@@ -2070,8 +2070,12 @@ async function processUploads(){
    if(!caseList || caseList.length === 0) return;
    caseList.forEach(function(pc){
     if(!pc.client) return;
+    // Match by client + plan_code + paid_premium to allow same client with multiple policies
+    var pcAmt = Math.round((pc.paid_premium||0)*100);
     var existing = cases.find(function(c){
-     return c.client.toLowerCase().trim() === pc.client.toLowerCase().trim() && c.product && c.product.indexOf(pc.plan_code||'NOMATCH') !== -1;
+     return c.client.toLowerCase().trim() === pc.client.toLowerCase().trim()
+      && c.product && c.product.indexOf(pc.plan_code||'NOMATCH') !== -1
+      && Math.round((c.amount||0)*100) === pcAmt;
     });
     if(existing){
      if(existing.status !== 'paid'){
