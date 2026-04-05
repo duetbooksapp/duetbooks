@@ -851,7 +851,6 @@ function renderDashboard(){
  var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
  for(var m=0;m<12;m++) monthlyProd[m] = 0;
  yearCases.forEach(function(c){
-  if(nonCommProducts.indexOf(c.product) >= 0) return;
   var d = c.submitted || c.created || '';
   if(d){
    var month = parseInt(d.substring(5,7)) - 1;
