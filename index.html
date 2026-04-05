@@ -170,7 +170,7 @@ tr:hover td{background:#FAFAFA}
 .pay-history-card .ph-meta{font-size:11px;color:var(--muted)}
 .pay-history-card .ph-amount{font-size:18px;font-weight:700;color:var(--grn)}
 
-/* ── Cash Flow ── */
+/* ── Forecasting ── */
 .cf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
 .cf-card{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);text-align:center}
 .cf-card .cf-period{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
@@ -299,7 +299,7 @@ tr:hover td{background:#FAFAFA}
   <div class="tab active" onclick="showTab(0)">Dashboard</div>
   <div class="tab" onclick="showTab(1)">Book of Business</div>
   <div class="tab" onclick="showTab(2)">Pay Periods</div>
-  <div class="tab" onclick="showTab(3)">Cash Flow</div>
+  <div class="tab" onclick="showTab(3)">Forecasting</div>
   <div class="tab" onclick="showTab(4)">Rate Table</div>
   <div class="tab" onclick="showTab(5)">Settings</div>
   <div class="tab" onclick="showTab(6)">Feedback</div>
@@ -488,7 +488,7 @@ var fbFilterStatus = '';
 var fbFilterPriority = '';
 var fbSearchQuery = '';
 
-var FEEDBACK_AREAS = ['Dashboard','Book of Business','Pay Periods','Cash Flow','Rate Table','Settings','Login / Auth','Firebase Sync','File Upload / AI','Other'];
+var FEEDBACK_AREAS = ['Dashboard','Book of Business','Pay Periods','Forecasting','Rate Table','Settings','Login / Auth','Firebase Sync','File Upload / AI','Other'];
 
 var IMPACT_AREAS = [
  {key:'commissions', label:'Commission calculations (calcCase, tiers, MMA)'},
@@ -1576,7 +1576,7 @@ function deletePayPeriod(id){
 function renderCashFlow(){
  var year = new Date().getFullYear();
  var now = new Date();
- var h = '<h2 style="margin-bottom:16px;color:var(--pri)">Cash Flow</h2>';
+ var h = '<h2 style="margin-bottom:16px;color:var(--pri)">Forecasting</h2>';
 
  // Calculate projections based on pipeline
  var paid = 0, pending30 = 0, pending60 = 0, pending90 = 0, pendingTotal = 0;
