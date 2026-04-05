@@ -658,7 +658,8 @@ async function doLogin(){
   showToast('Welcome back, ' + profile.name.split(' ')[0] + '!', 3000);
   enterApp();
  } catch(e){
-  errEl.textContent = 'Connection error. Please try again.';
+  console.error('Login error:', e);
+  errEl.textContent = 'Connection error: ' + (e.message || e) + '. Please try again.';
   errEl.style.display = 'block';
  }
 }
@@ -669,12 +670,12 @@ async function loadAgentData(){
   var fbCases = await fbLoad('cases');
   var fbSettings = await fbLoad('settings');
   var fbPay = await fbLoad('payperiods');
-  cases = fbCases || JSON.parse(localStorage.getItem('db_cases_' + currentAgent.id) || '[]');
-  payPeriods = fbPay || JSON.parse(localStorage.getItem('db_payperiods_' + currentAgent.id) || '[]');
+  cases = (fbCases || JSON.parse(localStorage.getItem('db_cases_' + currentAgent.id) || '[]')).filter(function(c){ return c !== null; });
+  payPeriods = (fbPay || JSON.parse(localStorage.getItem('db_payperiods_' + currentAgent.id) || '[]')).filter(function(p){ return p !== null; });
   settings = Object.assign({}, defaultSettings, fbSettings || JSON.parse(localStorage.getItem('db_settings_' + currentAgent.id) || '{}'));
  } catch(e){
-  cases = JSON.parse(localStorage.getItem('db_cases_' + currentAgent.id) || '[]');
-  payPeriods = JSON.parse(localStorage.getItem('db_payperiods_' + currentAgent.id) || '[]');
+  cases = JSON.parse(localStorage.getItem('db_cases_' + currentAgent.id) || '[]').filter(function(c){ return c !== null; });
+  payPeriods = JSON.parse(localStorage.getItem('db_payperiods_' + currentAgent.id) || '[]').filter(function(p){ return p !== null; });
   settings = Object.assign({}, defaultSettings, JSON.parse(localStorage.getItem('db_settings_' + currentAgent.id) || '{}'));
  }
  // Cache locally
@@ -702,7 +703,7 @@ function enterApp(){
  $1('#topAgentInfo').textContent = currentAgent.name + ' | ' + currentAgent.branch;
  $1('#versionLine').style.display = 'block';
  $1('#versionLine').textContent = 'Duet Books ' + APP_VERSION + ' | Built ' + APP_BUILD_DATE;
- loadFeedback().then(function(){ renderAll(); });
+ loadFeedback().catch(function(e){ console.error('Feedback load error:', e); }).finally(function(){ renderAll(); });
 }
 
 // ════════════════════════════════════════════
@@ -2213,8 +2214,10 @@ async function processUploads(){
 // ════════════════════════════════════════════
 
 function renderFeedback(){
+ if(!currentAgent) return;
+ try {
  var admin = isAdmin();
- var items = feedbackItems.slice();
+ var items = (feedbackItems || []).slice();
 
  // Filter
  if(!admin) items = items.filter(function(f){ return f.agentId === currentAgent.id; });
@@ -2300,6 +2303,7 @@ function renderFeedback(){
  });
 
  $1('#p6').innerHTML = h;
+ } catch(err){ console.error('renderFeedback error:', err); }
 }
 
 function submitFeedback(){
@@ -2578,7 +2582,9 @@ document.addEventListener('keydown', function(e){
    await loadAgentData();
    enterApp();
   } catch(e){
+   console.error('Session restore error:', e);
    sessionStorage.removeItem('db_agent');
+   currentAgent = null;
   }
  }
 
