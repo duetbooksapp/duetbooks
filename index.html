@@ -784,7 +784,8 @@ function calc3MMA(){
   if(c.status !== 'paid') return;
   var paidMonth = (c.paidDate||c.submitted||'').substring(0,7);
   if(months.indexOf(paidMonth) !== -1){
-   total += calcCase(c).agentShare;
+   // Use production credit for MMA (matches Varicent's calculation)
+   total += c.productionCredit || 0;
   }
  });
  return total / 3;
