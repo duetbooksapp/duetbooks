@@ -1515,10 +1515,7 @@ function renderCashFlow(){
  var d60 = new Date(now); d60.setDate(d60.getDate()+60); var day60 = toYMD(d60);
  var d90 = new Date(now); d90.setDate(d90.getDate()+90); var day90 = toYMD(d90);
 
- var nonCommProducts = ['Banking Incentive','Bonus','Other Income'];
  cases.forEach(function(c){
-  // Skip non-commission line items for Net Pay Commissions
-  if(nonCommProducts.indexOf(c.product) >= 0) return;
   var calc = calcCase(c);
   if(c.status === 'paid'){
    paid += calc.agentShare;
@@ -1549,10 +1546,10 @@ function renderCashFlow(){
  h += '<div class="cf-card"><div class="cf-period">60-90 Days</div><div class="cf-amount" style="color:var(--muted)">'+fmt(pending90)+'</div><div class="cf-sub">estimated commission</div></div>';
  h += '</div>';
 
- // Net Pay Commissions vs Actual Pay
- h += '<h3 style="margin-bottom:12px">Net Pay Commissions vs. Actual Pay</h3>';
+ // Gross Pay Commissions vs Actual Pay
+ h += '<h3 style="margin-bottom:12px">Gross Pay Commissions vs. Actual Pay</h3>';
  h += '<div class="cf-vs">';
- h += '<div class="cf-vs-card" style="border-top-color:var(--pri)"><h4>Net Pay Commissions</h4><div class="big" style="color:var(--pri)">'+fmt(paid + pendingTotal)+'</div><div style="font-size:11px;color:var(--muted)">Total commission on all cases</div></div>';
+ h += '<div class="cf-vs-card" style="border-top-color:var(--pri)"><h4>Gross Pay Commissions</h4><div class="big" style="color:var(--pri)">'+fmt(ytdVaricent + pendingTotal)+'</div><div style="font-size:11px;color:var(--muted)">YTD Varicent + pending pipeline</div></div>';
  h += '<div class="cf-vs-card" style="border-top-color:var(--grn)"><h4>Actual Pay (YTD)</h4><div class="big" style="color:var(--grn)">'+fmt(ytdNet)+'</div><div style="font-size:11px;color:var(--muted)">Commission + Banking + Bonus + Other Income</div></div>';
  h += '</div>';
 
