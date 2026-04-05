@@ -822,17 +822,17 @@ function renderDashboard(){
  var yearCases = cases.filter(function(c){ return (c.year||year) === year; });
  var totalCases = yearCases.length;
  var totalProduction = 0;
- var totalPaid = 0;
  var totalPending = 0;
 
- var nonCommProducts = ['Banking Incentive','Bonus','Other Income'];
  yearCases.forEach(function(c){
-  if(nonCommProducts.indexOf(c.product) >= 0) return;
   var calc = calcCase(c);
   totalProduction += calc.agentShare;
-  if(c.status === 'paid') totalPaid += calc.agentShare;
-  else totalPending += calc.agentShare;
+  if(c.status !== 'paid') totalPending += calc.agentShare;
  });
+
+ // YTD Paid = sum of varicent payouts from pay periods (authoritative Varicent number)
+ var totalPaid = 0;
+ payPeriods.forEach(function(p){ totalPaid += p.varicent || 0; });
 
  var mma = calc3MMA();
  var tier = tierText(mma);
@@ -873,7 +873,7 @@ function renderDashboard(){
  h += '<div class="stat-grid">';
  h += '<div class="stat-card"><div class="stat-label">Total Cases ('+year+')</div><div class="stat-value">'+totalCases+'</div></div>';
  h += '<div class="stat-card"><div class="stat-label">Monthly Production</div><div class="stat-value">'+fmt(curMonthProd)+'</div></div>';
- h += '<div class="stat-card green"><div class="stat-label">YTD Paid</div><div class="stat-value" style="color:var(--grn)">'+fmt(totalPaid)+'</div></div>';
+ h += '<div class="stat-card green"><div class="stat-label">YTD Commission (Varicent)</div><div class="stat-value" style="color:var(--grn)">'+fmt(totalPaid)+'</div></div>';
  h += '<div class="stat-card amber"><div class="stat-label">Pipeline Pending</div><div class="stat-value" style="color:var(--amb)">'+fmt(totalPending)+'</div></div>';
  h += '</div>';
 
