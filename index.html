@@ -1348,8 +1348,17 @@ function renderPayPeriods(){
   h += '<div class="stat-card green"><div class="stat-label">YTD Net Pay (Deposited)</div><div class="stat-value" style="color:var(--grn)">'+fmt(ytdNet)+'</div></div>';
   h += '</div>';
 
-  // Individual periods (newest first)
-  var sorted = payPeriods.slice().reverse();
+  // Individual periods (newest first, sorted chronologically by month + P1/P2)
+  var monthOrder = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var sorted = payPeriods.slice().sort(function(a,b){
+   var ma = monthOrder.indexOf(a.month || '');
+   var mb = monthOrder.indexOf(b.month || '');
+   if(ma !== mb) return mb - ma; // newest month first
+   // Same month: P2 before P1 (newest first)
+   var pa = (a.label||'').indexOf('P2') !== -1 ? 2 : 1;
+   var pb = (b.label||'').indexOf('P2') !== -1 ? 2 : 1;
+   return pb - pa;
+  });
   sorted.forEach(function(p){
    h += '<div class="pay-history-card">';
    h += '<div>';
@@ -1932,7 +1941,7 @@ async function processUploads(){
   } else {
    content.push({type:'image', source:{type:'base64', media_type:f.mediaType, data:f.base64}});
   }
-  content.push({type:'text', text:'This is a pay document from an AAA Life Insurance Specialist. It is EITHER a Varicent Commission Statement OR a Workday Payslip (identify which one it is).\n\nExtract ALL data and return as JSON with this EXACT structure:\n\n{"doc_type":"varicent or workday","period_label":"e.g. Apr P1 or Jan P2","month":"e.g. Apr","mma":0,"varicent_commission":0,"base_pay":0,"gross_pay":0,"banking_incentive":0,"bonuses":0,"pre_tax_deductions":0,"employee_taxes":0,"post_tax_deductions":0,"net_pay":0,"notes":"","cases":[]}\n\nIMPORTANT:\n- "doc_type" must be "varicent" or "workday" based on what this document is\n- If this is a VARICENT statement: fill in period_label, month, mma, varicent_commission, and the cases array\n- If this is a WORKDAY payslip: fill in base_pay (the base salary/regular earnings BEFORE commission), gross_pay, banking_incentive, bonuses, pre_tax_deductions, employee_taxes, post_tax_deductions, net_pay\n- Use the ACTUAL pay period date from the document, not today\'s date\n\nThe "cases" array (Varicent only) is CRITICAL. For EVERY individual line item in the 3MMA Transaction Details, extract the EXACT values from the document:\n{"client":"Insured Name exactly as shown","product":"Product Type exactly as shown (e.g. Ordinary Life, Platinum Annuity 5)","plan_code":"Plan Code as shown (e.g. G22AR, PL5NQ)","paid_premium":0,"production_credit":0,"mma_rate":0,"commission":0,"is_split":false}\n\n- "client" = the Insured Name column\n- "product" = the Product Type column exactly as written\n- "plan_code" = the Plan Code column\n- "paid_premium" = the Paid Premium column (what client paid)\n- "production_credit" = the Production Credit column\n- "mma_rate" = the 3MMA Incentive Commission Rate column (e.g. 50.00 for 50%, 2.85 for 2.85%)\n- "commission" = the New Incentive Commission column (the actual commission amount)\n- "is_split" = true if LPSplitCommInd column says SPLIT, false otherwise\n\nExtract EVERY line item exactly as shown. Do not calculate or modify any numbers.\n\nReturn ONLY valid JSON, no markdown or explanation.'});
+  content.push({type:'text', text:'This is a pay document from an AAA Life Insurance Specialist. It is EITHER a Varicent Commission Statement OR a Workday Payslip (identify which one it is).\n\nThe filename of this document is: "'+f.name+'"\nUse the filename to help determine the correct pay period. Filenames often follow patterns like "2026-02 1.pdf" (= Feb P1) or "2026-01 2 actual.pdf" (= Jan P2 Workday).\n\nExtract ALL data and return as JSON with this EXACT structure:\n\n{"doc_type":"varicent or workday","period_label":"e.g. Apr P1 or Jan P2","month":"e.g. Apr","mma":0,"varicent_commission":0,"base_pay":0,"gross_pay":0,"banking_incentive":0,"bonuses":0,"pre_tax_deductions":0,"employee_taxes":0,"post_tax_deductions":0,"net_pay":0,"notes":"","cases":[]}\n\nIMPORTANT:\n- "doc_type" must be "varicent" or "workday" based on what this document is\n- "period_label" MUST be in the format "Mon P1" or "Mon P2" (e.g. "Jan P1", "Feb P2"). Determine P1 vs P2 based on the pay period dates in the document: if the pay period ENDS on or before the 15th of the month, it is P1; if it ends after the 15th, it is P2. The MONTH in the label should be the month the work was performed (the pay period dates), NOT the check/payment date.\n- If the filename contains a pattern like "YYYY-MM N" (e.g. "2026-02 1"), use it: the month maps to the label month, and "1"=P1, "2"=P2.\n- If this is a VARICENT statement: fill in period_label, month, mma, varicent_commission, and the cases array\n- If this is a WORKDAY payslip: fill in period_label, month, base_pay (the base salary/regular earnings BEFORE commission), gross_pay, banking_incentive, bonuses, pre_tax_deductions, employee_taxes, post_tax_deductions, net_pay\n- Use the ACTUAL pay period dates from the document to determine the period, not the check date\n\nThe "cases" array (Varicent only) is CRITICAL. For EVERY individual line item in the 3MMA Transaction Details, extract the EXACT values from the document:\n{"client":"Insured Name exactly as shown","product":"Product Type exactly as shown (e.g. Ordinary Life, Platinum Annuity 5)","plan_code":"Plan Code as shown (e.g. G22AR, PL5NQ)","paid_premium":0,"production_credit":0,"mma_rate":0,"commission":0,"is_split":false}\n\n- "client" = the Insured Name column\n- "product" = the Product Type column exactly as written\n- "plan_code" = the Plan Code column\n- "paid_premium" = the Paid Premium column (what client paid)\n- "production_credit" = the Production Credit column\n- "mma_rate" = the 3MMA Incentive Commission Rate column (e.g. 50.00 for 50%, 2.85 for 2.85%)\n- "commission" = the New Incentive Commission column (the actual commission amount)\n- "is_split" = true if LPSplitCommInd column says SPLIT, false otherwise\n\nExtract EVERY line item exactly as shown. Do not calculate or modify any numbers.\n\nReturn ONLY valid JSON, no markdown or explanation.'});
 
   try {
    var resp = await fetch('https://api.anthropic.com/v1/messages', {
@@ -1985,32 +1994,47 @@ async function processUploads(){
  var totalNewCases = 0, totalUpdatedCases = 0, periodsCreated = 0, duplicatesSkipped = 0;
 
  // Auto-save each pay period
- // Try to pair Varicent + Workday by period label/month, otherwise create separate entries
+ // Try to pair Varicent + Workday by period label first, then month, otherwise create separate entries
  var usedWorkdays = {};
 
  varicents.forEach(function(v){
-  // DUPLICATE CHECK — skip if matching pay period already exists
-  // Check by: (1) same period label, OR (2) same month + same varicent commission amount
+  // DUPLICATE CHECK — skip if matching pay period already exists with varicent data
   var periodLabel = (v.period_label || '').toLowerCase().trim();
   var vMonth = (v.month || '').toLowerCase().trim();
-  var vComm = Math.round((v.varicent_commission || 0) * 100); // compare pennies to avoid float issues
+  var vComm = Math.round((v.varicent_commission || 0) * 100);
   var dupPeriod = payPeriods.find(function(p){
-   if(periodLabel && p.label && p.label.toLowerCase().trim() === periodLabel) return true;
+   if(periodLabel && p.label && p.label.toLowerCase().trim() === periodLabel && (p.varicent||0) > 0) return true;
    if(vMonth && p.month && p.month.toLowerCase().trim() === vMonth && Math.round((p.varicent||0)*100) === vComm && vComm > 0) return true;
    return false;
   });
   if(dupPeriod){
    duplicatesSkipped++;
-   return; // skip this varicent — already imported
+   return;
   }
 
-  // Find matching workday by month
+  // Find matching workday — prefer full period_label match, then fall back to month
   var matchedW = null;
-  workdays.forEach(function(w, wi){
-   if(!usedWorkdays[wi] && w.month && v.month && w.month.toLowerCase() === v.month.toLowerCase()){
-    matchedW = w; usedWorkdays[wi] = true;
+  // Pass 1: match by period_label (e.g. "Feb P2" === "Feb P2")
+  if(periodLabel){
+   workdays.forEach(function(w, wi){
+    if(!usedWorkdays[wi] && w.period_label && w.period_label.toLowerCase().trim() === periodLabel){
+     matchedW = w; usedWorkdays[wi] = true;
+    }
+   });
+  }
+  // Pass 2: match by month only if no period_label match found (and only one unmatched workday for that month)
+  if(!matchedW){
+   var monthCandidates = [];
+   workdays.forEach(function(w, wi){
+    if(!usedWorkdays[wi] && w.month && v.month && w.month.toLowerCase() === v.month.toLowerCase()){
+     monthCandidates.push({w:w, wi:wi});
+    }
+   });
+   if(monthCandidates.length === 1){
+    matchedW = monthCandidates[0].w;
+    usedWorkdays[monthCandidates[0].wi] = true;
    }
-  });
+  }
 
   // Create pay period combining varicent + matched workday
   var pe = {
@@ -2160,19 +2184,53 @@ async function processUploads(){
   }
  });
 
- // Any unmatched workdays become their own pay periods
+ // Any unmatched workdays — try to merge into existing varicent-only period, then create new
  workdays.forEach(function(w, wi){
   if(usedWorkdays[wi]) return;
-  // DUPLICATE CHECK — skip if matching pay period already exists
   var wLabel = (w.period_label || '').toLowerCase().trim();
   var wMonth = (w.month || '').toLowerCase().trim();
   var wNet = Math.round((w.net_pay || 0) * 100);
+
+  // DUPLICATE CHECK — skip if a period already has this workday data
   var dupW = payPeriods.find(function(p){
-   if(wLabel && p.label && p.label.toLowerCase().trim() === wLabel) return true;
+   if(wLabel && p.label && p.label.toLowerCase().trim() === wLabel && (p.net||0) > 0) return true;
    if(wMonth && p.month && p.month.toLowerCase().trim() === wMonth && Math.round((p.net||0)*100) === wNet && wNet > 0) return true;
    return false;
   });
   if(dupW){ duplicatesSkipped++; return; }
+
+  // MERGE-BACK: try to find an existing varicent-only period (has varicent but no workday data)
+  var mergeTarget = null;
+  // Pass 1: match by period_label
+  if(wLabel){
+   mergeTarget = payPeriods.find(function(p){
+    return p.label && p.label.toLowerCase().trim() === wLabel && (p.varicent||0) > 0 && (p.gross||0) === 0;
+   });
+  }
+  // Pass 2: match by month (only if one candidate)
+  if(!mergeTarget && wMonth){
+   var candidates = payPeriods.filter(function(p){
+    return p.month && p.month.toLowerCase().trim() === wMonth && (p.varicent||0) > 0 && (p.gross||0) === 0;
+   });
+   if(candidates.length === 1) mergeTarget = candidates[0];
+  }
+
+  if(mergeTarget){
+   // Merge workday data into existing varicent-only period
+   mergeTarget.basePay = w.base_pay || 0;
+   mergeTarget.gross = w.gross_pay || 0;
+   mergeTarget.banking = w.banking_incentive || 0;
+   mergeTarget.bonuses = w.bonuses || 0;
+   mergeTarget.preTax = w.pre_tax_deductions || 0;
+   mergeTarget.taxes = w.employee_taxes || 0;
+   mergeTarget.postTax = w.post_tax_deductions || 0;
+   mergeTarget.net = w.net_pay || 0;
+   mergeTarget.notes = (mergeTarget.notes || '') + ' + ' + w._filename;
+   periodsCreated++; // count as activity even though it's a merge
+   return;
+  }
+
+  // No merge target — create standalone workday period
   payPeriods.push({
    id: nextPeId++,
    label: w.period_label || ('Payslip ' + (payPeriods.length + 1)),
