@@ -1608,6 +1608,49 @@ function renderCashFlow(){
   ytdBasePay += p.basePay || 0;
  });
 
+ // 3MMA Tier Forecast
+ var fc = calc3MMAForecast();
+ h += '<div class="card">';
+ h += '<h3>3MMA Tier Forecast — '+fc.curMonth+'</h3>';
+
+ // Rolling window breakdown
+ h += '<div style="display:flex;gap:16px;margin:12px 0;flex-wrap:wrap">';
+ h += '<div style="text-align:center;min-width:100px;padding:10px;background:var(--ptint);border-radius:6px"><div style="font-size:10px;color:var(--muted)">'+fc.prev2Month+' Credits</div><div style="font-size:18px;font-weight:700">'+fmt(fc.credits3)+'</div></div>';
+ h += '<div style="text-align:center;min-width:100px;padding:10px;background:var(--ptint);border-radius:6px"><div style="font-size:10px;color:var(--muted)">'+fc.prevMonth+' Credits</div><div style="font-size:18px;font-weight:700">'+fmt(fc.credits2)+'</div></div>';
+ h += '<div style="text-align:center;min-width:100px;padding:10px;background:var(--gtint);border-radius:6px;border:2px solid var(--grn)"><div style="font-size:10px;color:var(--muted)">'+fc.curMonth+' So Far</div><div style="font-size:18px;font-weight:700;color:var(--grn)">'+fmt(fc.credits1)+'</div></div>';
+ h += '<div style="text-align:center;min-width:100px;padding:10px;background:var(--atint);border-radius:6px"><div style="font-size:10px;color:var(--muted)">Pipeline (Pending)</div><div style="font-size:18px;font-weight:700;color:var(--amb)">'+fmt(fc.pipelineCredits)+'</div></div>';
+ h += '</div>';
+
+ // What you need
+ h += '<div style="margin:12px 0">';
+ if(fc.needT4 > 0){
+  h += '<div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--gtint);border-radius:6px;margin-bottom:6px;font-size:13px;flex-wrap:wrap;gap:4px">';
+  h += '<span><b>To reach T4</b> — need <b>'+fmt(fc.needT4)+'</b> more in '+fc.curMonth+' production credits</span>';
+  if(fc.gapT4 > 0) h += '<span style="color:var(--red);font-weight:600">Gap after pipeline: '+fmt(fc.gapT4)+'</span>';
+  else h += '<span style="color:var(--grn);font-weight:600">Pipeline covers it!</span>';
+  h += '</div>';
+ }
+ if(fc.needT3 > 0 && fc.needT4 > 0){
+  h += '<div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--atint);border-radius:6px;margin-bottom:6px;font-size:13px;flex-wrap:wrap;gap:4px">';
+  h += '<span><b>To reach T3</b> — need <b>'+fmt(fc.needT3)+'</b> more in '+fc.curMonth+' production credits</span>';
+  if(fc.gapT3 > 0) h += '<span style="color:var(--red);font-weight:600">Gap after pipeline: '+fmt(fc.gapT3)+'</span>';
+  else h += '<span style="color:var(--grn);font-weight:600">Pipeline covers it!</span>';
+  h += '</div>';
+ }
+ if(fc.needT4 === 0){
+  h += '<div style="padding:8px 12px;background:var(--gtint);border-radius:6px;font-size:13px;color:var(--grn);font-weight:600">You\'re on track for T4 this month!</div>';
+ }
+ h += '</div>';
+
+ // Projected 3MMA
+ var projTier = tierText(fc.projected3MMA);
+ var projColor = fc.projected3MMA >= 6667 ? 'var(--grn)' : fc.projected3MMA >= 5000 ? 'var(--amb)' : 'var(--red)';
+ h += '<div style="padding:12px;background:var(--card);border:2px solid '+projColor+';border-radius:8px;text-align:center">';
+ h += '<div style="font-size:11px;color:var(--muted)">Projected 3MMA (if pipeline closes)</div>';
+ h += '<div style="font-size:28px;font-weight:700;color:'+projColor+'">'+fmt(fc.projected3MMA)+' <span style="font-size:14px">'+projTier+'</span></div>';
+ h += '</div>';
+ h += '</div>';
+
  // Projection cards
  h += '<h3 style="margin-bottom:12px">Projected Income from Pipeline</h3>';
  h += '<div class="cf-grid">';
