@@ -1985,12 +1985,15 @@ async function processUploads(){
  // Helper: get correct year and submitted date for a month label
  // If month is after current month, it's from the prior year (e.g., Dec doc uploaded in Jan)
  var monthList = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
- function getCaseDate(monthStr){
+ function getCaseDate(monthStr, periodLabel){
   var mi = monthList.indexOf(monthStr || '');
   if(mi < 0) return { submitted: toYMD(new Date()), year: new Date().getFullYear() };
   var curMonth = new Date().getMonth();
   var yr = (mi > curMonth) ? new Date().getFullYear() - 1 : new Date().getFullYear();
-  return { submitted: yr + '-' + String(mi+1).padStart(2,'0') + '-15', year: yr };
+  // P2 = last day of month, P1 = 15th
+  var isP2 = (periodLabel||'').indexOf('P2') !== -1;
+  var day = isP2 ? new Date(yr, mi+1, 0).getDate() : 15;
+  return { submitted: yr + '-' + String(mi+1).padStart(2,'0') + '-' + String(day).padStart(2,'0'), year: yr };
  }
 
  var totalNewCases = 0, totalUpdatedCases = 0, periodsCreated = 0, duplicatesSkipped = 0;
@@ -2107,12 +2110,12 @@ async function processUploads(){
       split: pc.is_split ? 'split' : 'full',
       splitName: '', splitEmail: '',
       status: 'paid',
-      submitted: getCaseDate(v.month).submitted,
+      submitted: getCaseDate(v.month, v.period_label).submitted,
       estPay: '',
       paidDate: toYMD(new Date()),
       paidIn: v.period_label || '',
       notes: policyType + ' | ' + section + ' | Paid Premium: $'+(pc.paid_premium||0).toFixed(2)+' | Prod Credit: $'+(pc.production_credit||0).toFixed(2),
-      year: getCaseDate(v.month).year,
+      year: getCaseDate(v.month, v.period_label).year,
       created: new Date().toISOString()
      });
      totalNewCases++;
