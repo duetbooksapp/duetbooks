@@ -774,22 +774,80 @@ function tierText(mma){ return mma >= 6667 ? 'T4' : mma >= 5000 ? 'T3' : 'T2'; }
 function tierClass(mma){ return mma >= 6667 ? 't4' : mma >= 5000 ? 't3' : 't2'; }
 
 function calc3MMA(){
- var now = new Date();
- var months = [];
- for(var i=0;i<3;i++){
-  var d = new Date(now.getFullYear(), now.getMonth()-i, 1);
-  months.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));
- }
- var total = 0;
- cases.forEach(function(c){
-  if(c.status !== 'paid') return;
-  var paidMonth = (c.paidDate||c.submitted||'').substring(0,7);
-  if(months.indexOf(paidMonth) !== -1){
-   // Use production credit for MMA (matches Varicent's calculation)
-   total += c.productionCredit || 0;
-  }
+ // Use the latest pay period's MMA value (authoritative Varicent number)
+ var latest = null;
+ var monthOrder = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+ payPeriods.forEach(function(p){
+  if(!p || !p.mma) return;
+  var mi = monthOrder.indexOf(p.month||'');
+  var pi = (p.label||'').indexOf('P2') !== -1 ? 2 : 1;
+  var score = mi * 10 + pi;
+  if(!latest || score > latest.score) latest = {mma: p.mma, score: score};
  });
- return total / 3;
+ return latest ? latest.mma : 0;
+}
+
+function calc3MMAForecast(){
+ var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+ var now = new Date();
+ var curMonth = now.getMonth(); // 0-indexed (Apr = 3)
+
+ // Get production credits per month from pay periods (sum P1+P2 for each month)
+ var monthCredits = {};
+ payPeriods.forEach(function(p){
+  if(!p) return;
+  var mi = monthNames.indexOf(p.month||'');
+  if(mi < 0) return;
+  var key = mi;
+  monthCredits[key] = (monthCredits[key]||0) + (p.newProdCredits||0) + (p.renewalProdCredits||0);
+ });
+
+ // Find the 3 months for the rolling window ending at current month
+ // If current month has no data yet, use the latest Varicent MMA as baseline
+ var m1 = curMonth;     // current month (may be partial/empty)
+ var m2 = (curMonth - 1 + 12) % 12; // last month
+ var m3 = (curMonth - 2 + 12) % 12; // 2 months ago
+
+ var credits1 = monthCredits[m1] || 0; // current month (partial)
+ var credits2 = monthCredits[m2] || 0; // last month
+ var credits3 = monthCredits[m3] || 0; // 2 months ago
+
+ // Pipeline production credits (pending cases)
+ var pipelineCredits = 0;
+ cases.forEach(function(c){
+  if(c.status === 'paid') return;
+  pipelineCredits += c.productionCredit || c.amount || 0;
+ });
+
+ // What you'd need in the current month to hit each tier
+ // 3MMA = (m1 + m2 + m3) / 3 >= threshold
+ // m1 >= (threshold * 3) - m2 - m3
+ var knownPrior = credits2 + credits3;
+ var needT4 = Math.max(0, (6667 * 3) - knownPrior - credits1);
+ var needT3 = Math.max(0, (5000 * 3) - knownPrior - credits1);
+
+ // Current projected 3MMA if pipeline closes
+ var projected3MMA = (credits1 + pipelineCredits + knownPrior) / 3;
+
+ // Gap after pipeline
+ var gapT4 = Math.max(0, needT4 - pipelineCredits);
+ var gapT3 = Math.max(0, needT3 - pipelineCredits);
+
+ return {
+  curMonth: monthNames[curMonth],
+  prevMonth: monthNames[m2],
+  prev2Month: monthNames[m3],
+  credits1: credits1,
+  credits2: credits2,
+  credits3: credits3,
+  knownPrior: knownPrior,
+  pipelineCredits: pipelineCredits,
+  needT4: needT4,
+  needT3: needT3,
+  projected3MMA: projected3MMA,
+  gapT4: gapT4,
+  gapT3: gapT3
+ };
 }
 
 // ════════════════════════════════════════════
@@ -876,37 +934,37 @@ function renderDashboard(){
  h += '<div class="stat-card amber"><div class="stat-label">Pipeline Pending</div><div class="stat-value" style="color:var(--amb)">'+fmt(totalPending)+'</div></div>';
  h += '</div>';
 
- // Tier card
- h += '<div class="tier-card">';
- h += '<div class="tier-badge '+tClass+'">'+tier+'</div>';
- h += '<div class="tier-info">';
- h += '<div class="tier-label">3-Month Moving Average</div>';
- h += '<div class="tier-value">'+fmt(mma)+' / month</div>';
- if(nextTierAmt > 0){
-  h += '<div style="font-size:11px;color:var(--muted);margin-top:4px">'+fmt(nextTierAmt)+' more in paid commission to reach '+nextTierName+'</div>';
- } else {
-  h += '<div style="font-size:11px;color:var(--grn);margin-top:4px">You\'re at the highest tier!</div>';
- }
- h += '</div>';
- h += '<div class="tier-progress" style="flex:1">';
- h += '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted)"><span>T2</span><span>T3 ($5,000)</span><span>T4 ($6,667)</span></div>';
- h += '<div class="tier-bar"><div class="tier-bar-fill" style="width:'+Math.min(tierPct,100)+'%;background:var(--'+(tClass==='t4'?'grn':tClass==='t3'?'amb':'red')+')"></div></div>';
- h += '</div>';
- h += '</div>';
-
- // Status breakdown
+ // Monthly Tier & Production Credits Report
  h += '<div class="card">';
- h += '<h3>Pipeline Status Breakdown</h3>';
- h += '<div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:8px">';
- statusOrder.forEach(function(s){
-  h += '<div style="text-align:center;min-width:80px">';
-  h += '<div style="font-size:24px;font-weight:700">'+statusCounts[s]+'</div>';
-  h += statusBadge(s);
-  h += '</div>';
+ h += '<h3>Monthly Tier & New Production Credits ('+year+')</h3>';
+ var monthlyCredits = {};
+ var monthlyTiers = {};
+ for(var tm=0;tm<12;tm++){ monthlyCredits[tm] = 0; monthlyTiers[tm] = ''; }
+ // Sum production credits per month from pay periods
+ payPeriods.forEach(function(p){
+  if(!p) return;
+  var mi = monthNames.indexOf(p.month||'');
+  if(mi < 0) return;
+  monthlyCredits[mi] += (p.newProdCredits||0) + (p.renewalProdCredits||0);
+  if(p.mmaTier) monthlyTiers[mi] = p.mmaTier;
  });
+ var maxCredits = Math.max.apply(null, Object.values(monthlyCredits).concat([1]));
+ h += '<div class="monthly-grid">';
+ for(var tm=0;tm<12;tm++){
+  var cval = monthlyCredits[tm];
+  var tval = monthlyTiers[tm];
+  var tbg = cval > 0 ? 'var(--gtint)' : '#f5f5f5';
+  var tcol = cval > 0 ? 'var(--grn)' : 'var(--muted)';
+  var tierBadge = tval ? '<div style="font-size:9px;font-weight:700;color:'+(tval==='TIER4'?'var(--grn)':tval==='TIER3'?'var(--amb)':'var(--red)')+'">'+tval.replace('TIER','T')+'</div>' : '';
+  h += '<div class="month-cell" style="background:'+tbg+'">';
+  h += '<div class="month-label">'+monthNames[tm]+'</div>';
+  h += '<div class="month-value" style="color:'+tcol+';font-size:11px">'+fmt(cval).replace('$','').split('.')[0]+'</div>';
+  h += tierBadge;
+  h += '</div>';
+ }
  h += '</div></div>';
 
- // Monthly production
+ // Gross Monthly Commission
  h += '<div class="card">';
  h += '<h3>Gross Monthly Commission ('+year+')</h3>';
  h += '<div class="monthly-grid">';
@@ -920,6 +978,18 @@ function renderDashboard(){
   h += '<div class="month-value" style="color:'+color+'">'+fmt(val).replace('$','').split('.')[0]+'</div>';
   h += '</div>';
  }
+ h += '</div></div>';
+
+ // Pipeline Status Breakdown (moved below Gross Monthly Commission)
+ h += '<div class="card">';
+ h += '<h3>Pipeline Status Breakdown</h3>';
+ h += '<div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:8px">';
+ statusOrder.forEach(function(s){
+  h += '<div style="text-align:center;min-width:80px">';
+  h += '<div style="font-size:24px;font-weight:700">'+statusCounts[s]+'</div>';
+  h += statusBadge(s);
+  h += '</div>';
+ });
  h += '</div></div>';
 
  $1('#p0').innerHTML = h;
