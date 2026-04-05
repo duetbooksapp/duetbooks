@@ -2071,6 +2071,7 @@ async function processUploads(){
       existing.paidIn = v.period_label || '';
       // Store actual Varicent commission — don't recalculate
       if(pc.commission) existing.actualCommission = pc.commission;
+      if(pc.production_credit) existing.productionCredit = pc.production_credit;
       if(pc.paid_premium) existing.amount = pc.paid_premium;
       if(pc.mma_rate) existing.rate = pc.mma_rate;
       if(pc.is_split) existing.split = 'split';
@@ -2088,6 +2089,7 @@ async function processUploads(){
       amount: pc.paid_premium || pc.production_credit || 0,
       rate: pc.mma_rate || 0,
       actualCommission: pc.commission || 0,
+      productionCredit: pc.production_credit || 0,
       split: pc.is_split ? 'split' : 'full',
       splitName: '', splitEmail: '',
       status: 'paid',
@@ -2104,84 +2106,6 @@ async function processUploads(){
    });
   }
 
-  // Import Banking Incentive as a Book of Business line item
-  var bankingAmt = matchedW ? (matchedW.banking_incentive || 0) : 0;
-  if(bankingAmt > 0){
-   var bankingBase = Math.round(bankingAmt / 0.05 * 100) / 100; // reverse 5% to get total amount
-   var bankingLabel = 'Banking Incentive - ' + (v.month || 'Unknown');
-   // Check if already exists
-   var existingBank = cases.find(function(c){
-    return c.product === 'Banking Incentive' && c.paidIn && c.paidIn.toLowerCase().trim() === (v.period_label||'').toLowerCase().trim();
-   });
-   if(!existingBank){
-    cases.push({
-     id: nextCaseId++,
-     client: bankingLabel,
-     phone: '',
-     product: 'Banking Incentive',
-     amount: bankingBase,
-     rate: 5,
-     actualCommission: bankingAmt,
-     split: 'full',
-     splitName: '', splitEmail: '',
-     status: 'paid',
-     submitted: getCaseDate(v.month).submitted,
-     estPay: '',
-     paidDate: toYMD(new Date()),
-     paidIn: v.period_label || '',
-     notes: 'Banking Incentive | 5% of $'+bankingBase.toFixed(2)+' = $'+bankingAmt.toFixed(2),
-     year: getCaseDate(v.month).year,
-     created: new Date().toISOString()
-    });
-    totalNewCases++;
-   }
-  }
-
-  // Import Bonuses as a Book of Business line item
-  var bonusAmt = matchedW ? (matchedW.bonuses || 0) : 0;
-  if(bonusAmt > 0){
-   var bonusLabel = 'Bonus - ' + (v.month || 'Unknown');
-   var existingBonus = cases.find(function(c){
-    return c.product === 'Bonus' && c.paidIn && c.paidIn.toLowerCase().trim() === (v.period_label||'').toLowerCase().trim();
-   });
-   if(!existingBonus){
-    cases.push({
-     id: nextCaseId++, client: bonusLabel, phone: '', product: 'Bonus',
-     amount: bonusAmt, rate: 100, actualCommission: bonusAmt,
-     split: 'full', splitName: '', splitEmail: '', status: 'paid',
-     submitted: getCaseDate(v.month).submitted, estPay: '', paidDate: toYMD(new Date()),
-     paidIn: v.period_label || '',
-     notes: 'Bonus from Workday payslip | $'+bonusAmt.toFixed(2),
-     year: getCaseDate(v.month).year, created: new Date().toISOString()
-    });
-    totalNewCases++;
-   }
-  }
-
-  // Import Other Income (base pay minus taxes/deductions) so YTD totals match net pay
-  if(matchedW){
-   var wNet = matchedW.net_pay || 0;
-   var wVaricent = v.varicent_commission || 0;
-   var otherIncome = wNet - wVaricent - bankingAmt - bonusAmt;
-   if(otherIncome > 0){
-    var otherLabel = 'Other Income - ' + (v.month || 'Unknown');
-    var existingOther = cases.find(function(c){
-     return c.product === 'Other Income' && c.paidIn && c.paidIn.toLowerCase().trim() === (v.period_label||'').toLowerCase().trim();
-    });
-    if(!existingOther){
-     cases.push({
-      id: nextCaseId++, client: otherLabel, phone: '', product: 'Other Income',
-      amount: otherIncome, rate: 100, actualCommission: otherIncome,
-      split: 'full', splitName: '', splitEmail: '', status: 'paid',
-      submitted: getCaseDate(v.month).submitted, estPay: '', paidDate: toYMD(new Date()),
-      paidIn: v.period_label || '',
-      notes: 'Other Income (base pay net of taxes/deductions) | $'+otherIncome.toFixed(2),
-      year: getCaseDate(v.month).year, created: new Date().toISOString()
-     });
-     totalNewCases++;
-    }
-   }
-  }
  });
 
  // Any unmatched workdays — try to merge into existing varicent-only period, then create new
@@ -2249,81 +2173,6 @@ async function processUploads(){
    created: new Date().toISOString()
   });
   periodsCreated++;
-
-  // Import Banking Incentive from standalone Workday
-  var wBanking = w.banking_incentive || 0;
-  if(wBanking > 0){
-   var wBankBase = Math.round(wBanking / 0.05 * 100) / 100;
-   var wBankLabel = 'Banking Incentive - ' + (w.month || 'Unknown');
-   var existingWBank = cases.find(function(c){
-    return c.product === 'Banking Incentive' && c.paidIn && c.paidIn.toLowerCase().trim() === (w.period_label||'').toLowerCase().trim();
-   });
-   if(!existingWBank){
-    cases.push({
-     id: nextCaseId++,
-     client: wBankLabel,
-     phone: '',
-     product: 'Banking Incentive',
-     amount: wBankBase,
-     rate: 5,
-     actualCommission: wBanking,
-     split: 'full',
-     splitName: '', splitEmail: '',
-     status: 'paid',
-     submitted: getCaseDate(w.month).submitted,
-     estPay: '',
-     paidDate: toYMD(new Date()),
-     paidIn: w.period_label || '',
-     notes: 'Banking Incentive | 5% of $'+wBankBase.toFixed(2)+' = $'+wBanking.toFixed(2),
-     year: getCaseDate(w.month).year,
-     created: new Date().toISOString()
-    });
-    totalNewCases++;
-   }
-  }
-
-  // Import Bonuses from standalone Workday
-  var wBonus = w.bonuses || 0;
-  if(wBonus > 0){
-   var wBonusLabel = 'Bonus - ' + (w.month || 'Unknown');
-   var existingWBonus = cases.find(function(c){
-    return c.product === 'Bonus' && c.paidIn && c.paidIn.toLowerCase().trim() === (w.period_label||'').toLowerCase().trim();
-   });
-   if(!existingWBonus){
-    cases.push({
-     id: nextCaseId++, client: wBonusLabel, phone: '', product: 'Bonus',
-     amount: wBonus, rate: 100, actualCommission: wBonus,
-     split: 'full', splitName: '', splitEmail: '', status: 'paid',
-     submitted: getCaseDate(w.month).submitted, estPay: '', paidDate: toYMD(new Date()),
-     paidIn: w.period_label || '',
-     notes: 'Bonus from Workday payslip | $'+wBonus.toFixed(2),
-     year: getCaseDate(w.month).year, created: new Date().toISOString()
-    });
-    totalNewCases++;
-   }
-  }
-
-  // Import Other Income so YTD totals match net pay
-  var wNetPay = w.net_pay || 0;
-  var wOtherIncome = wNetPay - wBanking - wBonus;
-  if(wOtherIncome > 0){
-   var wOtherLabel = 'Other Income - ' + (w.month || 'Unknown');
-   var existingWOther = cases.find(function(c){
-    return c.product === 'Other Income' && c.paidIn && c.paidIn.toLowerCase().trim() === (w.period_label||'').toLowerCase().trim();
-   });
-   if(!existingWOther){
-    cases.push({
-     id: nextCaseId++, client: wOtherLabel, phone: '', product: 'Other Income',
-     amount: wOtherIncome, rate: 100, actualCommission: wOtherIncome,
-     split: 'full', splitName: '', splitEmail: '', status: 'paid',
-     submitted: getCaseDate(w.month).submitted, estPay: '', paidDate: toYMD(new Date()),
-     paidIn: w.period_label || '',
-     notes: 'Other Income (base pay net of taxes/deductions) | $'+wOtherIncome.toFixed(2),
-     year: getCaseDate(w.month).year, created: new Date().toISOString()
-    });
-    totalNewCases++;
-   }
-  }
  });
 
  // Save everything
