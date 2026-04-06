@@ -1796,29 +1796,6 @@ function renderCashFlow(){
  });
  h += '</div>';
 
- // Monthly cash received
- h += '<div class="card">';
- h += '<h3>Monthly Cash Received ('+year+')</h3>';
- var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
- var monthlyNet = {};
- for(var m=0;m<12;m++) monthlyNet[m] = 0;
- payPeriods.forEach(function(p){
-  var mi = monthNames.indexOf(p.month);
-  if(mi >= 0) monthlyNet[mi] += p.net || 0;
- });
- var maxMN = Math.max.apply(null, Object.values(monthlyNet).concat([1]));
-
- h += '<div class="monthly-grid">';
- for(var m=0;m<12;m++){
-  var val = monthlyNet[m];
-  var bg = val > 0 ? 'var(--gtint)' : '#f5f5f5';
-  var color = val > 0 ? 'var(--grn)' : 'var(--muted)';
-  h += '<div class="month-cell" style="background:'+bg+'">';
-  h += '<div class="month-label">'+monthNames[m]+'</div>';
-  h += '<div class="month-value" style="color:'+color+'">'+fmt(val).replace('$','').split('.')[0]+'</div>';
-  h += '</div>';
- }
- h += '</div></div>';
 
  $1('#p3').innerHTML = h;
 }
