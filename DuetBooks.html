@@ -990,9 +990,10 @@ function renderDashboard(){
  var maxMonth = Math.max.apply(null, Object.values(monthlyProd).concat([1]));
 
  // YTD from pay periods for take-home
- var ytdNet = 0, ytdTaxes = 0, ytdDeductions = 0;
+ var ytdNet = 0, ytdGross = 0, ytdTaxes = 0, ytdDeductions = 0;
  payPeriods.forEach(function(p){
   ytdNet += p.net || 0;
+  ytdGross += p.gross || 0;
   ytdTaxes += p.taxes || 0;
   ytdDeductions += (p.preTax||0) + (p.postTax||0);
  });
