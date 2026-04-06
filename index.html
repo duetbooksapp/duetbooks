@@ -7,6 +7,19 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--pri:#534AB7;--grn:#1D9E75;--amb:#EF9F27;--red:#D94545;--dgrn:#0F6E56;--bg:#f5f5f3;--card:#fff;--ptint:#EEEDFE;--gtint:#F0FBF7;--atint:#FFFCF5;--rtint:#FEF2F2;--txt:#222;--muted:#666;--border:#ddd;--radius:8px;--shadow:0 1px 3px rgba(0,0,0,.08)}
+body.dark{--bg:#1a1a2e;--card:#252540;--txt:#e0e0e0;--muted:#999;--border:#3a3a50;--shadow:0 1px 3px rgba(0,0,0,.3);--ptint:#2e2a50;--gtint:#1a3028;--atint:#302a1a;--rtint:#301a1a}
+body.dark .login-card{background:#252540;color:var(--txt)}
+body.dark .login-card h1{color:#8B80E0}
+body.dark .login-card input,body.dark .login-card select{background:#1a1a2e;color:var(--txt);border-color:var(--border)}
+body.dark input,body.dark select,body.dark textarea{background:#1a1a2e;color:var(--txt);border-color:var(--border)}
+body.dark th{background:var(--ptint);color:#B0A8E8}
+body.dark th:hover{background:#3a3460}
+body.dark tr:hover td{background:#2a2a40}
+body.dark .toast{background:#333350;color:#e0e0e0}
+body.dark .modal{background:#252540;color:var(--txt)}
+body.dark .fb-modal-box{background:#252540;color:var(--txt)}
+body.dark .upload-zone{border-color:var(--border);background:var(--ptint)}
+body.dark .needs-card{background:var(--atint);border-color:#4a4030}
 html{font-size:13px}
 body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--txt);line-height:1.5}
 
@@ -298,6 +311,7 @@ tr:hover td{background:#FAFAFA}
   </div>
   <div class="topbar-right">
    <span style="font-size:11px;opacity:.7"><span class="sync-dot" id="syncDot"></span><span id="syncLabel">Synced</span></span>
+   <button class="logout-btn" onclick="toggleDarkMode()" id="darkModeBtn" title="Toggle dark mode" style="font-size:14px">🌙</button>
    <button class="logout-btn" onclick="doLogout()">Sign Out</button>
   </div>
  </div>
@@ -386,6 +400,18 @@ var filterCarrier = '';
 var filterCat = '';
 var searchQuery = '';
 var editingCaseId = null;
+
+// ── Dark Mode ──
+function toggleDarkMode(){
+ var isDark = document.body.classList.toggle('dark');
+ localStorage.setItem('db_darkmode', isDark ? '1' : '0');
+ var btn = $1('#darkModeBtn');
+ if(btn) btn.textContent = isDark ? '☀️' : '🌙';
+}
+// Apply on load
+if(localStorage.getItem('db_darkmode') === '1'){
+ document.body.classList.add('dark');
+}
 var showAddForm = false;
 
 var defaultSettings = {
@@ -760,6 +786,9 @@ function enterApp(){
  $1('#topAgentInfo').textContent = currentAgent.name + ' | ' + currentAgent.branch;
  $1('#versionLine').style.display = 'block';
  $1('#versionLine').textContent = 'Duet Books ' + APP_VERSION + ' | Built ' + APP_BUILD_DATE;
+ // Set dark mode button icon
+ var dmBtn = $1('#darkModeBtn');
+ if(dmBtn) dmBtn.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
  loadFeedback().catch(function(e){ console.error('Feedback load error:', e); }).finally(function(){ renderAll(); });
 }
 
