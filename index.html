@@ -216,6 +216,14 @@ tr:hover td{background:#FAFAFA}
 .fb-comment{background:#f9f9f7;border-radius:6px;padding:10px 12px;margin-top:8px;font-size:12px;border-left:3px solid var(--border)}
 .fb-comment .fb-comment-meta{font-size:10px;color:var(--muted);margin-bottom:4px}
 
+/* ── Floating Feedback Button ── */
+.fb-fab{position:fixed;bottom:24px;left:24px;width:50px;height:50px;border-radius:50%;background:var(--dgrn);color:#fff;border:none;font-size:22px;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.25);z-index:9000;transition:transform .2s;padding:0;display:flex;align-items:center;justify-content:center}
+.fb-fab:hover{transform:scale(1.08)}
+.fb-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);z-index:9001;display:none;justify-content:center;align-items:center}
+.fb-modal-overlay.show{display:flex}
+.fb-modal-box{background:#fff;border-radius:12px;padding:24px;max-width:440px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.2);max-height:85vh;overflow-y:auto}
+@media(max-width:768px){.fb-fab{bottom:70px}}
+
 /* ── Version ── */
 .version{text-align:center;font-size:10px;color:var(--muted);padding:20px;opacity:.5}
 
@@ -302,7 +310,6 @@ tr:hover td{background:#FAFAFA}
   <div class="tab" onclick="showTab(3)">Forecasting</div>
   <div class="tab" onclick="showTab(4)">Rate Table</div>
   <div class="tab" onclick="showTab(5)">Settings</div>
-  <div class="tab" onclick="showTab(6)">Feedback</div>
  </div>
 
  <!-- ═══ TAB 0: DASHBOARD ═══ -->
@@ -323,8 +330,6 @@ tr:hover td{background:#FAFAFA}
  <!-- ═══ TAB 5: SETTINGS ═══ -->
  <div class="panel" id="p5"></div>
 
- <!-- ═══ TAB 6: FEEDBACK ═══ -->
- <div class="panel" id="p6"></div>
 
 </div>
 
@@ -336,6 +341,14 @@ tr:hover td{background:#FAFAFA}
 <!-- Feedback Review Modal -->
 <div class="modal-overlay" id="fbReviewModal">
  <div class="modal fb-review-modal" id="fbReviewContent"></div>
+</div>
+
+<!-- Floating Feedback Button -->
+<button class="fb-fab" onclick="openFeedbackModal()" title="Submit Feedback">💡</button>
+
+<!-- Feedback Modal -->
+<div class="fb-modal-overlay" id="fbModal">
+ <div class="fb-modal-box" id="fbModalContent"></div>
 </div>
 
 <!-- Onboarding Modal -->
@@ -957,7 +970,6 @@ function renderAll(){
  renderCashFlow();
  renderRateTable();
  renderSettings();
- renderFeedback();
 }
 
 // ════════════════════════════════════════════
@@ -2470,6 +2482,156 @@ async function processUploads(){
 // TAB 6: FEEDBACK SYSTEM
 // ════════════════════════════════════════════
 
+function getActiveTabName(){
+ var tabNames = ['Dashboard','Book of Business','Pay Periods','Forecasting','Rate Table','Settings'];
+ return tabNames[activeTab] || 'Unknown';
+}
+
+function openFeedbackModal(){
+ var admin = isAdmin();
+ var h = '';
+ h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">';
+ h += '<div style="font-size:18px;font-weight:700;color:var(--pri)">Submit Feedback</div>';
+ h += '<button onclick="closeFeedbackModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted)">&times;</button>';
+ h += '</div>';
+
+ // Auto-captured tab context
+ h += '<div style="font-size:11px;color:var(--muted);margin-bottom:12px;padding:6px 10px;background:var(--ptint);border-radius:4px">From: <b>'+getActiveTabName()+'</b></div>';
+
+ // Type
+ h += '<div class="form-group" style="margin-bottom:10px"><label>Type</label>';
+ h += '<select id="fbm_type" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit"><option value="bug">Bug Report</option><option value="suggestion">Suggestion</option><option value="question">Question</option></select></div>';
+
+ // Priority (inline radio style)
+ h += '<div style="margin-bottom:10px"><label style="font-size:11px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px">Priority</label>';
+ h += '<div style="display:flex;gap:8px">';
+ h += '<label style="flex:1;text-align:center;padding:6px;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px"><input type="radio" name="fbm_pri" value="low" style="display:none"><span>Low</span></label>';
+ h += '<label style="flex:1;text-align:center;padding:6px;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px"><input type="radio" name="fbm_pri" value="medium" checked style="display:none"><span style="font-weight:600;color:var(--amb)">Medium</span></label>';
+ h += '<label style="flex:1;text-align:center;padding:6px;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px"><input type="radio" name="fbm_pri" value="high" style="display:none"><span>High</span></label>';
+ h += '</div></div>';
+
+ // Title
+ h += '<div class="form-group" style="margin-bottom:10px"><label>Title</label>';
+ h += '<input id="fbm_title" placeholder="Short summary" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit"></div>';
+
+ // Description
+ h += '<div class="form-group" style="margin-bottom:14px"><label>Description</label>';
+ h += '<textarea id="fbm_desc" rows="3" placeholder="Details, steps to reproduce, or your suggestion..." style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;resize:vertical"></textarea></div>';
+
+ // Submit
+ h += '<button class="btn btn-pri" style="width:100%;padding:10px" onclick="submitFeedbackModal()">Submit Feedback</button>';
+
+ // Admin: View All Feedback link
+ if(admin){
+  var newCount = feedbackItems.filter(function(f){ return f.status==='new'; }).length;
+  h += '<div style="text-align:center;margin-top:12px">';
+  h += '<a onclick="closeFeedbackModal();showAdminFeedback()" style="font-size:12px;color:var(--pri);cursor:pointer;text-decoration:underline">View All Feedback'+(newCount > 0 ? ' ('+newCount+' new)' : '')+'</a>';
+  h += '</div>';
+ }
+
+ $1('#fbModalContent').innerHTML = h;
+ $1('#fbModal').className = 'fb-modal-overlay show';
+
+ // Style the selected priority radio
+ setTimeout(function(){
+  document.querySelectorAll('input[name="fbm_pri"]').forEach(function(r){
+   r.parentElement.style.background = r.checked ? 'var(--ptint)' : '';
+   r.addEventListener('change', function(){
+    document.querySelectorAll('input[name="fbm_pri"]').forEach(function(r2){
+     r2.parentElement.style.background = r2.checked ? 'var(--ptint)' : '';
+    });
+   });
+  });
+ }, 50);
+}
+
+function closeFeedbackModal(){
+ $1('#fbModal').className = 'fb-modal-overlay';
+}
+
+function submitFeedbackModal(){
+ var title = ($1('#fbm_title').value||'').trim();
+ var desc = ($1('#fbm_desc').value||'').trim();
+ if(!title){ showToast('Please enter a title', 2000); return; }
+
+ var priEl = document.querySelector('input[name="fbm_pri"]:checked');
+ var item = {
+  id: 'fb_' + nextFbId++,
+  type: $1('#fbm_type').value,
+  priority: priEl ? priEl.value : 'medium',
+  area: getActiveTabName(),
+  title: title,
+  description: desc,
+  screenshotNote: '',
+  agentId: currentAgent.id,
+  agentName: currentAgent.name,
+  status: 'new',
+  timestamp: new Date().toISOString(),
+  comments: [],
+  impactChecklist: {},
+  aiAnalysis: '',
+  adminNotes: '',
+  notifyAgent: false
+ };
+
+ feedbackItems.push(item);
+ fbSaveFeedback(item);
+ showToast('Feedback submitted: ' + title, 3000);
+ closeFeedbackModal();
+}
+
+function showAdminFeedback(){
+ // Render the full feedback queue in the review modal
+ var items = feedbackItems.slice().sort(function(a,b){ return (b.timestamp||'').localeCompare(a.timestamp||''); });
+ var h = '';
+ h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">';
+ h += '<div style="font-size:18px;font-weight:700;color:var(--pri)">All Feedback ('+items.length+')</div>';
+ h += '<button class="btn btn-outline btn-sm" onclick="closeAdminFeedback()">&times; Close</button>';
+ h += '</div>';
+
+ // Filters
+ h += '<div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">';
+ h += '<select id="afb_status" onchange="filterAdminFeedback()" style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:11px"><option value="">All Status</option><option value="new">New</option><option value="reviewing">Reviewing</option><option value="resolved">Resolved</option><option value="wontfix">Won\'t Fix</option></select>';
+ h += '<select id="afb_type" onchange="filterAdminFeedback()" style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:11px"><option value="">All Types</option><option value="bug">Bugs</option><option value="suggestion">Suggestions</option><option value="question">Questions</option></select>';
+ h += '</div>';
+
+ h += '<div id="afb_list">';
+ items.forEach(function(f){
+  var statusClass = 'fb-status-' + f.status;
+  var typeBadge = f.type === 'bug' ? 'badge-red' : f.type === 'suggestion' ? 'badge-pri' : 'badge-amb';
+  h += '<div class="fb-item fb-'+f.type+'" onclick="closeAdminFeedback();openFeedbackReview(\''+f.id+'\')" style="margin-bottom:8px">';
+  h += '<div class="fb-item-head"><div class="fb-item-title">'+f.title+'</div><span class="badge '+statusClass+'">'+f.status+'</span></div>';
+  h += '<div class="fb-item-meta"><span class="badge '+typeBadge+'">'+(f.type||'')+'</span> <span>'+f.agentName+'</span> <span>'+f.area+'</span> <span>'+new Date(f.timestamp).toLocaleDateString()+'</span></div>';
+  h += '</div>';
+ });
+ h += '</div>';
+
+ $1('#fbReviewContent').innerHTML = h;
+ $1('#fbReviewModal').className = 'modal-overlay show';
+}
+
+function closeAdminFeedback(){
+ $1('#fbReviewModal').className = 'modal-overlay';
+}
+
+function filterAdminFeedback(){
+ var status = ($1('#afb_status').value||'');
+ var type = ($1('#afb_type').value||'');
+ var items = feedbackItems.slice().sort(function(a,b){ return (b.timestamp||'').localeCompare(a.timestamp||''); });
+ if(status) items = items.filter(function(f){ return f.status === status; });
+ if(type) items = items.filter(function(f){ return f.type === type; });
+ var h = '';
+ items.forEach(function(f){
+  var statusClass = 'fb-status-' + f.status;
+  var typeBadge = f.type === 'bug' ? 'badge-red' : f.type === 'suggestion' ? 'badge-pri' : 'badge-amb';
+  h += '<div class="fb-item fb-'+f.type+'" onclick="closeAdminFeedback();openFeedbackReview(\''+f.id+'\')" style="margin-bottom:8px">';
+  h += '<div class="fb-item-head"><div class="fb-item-title">'+f.title+'</div><span class="badge '+statusClass+'">'+f.status+'</span></div>';
+  h += '<div class="fb-item-meta"><span class="badge '+typeBadge+'">'+(f.type||'')+'</span> <span>'+f.agentName+'</span> <span>'+f.area+'</span> <span>'+new Date(f.timestamp).toLocaleDateString()+'</span></div>';
+  h += '</div>';
+ });
+ $1('#afb_list').innerHTML = h;
+}
+
 function renderFeedback(){
  if(!currentAgent) return;
  try {
@@ -2814,6 +2976,7 @@ document.addEventListener('click', function(e){
  if(e.target.id === 'editModal') closeEditModal();
  if(e.target.id === 'fbReviewModal') closeFbReview();
  if(e.target.id === 'onboardModal') dismissOnboarding();
+ if(e.target.id === 'fbModal') closeFeedbackModal();
 });
 
 // Enter key on login
