@@ -1853,8 +1853,22 @@ function renderCashFlow(){
 function renderRateTable(){
  var mma = calc3MMA();
  var curTier = mma >= 6667 ? 4 : mma >= 5000 ? 3 : mma >= 3334 ? 2 : 1;
+ // Determine current month from latest pay period data
+ var rtMonthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+ var rtFC = calc3MMAForecast();
+ var rtMonth = rtFC.openMonth ? rtFC.openMonth.name : (rtFC.settled3[2].name || rtMonthNames[new Date().getMonth()]);
+ var tierColor = curTier === 4 ? 'var(--grn)' : curTier === 3 ? 'var(--amb)' : 'var(--red)';
+
  var h = '<h2 style="margin-bottom:8px;color:var(--amb)">Product Rate Table</h2>';
- h += '<div style="font-size:12px;color:var(--muted);margin-bottom:16px">2026 Variable Incentive Plan &middot; Your current tier: <b style="color:var(--grn)">T'+curTier+'</b> (3MMA: '+fmt(mma)+')</div>';
+ h += '<div style="font-size:12px;color:var(--muted);margin-bottom:12px">2026 Variable Incentive Plan &middot; Your current tier for '+rtMonth+': <b style="color:'+tierColor+'">T'+curTier+'</b> (3MMA: '+fmt(mma)+')</div>';
+
+ // Tier reference badges
+ h += '<div style="display:flex;gap:0;font-size:14px;font-weight:700;border-radius:8px;overflow:hidden;border:1px solid var(--border);margin-bottom:16px;max-width:500px">';
+ h += '<div style="padding:10px 18px;text-align:center;flex:1;background:'+(curTier===1?'var(--red);color:#fff':'var(--rtint);color:var(--red)')+'">T1<div style="font-weight:400;font-size:11px">0-3,333</div></div>';
+ h += '<div style="padding:10px 18px;text-align:center;flex:1;background:'+(curTier===2?'var(--amb);color:#fff':'var(--atint);color:var(--amb)')+'">T2<div style="font-weight:400;font-size:11px">3,334-4,999</div></div>';
+ h += '<div style="padding:10px 18px;text-align:center;flex:1;background:'+(curTier===3?'var(--pri);color:#fff':'var(--ptint);color:var(--pri)')+'">T3<div style="font-weight:400;font-size:11px">5,000-6,666</div></div>';
+ h += '<div style="padding:10px 18px;text-align:center;flex:1;background:'+(curTier===4?'var(--grn);color:#fff':'var(--gtint);color:var(--grn)')+'">T4<div style="font-weight:400;font-size:11px">6,667+</div></div>';
+ h += '</div>';
  var carriers = ['AAA','MassMutual','Securian'];
 
  carriers.forEach(function(carrier){
