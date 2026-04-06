@@ -376,34 +376,73 @@ var defaultSettings = {
  yearlyGoal: 100000
 };
 
-// ── Product Catalog ──
+// ── Product Catalog (all 4 tiers from 2026 Rate Tables) ──
+// rate = T4 (default display), t1/t2/t3 = other tiers, prodCredit = production credit %
 var products = [
- {name:'AAA Accumulator IUL',carrier:'AAA',cat:'IUL / Universal Life',rate:105,basis:'target premium',pct:true},
- {name:'AAA LifeTime UL (age 79 and under)',carrier:'AAA',cat:'IUL / Universal Life',rate:105,basis:'target premium',pct:true},
- {name:'AAA LifeTime UL (age 80+)',carrier:'AAA',cat:'IUL / Universal Life',rate:100,basis:'target premium',pct:true},
- {name:'Securian Eclipse UL (brokered)',carrier:'Securian',cat:'IUL / Universal Life',rate:70,basis:'target/planned prem',pct:true},
- {name:'Platinum Annuity 5 External (ages 0-79)',carrier:'AAA',cat:'Annuities',rate:2.85,basis:'deposit',pct:true},
- {name:'Platinum Annuity 5 Internal (ages 0-79)',carrier:'AAA',cat:'Annuities',rate:1.85,basis:'deposit',pct:true},
- {name:'Elite3 Guarantee External',carrier:'AAA',cat:'Annuities',rate:1.25,basis:'deposit',pct:true},
- {name:'MM GIA External Funds (ages 0-79)',carrier:'MassMutual',cat:'Annuities',rate:2.80,basis:'deposit',pct:true},
- {name:'MM GIA Internal Funds (ages 0-79)',carrier:'MassMutual',cat:'Annuities',rate:1.80,basis:'deposit',pct:true},
- {name:'MM American Legend 7 External (ages 0-75)',carrier:'MassMutual',cat:'Annuities',rate:2.85,basis:'deposit',pct:true},
- {name:'MM Safe Return External (ages 0-75)',carrier:'MassMutual',cat:'Annuities',rate:2.85,basis:'deposit',pct:true},
- {name:'MM Landmark 3 External (ages 0-75)',carrier:'MassMutual',cat:'Annuities',rate:2.75,basis:'deposit',pct:true},
- {name:'MM Landmark 5 External (ages 0-75)',carrier:'MassMutual',cat:'Annuities',rate:2.85,basis:'deposit',pct:true},
- {name:'MM Premier Bonus External (ages 0-75)',carrier:'MassMutual',cat:'Annuities',rate:2.85,basis:'deposit',pct:true},
- {name:'MM Premier Income Bonus External (ages 0-75)',carrier:'MassMutual',cat:'Annuities',rate:2.85,basis:'deposit',pct:true},
- {name:'Platinum Bonus 5 (AAA Life)',carrier:'AAA',cat:'Annuities',rate:2.85,basis:'deposit',pct:true},
- {name:'Whole Life (W21GN / RWL21)',carrier:'AAA',cat:'Life (Whole / Term)',rate:75,basis:'annualized premium',pct:true},
- {name:'Guaranteed Issue Whole Life (GIWL)',carrier:'AAA',cat:'Life (Whole / Term)',rate:50,basis:'annualized premium',pct:true},
- {name:'Life Paid Up at 65 (conversion)',carrier:'AAA',cat:'Life (Whole / Term)',rate:90,basis:'annualized premium',pct:true},
- {name:'10-Year Term',carrier:'AAA',cat:'Life (Whole / Term)',rate:75,basis:'annualized premium',pct:true},
- {name:'15-Year Term',carrier:'AAA',cat:'Life (Whole / Term)',rate:75,basis:'annualized premium',pct:true},
- {name:'20-Year Term',carrier:'AAA',cat:'Life (Whole / Term)',rate:80,basis:'annualized premium',pct:true},
- {name:'30-Year Term',carrier:'AAA',cat:'Life (Whole / Term)',rate:100,basis:'annualized premium',pct:true},
- {name:'Certificate of Deposit (CD)',carrier:'AAA',cat:'Banking / CD / Other',rate:0.05,basis:'deposit',pct:true,hardwired:true},
- {name:'Credit Card',carrier:'AAA',cat:'Banking / CD / Other',rate:0,basis:'flat fee',pct:false,flat:true},
- {name:'AAA Membership',carrier:'AAA',cat:'Banking / CD / Other',rate:0,basis:'flat fee',pct:false,flat:true}
+ // ── AAA Life: Whole Life & Term ──
+ {name:'Whole Life (W21GN / RWL21)',carrier:'AAA',cat:'Life (Whole / Term)',rate:75,t1:25,t2:45,t3:65,basis:'annualized premium',pct:true,prodCredit:100,codes:'W21GN, RWL21, TAR20E'},
+ {name:'Whole Life (SIWL) Conversion',carrier:'AAA',cat:'Life (Whole / Term)',rate:40,t1:10,t2:20,t3:30,basis:'annualized premium',pct:true,prodCredit:100,codes:'W21GNC'},
+ {name:'Guaranteed Issue Whole Life (GIWL)',carrier:'AAA',cat:'Life (Whole / Term)',rate:50,t1:20,t2:30,t3:40,basis:'annualized premium',pct:true,prodCredit:100,codes:'G22AR, G22ARN'},
+ {name:'Life Paid Up at 65 (conversion)',carrier:'AAA',cat:'Life (Whole / Term)',rate:90,t1:40,t2:60,t3:80,basis:'annualized premium',pct:true,prodCredit:100,codes:'LP6521'},
+ {name:'10-Year Term',carrier:'AAA',cat:'Life (Whole / Term)',rate:75,t1:25,t2:45,t3:65,basis:'annualized premium',pct:true,prodCredit:100,codes:'10T26'},
+ {name:'15-Year Term',carrier:'AAA',cat:'Life (Whole / Term)',rate:75,t1:25,t2:45,t3:65,basis:'annualized premium',pct:true,prodCredit:100,codes:'15T26, 15P26, 15R26'},
+ {name:'20-Year Term',carrier:'AAA',cat:'Life (Whole / Term)',rate:80,t1:30,t2:50,t3:70,basis:'annualized premium',pct:true,prodCredit:100,codes:'20T26, 20P26, 20R26'},
+ {name:'30-Year Term',carrier:'AAA',cat:'Life (Whole / Term)',rate:100,t1:40,t2:60,t3:80,basis:'annualized premium',pct:true,prodCredit:100,codes:'30T26, 30P26, 30R26'},
+ // ── AAA Life: IUL / Universal Life ──
+ {name:'AAA Accumulator - Target Premium',carrier:'AAA',cat:'IUL / Universal Life',rate:105,t1:55,t2:75,t3:95,basis:'target premium',pct:true,prodCredit:100,codes:'ULA20'},
+ {name:'AAA Accumulator - Excess Premium',carrier:'AAA',cat:'IUL / Universal Life',rate:3.5,t1:1.5,t2:2.0,t3:2.5,basis:'excess premium',pct:true,prodCredit:6,codes:'ULA20'},
+ {name:'AAA Accumulator Riders',carrier:'AAA',cat:'IUL / Universal Life',rate:105,t1:55,t2:75,t3:95,basis:'target premium',pct:true,prodCredit:100,codes:'PIR20, CRA19'},
+ {name:'AAA LifeTime UL - Target (age 79-)',carrier:'AAA',cat:'IUL / Universal Life',rate:105,t1:55,t2:75,t3:95,basis:'target premium',pct:true,prodCredit:100,codes:'ULL20'},
+ {name:'AAA LifeTime UL - Target (age 80+)',carrier:'AAA',cat:'IUL / Universal Life',rate:100,t1:50,t2:70,t3:90,basis:'target premium',pct:true,prodCredit:100,codes:'ULL20'},
+ {name:'AAA LifeTime UL - Excess (age 79-)',carrier:'AAA',cat:'IUL / Universal Life',rate:3.5,t1:1.5,t2:2.0,t3:2.5,basis:'excess premium',pct:true,prodCredit:6,codes:'ULL20'},
+ {name:'AAA LifeTime UL - Excess (age 80+)',carrier:'AAA',cat:'IUL / Universal Life',rate:3.5,t1:1.5,t2:2.0,t3:2.5,basis:'excess premium',pct:true,prodCredit:6,codes:'ULL20'},
+ // ── AAA Life: Annuities ──
+ {name:'Elite3 Guarantee External',carrier:'AAA',cat:'Annuities',rate:1.25,t1:0.60,t2:0.75,t3:1.00,basis:'deposit',pct:true,prodCredit:3,codes:'EG3NQ, EG3NQF'},
+ {name:'Elite3 Guarantee Internal',carrier:'AAA',cat:'Annuities',rate:0.20,t1:0.08,t2:0.12,t3:0.16,basis:'deposit',pct:true,prodCredit:3,codes:'EG3NQ, EG3NQF'},
+ {name:'Platinum Annuity 5 External (ages 0-79)',carrier:'AAA',cat:'Annuities',rate:2.85,t1:1.50,t2:1.95,t3:2.40,basis:'deposit',pct:true,prodCredit:3,codes:'PL5NQ, PL5QU'},
+ {name:'Platinum Annuity 5 External (ages 80-85)',carrier:'AAA',cat:'Annuities',rate:2.75,t1:1.40,t2:1.85,t3:2.30,basis:'deposit',pct:true,prodCredit:3,codes:'PL5NQ, PL5QU'},
+ {name:'Platinum Annuity 5 External (ages 86-90)',carrier:'AAA',cat:'Annuities',rate:1.20,t1:0.15,t2:0.40,t3:0.80,basis:'deposit',pct:true,prodCredit:3,codes:'PL5NQ, PL5QU'},
+ {name:'Platinum Annuity 5 Internal (ages 0-79)',carrier:'AAA',cat:'Annuities',rate:1.85,t1:1.15,t2:1.45,t3:1.65,basis:'deposit',pct:true,prodCredit:3,codes:'PL5NQ, PL5QU'},
+ {name:'Platinum Annuity 5 Internal (ages 80-85)',carrier:'AAA',cat:'Annuities',rate:1.80,t1:0.60,t2:1.00,t3:1.40,basis:'deposit',pct:true,prodCredit:3,codes:'PL5NQ, PL5QU'},
+ {name:'Platinum Annuity 5 Internal (ages 86-90)',carrier:'AAA',cat:'Annuities',rate:1.15,t1:0.10,t2:0.35,t3:0.75,basis:'deposit',pct:true,prodCredit:3,codes:'PL5NQ, PL5QU'},
+ // ── MassMutual (Great American Life) ──
+ {name:'GIA External Funds (ages 0-79)',carrier:'MassMutual',cat:'Annuities',rate:2.80,t1:1.45,t2:1.90,t3:2.35,basis:'deposit',pct:true,prodCredit:3,codes:'IANLN, IANLQ'},
+ {name:'GIA External Funds (ages 80+)',carrier:'MassMutual',cat:'Annuities',rate:2.70,t1:1.35,t2:1.80,t3:2.25,basis:'deposit',pct:true,prodCredit:3,codes:'IANLN, IANLQ'},
+ {name:'GIA Internal Funds (ages 0-79)',carrier:'MassMutual',cat:'Annuities',rate:1.80,t1:1.10,t2:1.40,t3:1.60,basis:'deposit',pct:true,prodCredit:3,codes:'IANLN, IANLQ'},
+ {name:'GIA Internal Funds (ages 80+)',carrier:'MassMutual',cat:'Annuities',rate:1.45,t1:0.85,t2:1.15,t3:1.30,basis:'deposit',pct:true,prodCredit:3,codes:'IANLN, IANLQ'},
+ {name:'American Legend 7 External (ages 0-75)',carrier:'MassMutual',cat:'Annuities',rate:2.85,t1:1.50,t2:1.95,t3:2.40,basis:'deposit',pct:true,prodCredit:3,codes:'G7X001'},
+ {name:'American Legend 7 External (ages 76+)',carrier:'MassMutual',cat:'Annuities',rate:2.75,t1:1.40,t2:1.85,t3:2.30,basis:'deposit',pct:true,prodCredit:3,codes:'G7X002'},
+ {name:'American Legend 7 Internal (ages 0-79)',carrier:'MassMutual',cat:'Annuities',rate:1.85,t1:1.15,t2:1.45,t3:1.65,basis:'deposit',pct:true,prodCredit:3,codes:'G7I001'},
+ {name:'American Legend 7 Internal (ages 80+)',carrier:'MassMutual',cat:'Annuities',rate:1.80,t1:0.60,t2:1.00,t3:1.40,basis:'deposit',pct:true,prodCredit:3,codes:'G7I002'},
+ {name:'Safe Return External (ages 0-75)',carrier:'MassMutual',cat:'Annuities',rate:2.85,t1:1.50,t2:1.95,t3:2.40,basis:'deposit',pct:true,prodCredit:3,codes:'G4X001'},
+ {name:'Safe Return External (ages 76+)',carrier:'MassMutual',cat:'Annuities',rate:2.75,t1:1.40,t2:1.85,t3:2.30,basis:'deposit',pct:true,prodCredit:3,codes:'G4X002'},
+ {name:'Safe Return Internal (ages 0-79)',carrier:'MassMutual',cat:'Annuities',rate:1.85,t1:1.15,t2:1.45,t3:1.65,basis:'deposit',pct:true,prodCredit:3,codes:'G4I001'},
+ {name:'Safe Return Internal (ages 80+)',carrier:'MassMutual',cat:'Annuities',rate:1.80,t1:0.60,t2:1.00,t3:1.40,basis:'deposit',pct:true,prodCredit:3,codes:'G4I002'},
+ {name:'Landmark 3 External (ages 0-75)',carrier:'MassMutual',cat:'Annuities',rate:2.75,t1:1.40,t2:1.95,t3:2.40,basis:'deposit',pct:true,prodCredit:3,codes:'G3X001'},
+ {name:'Landmark 3 External (ages 76-85)',carrier:'MassMutual',cat:'Annuities',rate:2.25,t1:1.00,t2:1.45,t3:1.90,basis:'deposit',pct:true,prodCredit:3,codes:'G3X002'},
+ {name:'Landmark 3 External (ages 86-90)',carrier:'MassMutual',cat:'Annuities',rate:1.75,t1:1.00,t2:1.15,t3:1.50,basis:'deposit',pct:true,prodCredit:3,codes:'G3X003'},
+ {name:'Landmark 3 Internal (ages 0-79)',carrier:'MassMutual',cat:'Annuities',rate:1.85,t1:1.15,t2:1.45,t3:1.65,basis:'deposit',pct:true,prodCredit:3,codes:'G3I001'},
+ {name:'Landmark 3 Internal (ages 80+)',carrier:'MassMutual',cat:'Annuities',rate:1.80,t1:0.60,t2:1.00,t3:1.40,basis:'deposit',pct:true,prodCredit:3,codes:'G3I002'},
+ {name:'Landmark 5 External (ages 0-75)',carrier:'MassMutual',cat:'Annuities',rate:2.85,t1:1.50,t2:1.95,t3:2.40,basis:'deposit',pct:true,prodCredit:3,codes:'G5X001'},
+ {name:'Landmark 5 External (ages 76-85)',carrier:'MassMutual',cat:'Annuities',rate:2.75,t1:1.40,t2:1.85,t3:2.30,basis:'deposit',pct:true,prodCredit:3,codes:'G5X002'},
+ {name:'Landmark 5 External (ages 86-90)',carrier:'MassMutual',cat:'Annuities',rate:2.75,t1:1.40,t2:1.85,t3:2.30,basis:'deposit',pct:true,prodCredit:3,codes:'G5X003'},
+ {name:'Landmark 5 Internal (ages 0-79)',carrier:'MassMutual',cat:'Annuities',rate:1.85,t1:1.15,t2:1.45,t3:1.65,basis:'deposit',pct:true,prodCredit:3,codes:'G5I001'},
+ {name:'Landmark 5 Internal (ages 80+)',carrier:'MassMutual',cat:'Annuities',rate:1.80,t1:0.60,t2:1.00,t3:1.40,basis:'deposit',pct:true,prodCredit:3,codes:'G5I002'},
+ {name:'Premier Bonus External (ages 0-75)',carrier:'MassMutual',cat:'Annuities',rate:2.85,t1:1.50,t2:1.95,t3:2.40,basis:'deposit',pct:true,prodCredit:3,codes:'G1X001'},
+ {name:'Premier Bonus External (ages 76+)',carrier:'MassMutual',cat:'Annuities',rate:2.75,t1:1.40,t2:1.85,t3:2.30,basis:'deposit',pct:true,prodCredit:3,codes:'G1X002'},
+ {name:'Premier Bonus Internal (ages 0-79)',carrier:'MassMutual',cat:'Annuities',rate:1.85,t1:1.15,t2:1.45,t3:1.65,basis:'deposit',pct:true,prodCredit:3,codes:'G1I001'},
+ {name:'Premier Bonus Internal (ages 80+)',carrier:'MassMutual',cat:'Annuities',rate:1.80,t1:0.60,t2:1.00,t3:1.40,basis:'deposit',pct:true,prodCredit:3,codes:'G1I002'},
+ {name:'Premier Income Bonus External (ages 0-75)',carrier:'MassMutual',cat:'Annuities',rate:2.85,t1:1.50,t2:1.95,t3:2.40,basis:'deposit',pct:true,prodCredit:3,codes:'G2X001'},
+ {name:'Premier Income Bonus External (ages 76+)',carrier:'MassMutual',cat:'Annuities',rate:2.75,t1:1.40,t2:1.85,t3:2.30,basis:'deposit',pct:true,prodCredit:3,codes:'G2X002'},
+ {name:'Premier Income Bonus Internal (ages 0-79)',carrier:'MassMutual',cat:'Annuities',rate:1.85,t1:1.15,t2:1.45,t3:1.65,basis:'deposit',pct:true,prodCredit:3,codes:'G2I001'},
+ {name:'Premier Income Bonus Internal (ages 80+)',carrier:'MassMutual',cat:'Annuities',rate:1.80,t1:0.60,t2:1.00,t3:1.40,basis:'deposit',pct:true,prodCredit:3,codes:'G2I002'},
+ // ── Securian (Brokered) ──
+ {name:'Securian Eclipse UL (target/planned)',carrier:'Securian',cat:'IUL / Universal Life',rate:70,t1:35,t2:50,t3:60,basis:'target/planned prem',pct:true,prodCredit:100,codes:'000330'},
+ {name:'Securian Eclipse UL (excess)',carrier:'Securian',cat:'IUL / Universal Life',rate:1.85,t1:1.15,t2:1.45,t3:1.65,basis:'excess premium',pct:true,prodCredit:6,codes:'00033X'},
+ // ── Banking / CD / Other ──
+ {name:'Certificate of Deposit (CD)',carrier:'AAA',cat:'Banking / CD / Other',rate:0.05,t1:0.05,t2:0.05,t3:0.05,basis:'deposit',pct:true,hardwired:true,codes:'401'},
+ {name:'Credit Card',carrier:'AAA',cat:'Banking / CD / Other',rate:0,t1:0,t2:0,t3:0,basis:'flat fee',pct:false,flat:true},
+ {name:'AAA Membership',carrier:'AAA',cat:'Banking / CD / Other',rate:0,t1:0,t2:0,t3:0,basis:'flat fee',pct:false,flat:true}
 ];
 
 function findProd(n){ return products.find(function(p){return p.name===n}) || products[0]; }
@@ -1804,7 +1843,10 @@ function renderCashFlow(){
 // TAB 4: RATE TABLE
 // ════════════════════════════════════════════
 function renderRateTable(){
- var h = '<h2 style="margin-bottom:16px;color:var(--amb)">Product Rate Table</h2>';
+ var mma = calc3MMA();
+ var curTier = mma >= 6667 ? 4 : mma >= 5000 ? 3 : mma >= 3334 ? 2 : 1;
+ var h = '<h2 style="margin-bottom:8px;color:var(--amb)">Product Rate Table</h2>';
+ h += '<div style="font-size:12px;color:var(--muted);margin-bottom:16px">2026 Variable Incentive Plan &middot; Your current tier: <b style="color:var(--grn)">T'+curTier+'</b> (3MMA: '+fmt(mma)+')</div>';
  var carriers = ['AAA','MassMutual','Securian'];
 
  carriers.forEach(function(carrier){
@@ -1814,7 +1856,6 @@ function renderRateTable(){
   h += '<div class="card">';
   h += '<h3>'+carrierBadge(carrier)+' '+carrier+'</h3>';
 
-  // Group by category
   var catMap = {};
   carrierProds.forEach(function(p){
    if(!catMap[p.cat]) catMap[p.cat] = [];
@@ -1824,13 +1865,22 @@ function renderRateTable(){
   Object.keys(catMap).forEach(function(cat){
    h += '<div style="margin-top:12px;margin-bottom:4px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.3px">'+cat+'</div>';
    h += '<div class="tbl-wrap" style="margin-bottom:12px"><table>';
-   h += '<thead><tr><th>Product</th><th>Rate</th><th>Basis</th><th>Type</th></tr></thead><tbody>';
+   h += '<thead><tr><th>Product</th><th style="text-align:center;'+(curTier===1?'background:var(--gtint)':'')+'">T1</th><th style="text-align:center;'+(curTier===2?'background:var(--gtint)':'')+'">T2</th><th style="text-align:center;'+(curTier===3?'background:var(--gtint)':'')+'">T3</th><th style="text-align:center;'+(curTier===4?'background:var(--gtint)':'')+'">T4</th><th>Basis</th><th>Prod Credit</th></tr></thead><tbody>';
    catMap[cat].forEach(function(p){
+    if(p.flat){
+     h += '<tr><td>'+p.name+'</td><td colspan="4" style="text-align:center;color:var(--muted)">Flat Fee</td><td>'+p.basis+'</td><td>—</td></tr>';
+     return;
+    }
+    var rates = [p.t1||0, p.t2||0, p.t3||0, p.rate||0];
     h += '<tr>';
-    h += '<td>'+p.name+'</td>';
-    h += '<td><b>'+(p.flat?'Flat Fee':(p.hardwired?p.rate+'% (hardwired)':p.rate+'%'))+'</b></td>';
+    h += '<td>'+p.name+(p.codes?'<div style="font-size:9px;color:var(--muted)">'+p.codes+'</div>':'')+'</td>';
+    for(var ti=0;ti<4;ti++){
+     var isCur = (ti+1) === curTier;
+     var style = 'text-align:center;' + (isCur ? 'background:var(--gtint);font-weight:700;color:var(--grn)' : '');
+     h += '<td style="'+style+'">'+(p.hardwired ? rates[ti]+'%' : rates[ti]+'%')+'</td>';
+    }
     h += '<td>'+p.basis+'</td>';
-    h += '<td>'+(p.flat?'Flat':p.pct?'Percentage':'—')+'</td>';
+    h += '<td style="text-align:center">'+(p.prodCredit ? p.prodCredit+'%' : '—')+'</td>';
     h += '</tr>';
    });
    h += '</tbody></table></div>';
