@@ -950,52 +950,59 @@ function renderDashboard(){
  });
  var maxMonth = Math.max.apply(null, Object.values(monthlyProd).concat([1]));
 
+ // YTD from pay periods for take-home
+ var ytdNet = 0, ytdTaxes = 0, ytdDeductions = 0;
+ payPeriods.forEach(function(p){
+  ytdNet += p.net || 0;
+  ytdTaxes += p.taxes || 0;
+  ytdDeductions += (p.preTax||0) + (p.postTax||0);
+ });
+ var takeHomeRate = totalPaid > 0 ? (ytdNet / totalPaid * 100).toFixed(0) : '—';
+
  var h = '';
 
+ // ── Take-Home Summary (hero) ──
+ h += '<div class="card" style="border-top:4px solid var(--grn)">';
+ h += '<div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">';
+ h += '<div style="flex:1;min-width:200px;text-align:center">';
+ h += '<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">YTD Net Deposited</div>';
+ h += '<div style="font-size:36px;font-weight:800;color:var(--grn)">'+fmt(ytdNet)+'</div>';
+ h += '<div style="font-size:12px;color:var(--muted)">'+takeHomeRate+'% take-home rate</div>';
+ h += '</div>';
+ h += '<div style="display:flex;gap:16px;flex-wrap:wrap">';
+ h += '<div style="text-align:center;min-width:100px"><div style="font-size:10px;color:var(--muted)">Gross Commission</div><div style="font-size:20px;font-weight:700;color:var(--pri)">'+fmt(totalPaid)+'</div></div>';
+ h += '<div style="text-align:center;min-width:80px"><div style="font-size:10px;color:var(--muted)">Taxes</div><div style="font-size:20px;font-weight:700;color:var(--red)">'+fmt(ytdTaxes)+'</div></div>';
+ h += '<div style="text-align:center;min-width:80px"><div style="font-size:10px;color:var(--muted)">Deductions</div><div style="font-size:20px;font-weight:700;color:var(--amb)">'+fmt(ytdDeductions)+'</div></div>';
+ h += '</div>';
+ h += '</div>';
+ // Current tier badge inline
+ var tierColor = tier === 'T4' ? 'var(--grn)' : tier === 'T3' ? 'var(--amb)' : 'var(--red)';
+ h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">';
+ h += '<div style="display:flex;align-items:center;gap:10px"><span style="font-size:24px;font-weight:800;color:'+tierColor+'">'+tier+'</span><span style="font-size:12px;color:var(--muted)">Current Tier &middot; 3MMA: '+fmt(mma)+'</span></div>';
+ h += '<div style="font-size:12px;color:var(--muted)">'+totalCases+' cases &middot; '+statusCounts['paid']+' paid &middot; '+(totalCases-statusCounts['paid'])+' in pipeline</div>';
+ h += '</div>';
+ h += '</div>';
+
+ // ── Stat cards ──
  // Latest month with production data
  var latestMonth = new Date().getMonth();
  for(var lm = new Date().getMonth(); lm >= 0; lm--){
   if(monthlyProd[lm] > 0){ latestMonth = lm; break; }
  }
  var curMonthProd = monthlyProd[latestMonth] || 0;
-
- // Stat cards
- h += '<div class="stat-grid">';
- h += '<div class="stat-card"><div class="stat-label">Total Cases ('+year+')</div><div class="stat-value">'+totalCases+'</div></div>';
- h += '<div class="stat-card"><div class="stat-label">Monthly Production</div><div class="stat-value">'+fmt(curMonthProd)+'</div></div>';
- h += '<div class="stat-card green"><div class="stat-label">YTD Commission (Varicent)</div><div class="stat-value" style="color:var(--grn)">'+fmt(totalPaid)+'</div></div>';
- h += '<div class="stat-card amber"><div class="stat-label">Pipeline Pending</div><div class="stat-value" style="color:var(--amb)">'+fmt(totalPending)+'</div></div>';
- h += '</div>';
-
- // Monthly Tier & Production Credits Report
- h += '<div class="card">';
- h += '<h3>Monthly Tier & New Production Credits ('+year+')</h3>';
- var monthlyCredits = {};
- var monthlyTiers = {};
- for(var tm=0;tm<12;tm++){ monthlyCredits[tm] = 0; monthlyTiers[tm] = ''; }
- // Sum production credits per month from pay periods
+ var curMonthNet = 0;
  payPeriods.forEach(function(p){
   if(!p) return;
   var mi = monthNames.indexOf(p.month||'');
-  if(mi < 0) return;
-  monthlyCredits[mi] += (p.newProdCredits||0) + (p.renewalProdCredits||0);
-  if(p.mmaTier) monthlyTiers[mi] = p.mmaTier;
+  if(mi === latestMonth) curMonthNet += p.net || 0;
  });
- var maxCredits = Math.max.apply(null, Object.values(monthlyCredits).concat([1]));
- h += '<div class="monthly-grid">';
- for(var tm=0;tm<12;tm++){
-  var cval = monthlyCredits[tm];
-  var tval = monthlyTiers[tm];
-  var tbg = cval > 0 ? 'var(--gtint)' : '#f5f5f5';
-  var tcol = cval > 0 ? 'var(--grn)' : 'var(--muted)';
-  var tierBadge = tval ? '<div style="font-size:9px;font-weight:700;color:'+(tval==='TIER4'?'var(--grn)':tval==='TIER3'?'var(--amb)':'var(--red)')+'">'+tval.replace('TIER','T')+'</div>' : '';
-  h += '<div class="month-cell" style="background:'+tbg+'">';
-  h += '<div class="month-label">'+monthNames[tm]+'</div>';
-  h += '<div class="month-value" style="color:'+tcol+';font-size:11px">'+fmt(cval).replace('$','').split('.')[0]+'</div>';
-  h += tierBadge;
-  h += '</div>';
- }
- h += '</div></div>';
+
+ h += '<div class="stat-grid">';
+ h += '<div class="stat-card"><div class="stat-label">'+monthNames[latestMonth]+' Commission</div><div class="stat-value">'+fmt(curMonthProd)+'</div></div>';
+ h += '<div class="stat-card green"><div class="stat-label">'+monthNames[latestMonth]+' Net Deposited</div><div class="stat-value" style="color:var(--grn)">'+fmt(curMonthNet)+'</div></div>';
+ h += '<div class="stat-card"><div class="stat-label">Total Cases ('+year+')</div><div class="stat-value">'+totalCases+'</div></div>';
+ h += '<div class="stat-card amber"><div class="stat-label">Pipeline Pending</div><div class="stat-value" style="color:var(--amb)">'+fmt(totalPending)+'</div></div>';
+ h += '</div>';
 
  // Gross Monthly Commission
  h += '<div class="card">';
@@ -1116,6 +1123,7 @@ function renderBookOfBusiness(){
   {key:'status',label:'Status'},
   {key:'submitted',label:'Submitted'},
   {key:'estPay',label:'Est. Pay'},
+  {key:'paidIn',label:'Paid In'},
   {key:'notes',label:'Notes'},
   {key:'actions',label:''}
  ];
@@ -1130,7 +1138,7 @@ function renderBookOfBusiness(){
  h += '</tr></thead><tbody>';
 
  if(filtered.length === 0){
-  h += '<tr><td colspan="11" style="text-align:center;padding:40px;color:var(--muted)">No cases yet. Click "+ Add New Case" to get started.</td></tr>';
+  h += '<tr><td colspan="12" style="text-align:center;padding:40px;color:var(--muted)">No cases yet. Click "+ Add New Case" to get started.</td></tr>';
  }
 
  filtered.forEach(function(c){
@@ -1146,6 +1154,7 @@ function renderBookOfBusiness(){
   h += '<td>'+statusBadge(c.status)+statusBar(c.status)+'</td>';
   h += '<td style="font-size:11px">'+c.submitted+'</td>';
   h += '<td style="font-size:11px">'+(c.estPay||'—')+'</td>';
+  h += '<td style="font-size:11px">'+(c.paidIn||'—')+'</td>';
   h += '<td style="font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(c.notes||'—')+'</td>';
   h += '<td>';
   if(statusIdx(c.status) < 4){
@@ -1464,15 +1473,25 @@ function renderPayPeriods(){
    return pb - pa;
   });
   sorted.forEach(function(p){
+   var pTier = p.mmaTier ? p.mmaTier.replace('TIER','T') : '';
+   var pTierColor = p.mmaTier==='TIER4'?'var(--grn)':p.mmaTier==='TIER3'?'var(--amb)':'var(--muted)';
+   var pCredits = (p.newProdCredits||0) + (p.renewalProdCredits||0);
    h += '<div class="pay-history-card">';
    h += '<div>';
-   h += '<div class="ph-label">'+p.label+' <span style="font-size:11px;color:var(--muted)">'+p.month+'</span></div>';
-   h += '<div class="ph-meta">Commission: '+fmt(p.varicent)+' | Gross: '+fmt(p.gross)+' | Taxes: '+fmt(p.taxes)+' | Deductions: '+fmt((p.preTax||0)+(p.postTax||0))+'</div>';
+   h += '<div class="ph-label">'+p.label+' <span style="font-size:11px;color:var(--muted)">'+p.month+'</span>';
+   if(pTier) h += ' <span style="font-size:10px;font-weight:700;color:'+pTierColor+'">'+pTier+'</span>';
+   h += '</div>';
+   h += '<div class="ph-meta">Commission: '+fmt(p.varicent)+' | Prod Credits: '+fmt(pCredits)+'</div>';
+   if(p.net > 0) h += '<div class="ph-meta">Gross: '+fmt(p.gross)+' | Taxes: '+fmt(p.taxes)+' | Deductions: '+fmt((p.preTax||0)+(p.postTax||0))+'</div>';
    if(p.notes) h += '<div class="ph-meta" style="font-style:italic">'+p.notes+'</div>';
    h += '</div>';
    h += '<div style="text-align:right">';
-   h += '<div class="ph-amount">'+fmt(p.net)+'</div>';
-   h += '<div class="ph-meta">net deposited</div>';
+   h += '<div class="ph-amount">'+fmt(p.varicent)+'</div>';
+   h += '<div class="ph-meta">commission</div>';
+   if(p.net > 0){
+    h += '<div style="font-size:14px;font-weight:600;color:var(--grn);margin-top:4px">'+fmt(p.net)+'</div>';
+    h += '<div class="ph-meta">net deposited</div>';
+   }
    h += '<button class="btn-del" onclick="deletePayPeriod('+p.id+')" style="margin-top:4px">delete</button>';
    h += '</div>';
    h += '</div>';
@@ -1785,33 +1804,20 @@ function renderCashFlow(){
  h += '<div><div style="font-size:11px;color:var(--muted)">Take-Home Rate</div><div style="font-size:22px;font-weight:700;color:var(--grn)">'+takeHomeRate+'%</div><div style="font-size:11px;color:var(--muted)">'+fmt(ytdNet)+' net deposited</div></div>';
  h += '</div></div>';
 
- // What You Need to Sell
- var mma = calc3MMA();
- var tier = tierText(mma);
+ // Annual Goal Tracker
  h += '<div class="needs-card">';
- h += '<h3>What You Need to Sell</h3>';
- h += '<div style="font-size:12px;color:var(--muted);margin-bottom:12px">Based on your current '+tier+' tier (3MMA: '+fmt(mma)+')</div>';
-
- var targets = [
-  {name:'Reach T3 ($5,000/mo)', mma:5000, show: mma < 5000},
-  {name:'Reach T4 ($6,667/mo)', mma:6667, show: mma < 6667},
+ h += '<h3>Annual Goal Tracker</h3>';
+ var annualTargets = [
   {name:'$75K Annual Goal', annual:75000},
   {name:'$100K Annual Goal', annual:100000},
   {name:'$150K Annual Goal', annual:150000}
  ];
-
- targets.forEach(function(t){
-  if(t.mma && !t.show) return;
-  var needed;
-  if(t.mma){
-   needed = Math.max(0, (t.mma - mma) * 3);
-   h += '<div class="needs-row"><span>'+t.name+'</span><span style="font-weight:600">'+fmt(needed)+' more in paid commission (next 3 months)</span></div>';
-  } else {
-   var remaining = Math.max(0, t.annual - paid);
-   var monthsLeft = 12 - now.getMonth();
-   var perMonth = monthsLeft > 0 ? remaining / monthsLeft : remaining;
-   h += '<div class="needs-row"><span>'+t.name+'</span><span style="font-weight:600">'+fmt(remaining)+' remaining ('+fmt(perMonth)+'/mo)</span></div>';
-  }
+ annualTargets.forEach(function(t){
+  var remaining = Math.max(0, t.annual - ytdVaricent);
+  var monthsLeft = 12 - now.getMonth();
+  var perMonth = monthsLeft > 0 ? remaining / monthsLeft : remaining;
+  var pct = Math.min(100, ytdVaricent / t.annual * 100).toFixed(0);
+  h += '<div class="needs-row"><span>'+t.name+' <span style="color:var(--pri);font-weight:600">('+pct+'%)</span></span><span style="font-weight:600">'+fmt(remaining)+' remaining ('+fmt(perMonth)+'/mo)</span></div>';
  });
  h += '</div>';
 
