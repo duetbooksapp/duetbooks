@@ -1442,38 +1442,7 @@ function renderPayPeriods(){
  h += '<div id="upload_status"></div>';
  h += '</div>';
 
- // Panel 1 — Varicent
- h += '<div class="pay-panel pay-panel-v"><h4 style="color:var(--pri)">Varicent Commission Statement</h4>';
- h += '<div class="form-row"><div class="form-group"><label>Period Label</label><input id="pp_label" placeholder="e.g. Apr P1"></div>';
- h += '<div class="form-group"><label>Month</label><select id="pp_month">';
- months.forEach(function(m,i){ var sel = i===new Date().getMonth()?' selected':''; h += '<option value="'+m+'"'+sel+'>'+m+'</option>'; });
- h += '</select></div></div>';
- h += '<div class="form-row"><div class="form-group"><label>3MMA Credit Amount ($)</label><input id="pp_mma" type="number" step="0.01" oninput="updatePayPreview()"></div>';
- h += '<div class="form-group"><label>Your Commission — Varicent Paid ($)</label><input id="pp_varicent" type="number" step="0.01" oninput="updatePayPreview()"></div></div>';
- h += '<div class="form-group"><label>Notes</label><textarea id="pp_notes" rows="2" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px"></textarea></div>';
- h += '</div>';
-
- // Panel 2 — Workday Payslip
- h += '<div class="pay-panel pay-panel-w"><h4 style="color:var(--grn)">Workday Payslip</h4>';
- h += '<div class="form-row"><div class="form-group"><label>Base Pay ($)</label><input id="pp_basepay" type="number" step="0.01" oninput="updatePayPreview()"></div>';
- h += '<div class="form-group"><label>Gross Pay ($)</label><input id="pp_gross" type="number" step="0.01" oninput="updatePayPreview()"></div></div>';
- h += '<div class="form-row"><div class="form-group"><label>Banking Incentive ($)</label><input id="pp_banking" type="number" step="0.01" oninput="updatePayPreview()"></div>';
- h += '<div class="form-row"><div class="form-group"><label>Other Bonuses ($)</label><input id="pp_bonuses" type="number" step="0.01" value="0" oninput="updatePayPreview()"></div>';
- h += '<div class="form-group"><label>Pre-Tax Deductions ($)</label><input id="pp_pretax" type="number" step="0.01" oninput="updatePayPreview()"></div></div>';
- h += '<div class="form-row"><div class="form-group"><label>Employee Taxes ($)</label><input id="pp_taxes" type="number" step="0.01" oninput="updatePayPreview()"></div>';
- h += '<div class="form-group"><label>Post-Tax Deductions ($)</label><input id="pp_posttax" type="number" step="0.01" oninput="updatePayPreview()"></div></div>';
- h += '<div class="form-group"><label>Net Pay ($) — actual deposited</label><input id="pp_net" type="number" step="0.01" oninput="updatePayPreview()"></div>';
- h += '</div>';
-
  h += '</div>'; // end pay-grid
-
- // Live preview
- h += '<div class="preview-box" id="payPreview"><h4>Live Calculation Preview</h4><p style="color:var(--muted)">Enter values above to see calculations...</p></div>';
-
- // Match suggestions
- h += '<div id="matchSuggestions"></div>';
-
- h += '<div style="margin-top:12px"><button class="btn btn-grn" onclick="savePeriod()">Save Pay Period</button></div>';
  h += '</div>'; // end payFormWrap
  h += '</div>'; // end card
 
