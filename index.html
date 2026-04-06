@@ -1249,13 +1249,13 @@ function renderBookOfBusiness(){
   h += '<td style="font-size:11px">'+c.submitted+'</td>';
   h += '<td style="font-size:11px">'+(c.estPay||'—')+'</td>';
   h += '<td style="font-size:11px">'+(c.paidIn||'—')+'</td>';
-  h += '<td style="font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(c.notes||'—')+'</td>';
-  h += '<td>';
+  h += '<td style="font-size:10px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+(c.notes||'').replace(/"/g,'&quot;')+'">'+(c.notes||'—')+'</td>';
+  h += '<td style="white-space:nowrap">';
   if(statusIdx(c.status) < 4){
-   h += '<button class="btn-next" onclick="advanceStatus('+c.id+')">Next</button>';
+   h += '<button class="btn-next" onclick="advanceStatus('+c.id+')">Next</button> ';
   }
-  h += '<br><button class="btn-del" onclick="editCase('+c.id+')" style="color:var(--pri);margin-top:4px">edit</button>';
-  h += '<br><button class="btn-del" onclick="deleteCase('+c.id+')">del</button>';
+  h += '<button class="btn-del" onclick="editCase('+c.id+')" style="color:var(--pri)">edit</button> ';
+  h += '<button class="btn-del" onclick="deleteCase('+c.id+')">del</button>';
   h += '</td>';
   h += '</tr>';
  });
