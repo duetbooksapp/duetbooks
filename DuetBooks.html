@@ -790,75 +790,86 @@ function calc3MMA(){
 function calc3MMAForecast(){
  var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
- // Get production credits per month from pay periods
+ // Get production credits and tiers per month from pay periods
  var monthCredits = {};
+ var monthTiers = {};
  payPeriods.forEach(function(p){
   if(!p) return;
   var mi = monthNames.indexOf(p.month||'');
   if(mi < 0) return;
   monthCredits[mi] = (monthCredits[mi]||0) + (p.newProdCredits||0) + (p.renewalProdCredits||0);
+  if(p.mmaTier) monthTiers[mi] = p.mmaTier;
  });
 
- // Find the latest 3 months that have actual data (we're always 2 weeks behind)
+ // Find the latest 4 months that have actual data
  var monthsWithData = [];
- for(var i=11;i>=0;i--){
+ // Scan from 12 months ago to now, wrapping around
+ for(var i=12;i>=0;i--){
   var mi = (new Date().getMonth() - i + 12) % 12;
-  if(monthCredits[mi] && monthCredits[mi] > 0) monthsWithData.push(mi);
+  if(monthCredits[mi] && monthCredits[mi] > 0 && monthsWithData.indexOf(mi) === -1) monthsWithData.push(mi);
  }
 
- // Take the last 3 months with data
- var recent = monthsWithData.slice(-3);
- while(recent.length < 3) recent.unshift(-1); // pad if less than 3
+ // Take the last 4 months with data
+ var recent4 = monthsWithData.slice(-4);
+ while(recent4.length < 4) recent4.unshift(-1);
 
- var m3 = recent[0]; // oldest
- var m2 = recent[1]; // middle
- var m1 = recent[2]; // most recent
+ var months = [];
+ for(var r=0;r<4;r++){
+  var mi = recent4[r];
+  months.push({
+   name: mi >= 0 ? monthNames[mi] : '—',
+   credits: mi >= 0 ? (monthCredits[mi]||0) : 0,
+   tier: mi >= 0 ? (monthTiers[mi]||'') : '',
+   idx: mi
+  });
+ }
 
- var credits3 = m3 >= 0 ? (monthCredits[m3]||0) : 0;
- var credits2 = m2 >= 0 ? (monthCredits[m2]||0) : 0;
- var credits1 = m1 >= 0 ? (monthCredits[m1]||0) : 0;
+ // Current 3MMA = last 3 months with data
+ var last3 = months.slice(-3);
+ var current3MMA = (last3[0].credits + last3[1].credits + last3[2].credits) / 3;
 
- var total3 = credits1 + credits2 + credits3;
- var current3MMA = total3 / 3;
+ // Forecast: when the next month arrives, the oldest of the 3 drops off
+ // The 2 most recent carry forward
+ var carry1 = last3[1]; // middle month carries
+ var carry2 = last3[2]; // most recent carries
+ var dropping = last3[0]; // oldest drops off
+ var knownForNext = carry1.credits + carry2.credits;
 
- // The NEXT month (upcoming) — what you'd need to maintain/reach tier
- // When next month rolls in, the oldest month drops off
- // New 3MMA = (m2 + m1 + nextMonth) / 3
- var knownForNext = credits2 + credits1; // the two months that will carry forward
- var needT4Next = Math.max(0, (6667 * 3) - knownForNext);
- var needT3Next = Math.max(0, (5000 * 3) - knownForNext);
+ // Next month = month after the most recent
+ var nextIdx = carry2.idx >= 0 ? (carry2.idx + 1) % 12 : new Date().getMonth();
+ var nextMonth = monthNames[nextIdx];
 
- // Determine next month name
- var nextMonthIdx = m1 >= 0 ? (m1 + 1) % 12 : new Date().getMonth();
- var nextMonth = monthNames[nextMonthIdx];
+ var needT4 = Math.max(0, (6667 * 3) - knownForNext);
+ var needT3 = Math.max(0, (5000 * 3) - knownForNext);
 
- // Pipeline production credits (pending cases)
- var pipelineCredits = 0;
+ // Pipeline — group by status for timing estimate
+ var pipelineByStatus = {pending:0, submitted:0, approved:0, issued:0};
+ var pipelineTotal = 0;
  cases.forEach(function(c){
   if(c.status === 'paid') return;
-  pipelineCredits += c.productionCredit || c.amount || 0;
+  var credits = c.productionCredit || c.amount || 0;
+  pipelineTotal += credits;
+  if(pipelineByStatus[c.status] !== undefined) pipelineByStatus[c.status] += credits;
  });
 
- // Projected 3MMA if pipeline closes next month
- var projected3MMA = (knownForNext + pipelineCredits) / 3;
+ // Projected 3MMA if all pipeline closes next month
+ var projected3MMA = (knownForNext + pipelineTotal) / 3;
 
- // Gap after pipeline
- var gapT4 = Math.max(0, needT4Next - pipelineCredits);
- var gapT3 = Math.max(0, needT3Next - pipelineCredits);
+ var gapT4 = Math.max(0, needT4 - pipelineTotal);
+ var gapT3 = Math.max(0, needT3 - pipelineTotal);
 
  return {
-  month1Name: m3 >= 0 ? monthNames[m3] : '—',
-  month2Name: m2 >= 0 ? monthNames[m2] : '—',
-  month3Name: m1 >= 0 ? monthNames[m1] : '—',
-  credits1: credits3, // oldest
-  credits2: credits2, // middle
-  credits3: credits1, // most recent
+  months: months,
   current3MMA: current3MMA,
+  dropping: dropping,
+  carry1: carry1,
+  carry2: carry2,
   nextMonth: nextMonth,
   knownForNext: knownForNext,
-  pipelineCredits: pipelineCredits,
-  needT4: needT4Next,
-  needT3: needT3Next,
+  needT4: needT4,
+  needT3: needT3,
+  pipelineTotal: pipelineTotal,
+  pipelineByStatus: pipelineByStatus,
   projected3MMA: projected3MMA,
   gapT4: gapT4,
   gapT3: gapT3
@@ -1626,15 +1637,79 @@ function renderCashFlow(){
  var curTier = tierText(fc.current3MMA);
  var curTierColor = fc.current3MMA >= 6667 ? 'var(--grn)' : fc.current3MMA >= 5000 ? 'var(--amb)' : 'var(--red)';
  h += '<div class="card">';
- h += '<h3>3MMA Tier — Last 3 Months with Data</h3>';
+ h += '<h3>3MMA Production Credits — Last 4 Months</h3>';
 
- // Last 3 months with data
- h += '<div style="display:flex;gap:16px;margin:12px 0;flex-wrap:wrap">';
- h += '<div style="text-align:center;min-width:100px;padding:10px;background:var(--ptint);border-radius:6px"><div style="font-size:10px;color:var(--muted)">'+fc.month1Name+' Credits</div><div style="font-size:18px;font-weight:700">'+fmt(fc.credits1)+'</div></div>';
- h += '<div style="text-align:center;min-width:100px;padding:10px;background:var(--ptint);border-radius:6px"><div style="font-size:10px;color:var(--muted)">'+fc.month2Name+' Credits</div><div style="font-size:18px;font-weight:700">'+fmt(fc.credits2)+'</div></div>';
- h += '<div style="text-align:center;min-width:100px;padding:10px;background:var(--ptint);border-radius:6px"><div style="font-size:10px;color:var(--muted)">'+fc.month3Name+' Credits</div><div style="font-size:18px;font-weight:700">'+fmt(fc.credits3)+'</div></div>';
- h += '<div style="text-align:center;min-width:120px;padding:10px;background:var(--card);border:2px solid '+curTierColor+';border-radius:6px"><div style="font-size:10px;color:var(--muted)">Current 3MMA</div><div style="font-size:18px;font-weight:700;color:'+curTierColor+'">'+fmt(fc.current3MMA)+'</div><div style="font-size:11px;font-weight:700;color:'+curTierColor+'">'+curTier+'</div></div>';
+ // 4 months of data + current 3MMA
+ h += '<div style="display:flex;gap:12px;margin:12px 0;flex-wrap:wrap">';
+ fc.months.forEach(function(m, i){
+  var isDropping = (i === 0 && fc.months.length === 4);
+  var bg = isDropping ? 'var(--rtint)' : 'var(--ptint)';
+  var border = isDropping ? 'border:1px dashed var(--red)' : '';
+  var tierBadge = m.tier ? '<div style="font-size:9px;font-weight:700;color:'+(m.tier==='TIER4'?'var(--grn)':m.tier==='TIER3'?'var(--amb)':'var(--red)')+'">'+m.tier.replace('TIER','T')+'</div>' : '';
+  h += '<div style="text-align:center;min-width:100px;padding:10px;background:'+bg+';border-radius:6px;'+border+'">';
+  h += '<div style="font-size:10px;color:var(--muted)">'+m.name+'</div>';
+  h += '<div style="font-size:18px;font-weight:700">'+fmt(m.credits)+'</div>';
+  h += tierBadge;
+  if(isDropping) h += '<div style="font-size:9px;color:var(--red);margin-top:2px">drops off next</div>';
+  h += '</div>';
+ });
+ h += '<div style="text-align:center;min-width:120px;padding:10px;background:var(--card);border:2px solid '+curTierColor+';border-radius:6px">';
+ h += '<div style="font-size:10px;color:var(--muted)">Current 3MMA</div>';
+ h += '<div style="font-size:18px;font-weight:700;color:'+curTierColor+'">'+fmt(fc.current3MMA)+'</div>';
+ h += '<div style="font-size:11px;font-weight:700;color:'+curTierColor+'">'+curTier+'</div>';
  h += '</div>';
+ h += '</div>';
+
+ // Forecast section
+ h += '<h4 style="margin:16px 0 8px;color:var(--pri)">What Happens Next — '+fc.nextMonth+'</h4>';
+ h += '<div style="font-size:12px;color:var(--muted);margin-bottom:12px">When '+fc.nextMonth+' data arrives, <b>'+fc.dropping.name+' ('+fmt(fc.dropping.credits)+')</b> drops off the 3-month window. Your new 3MMA = ('+fc.carry1.name+' + '+fc.carry2.name+' + '+fc.nextMonth+') / 3</div>';
+
+ // Tier targets
+ h += '<div style="margin:12px 0">';
+ h += '<div style="display:flex;justify-content:space-between;padding:10px 12px;background:var(--gtint);border-radius:6px;margin-bottom:6px;font-size:13px;flex-wrap:wrap;gap:4px">';
+ h += '<span><b>To maintain T4</b> — need <b>'+fmt(fc.needT4)+'</b> in '+fc.nextMonth+' production credits</span>';
+ if(fc.pipelineTotal > 0){
+  if(fc.gapT4 > 0) h += '<span style="color:var(--red);font-weight:600">Gap after pipeline: '+fmt(fc.gapT4)+'</span>';
+  else h += '<span style="color:var(--grn);font-weight:600">Pipeline covers it!</span>';
+ }
+ h += '</div>';
+ if(fc.needT3 > 0 && fc.needT3 < fc.needT4){
+  h += '<div style="display:flex;justify-content:space-between;padding:10px 12px;background:var(--atint);border-radius:6px;margin-bottom:6px;font-size:13px;flex-wrap:wrap;gap:4px">';
+  h += '<span><b>To maintain T3</b> — need <b>'+fmt(fc.needT3)+'</b> in '+fc.nextMonth+' production credits</span>';
+  if(fc.pipelineTotal > 0){
+   if(fc.gapT3 > 0) h += '<span style="color:var(--red);font-weight:600">Gap after pipeline: '+fmt(fc.gapT3)+'</span>';
+   else h += '<span style="color:var(--grn);font-weight:600">Pipeline covers it!</span>';
+  }
+  h += '</div>';
+ }
+ h += '</div>';
+
+ // Pipeline breakdown by status
+ h += '<h4 style="margin:16px 0 8px;color:var(--pri)">Pipeline Production Credits by Status</h4>';
+ h += '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Cases closer to paid will hit your Varicent sooner</div>';
+ h += '<div style="display:flex;gap:12px;flex-wrap:wrap">';
+ var statusLabels = {issued:'Issued',approved:'Approved',submitted:'Submitted',pending:'Pending'};
+ var statusColors = {issued:'var(--grn)',approved:'var(--pri)',submitted:'var(--amb)',pending:'var(--muted)'};
+ var statusTimeline = {issued:'~2 weeks',approved:'~4 weeks',submitted:'~6 weeks',pending:'~8+ weeks'};
+ ['issued','approved','submitted','pending'].forEach(function(s){
+  var amt = fc.pipelineByStatus[s] || 0;
+  h += '<div style="text-align:center;min-width:100px;padding:10px;background:var(--card);border-radius:6px;border:1px solid var(--border)">';
+  h += '<div style="font-size:10px;color:var(--muted)">'+statusLabels[s]+'</div>';
+  h += '<div style="font-size:18px;font-weight:700;color:'+statusColors[s]+'">'+fmt(amt)+'</div>';
+  h += '<div style="font-size:9px;color:var(--muted)">'+statusTimeline[s]+'</div>';
+  h += '</div>';
+ });
+ h += '</div>';
+
+ // Projected 3MMA
+ if(fc.pipelineTotal > 0){
+  var projTier = tierText(fc.projected3MMA);
+  var projColor = fc.projected3MMA >= 6667 ? 'var(--grn)' : fc.projected3MMA >= 5000 ? 'var(--amb)' : 'var(--red)';
+  h += '<div style="padding:12px;margin-top:16px;background:var(--card);border:2px solid '+projColor+';border-radius:8px;text-align:center">';
+  h += '<div style="font-size:11px;color:var(--muted)">Projected '+fc.nextMonth+' 3MMA (if all pipeline closes)</div>';
+  h += '<div style="font-size:28px;font-weight:700;color:'+projColor+'">'+fmt(fc.projected3MMA)+' <span style="font-size:14px">'+projTier+'</span></div>';
+  h += '</div>';
+ }
 
  h += '</div>';
 
