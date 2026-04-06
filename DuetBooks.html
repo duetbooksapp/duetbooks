@@ -1500,41 +1500,46 @@ function renderPayPeriods(){
   h += '<div class="stat-card green"><div class="stat-label">YTD Net Pay (Deposited)</div><div class="stat-value" style="color:var(--grn)">'+fmt(ytdNet)+'</div></div>';
   h += '</div>';
 
-  // Individual periods (newest first, sorted chronologically by month + P1/P2)
-  var monthOrder = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  // Individual periods — compact cards, sorted newest first
+  // Sort: handle Dec from prior year correctly (Dec < Jan in calendar order for current year)
+  var monthOrder = ['Dec','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov'];
   var sorted = payPeriods.slice().sort(function(a,b){
    var ma = monthOrder.indexOf(a.month || '');
    var mb = monthOrder.indexOf(b.month || '');
-   if(ma !== mb) return mb - ma; // newest month first
-   // Same month: P2 before P1 (newest first)
+   if(ma !== mb) return mb - ma;
    var pa = (a.label||'').indexOf('P2') !== -1 ? 2 : 1;
    var pb = (b.label||'').indexOf('P2') !== -1 ? 2 : 1;
    return pb - pa;
   });
+
+  h += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">';
   sorted.forEach(function(p){
    var pTier = p.mmaTier ? p.mmaTier.replace('TIER','T') : '';
    var pTierColor = p.mmaTier==='TIER4'?'var(--grn)':p.mmaTier==='TIER3'?'var(--amb)':'var(--muted)';
    var pCredits = (p.newProdCredits||0) + (p.renewalProdCredits||0);
-   h += '<div class="pay-history-card">';
-   h += '<div>';
-   h += '<div class="ph-label">'+p.label+' <span style="font-size:11px;color:var(--muted)">'+p.month+'</span>';
+   h += '<div style="background:var(--card);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow);border-left:4px solid var(--pri)">';
+   // Header row
+   h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+   h += '<div style="font-weight:700;font-size:14px">'+p.label;
    if(pTier) h += ' <span style="font-size:10px;font-weight:700;color:'+pTierColor+'">'+pTier+'</span>';
    h += '</div>';
-   h += '<div class="ph-meta">Commission: '+fmt(p.varicent)+' | Prod Credits: '+fmt(pCredits)+'</div>';
-   if(p.net > 0) h += '<div class="ph-meta">Gross: '+fmt(p.gross)+' | Taxes: '+fmt(p.taxes)+' | Deductions: '+fmt((p.preTax||0)+(p.postTax||0))+'</div>';
-   if(p.notes) h += '<div class="ph-meta" style="font-style:italic">'+p.notes+'</div>';
+   h += '<button class="btn-del" onclick="deletePayPeriod('+p.id+')" style="font-size:10px">del</button>';
    h += '</div>';
-   h += '<div style="text-align:right">';
-   h += '<div class="ph-amount">'+fmt(p.varicent)+'</div>';
-   h += '<div class="ph-meta">commission</div>';
+   // Commission + Net
+   h += '<div style="display:flex;justify-content:space-between;align-items:baseline">';
+   h += '<div><div style="font-size:18px;font-weight:700;color:var(--pri)">'+fmt(p.varicent)+'</div><div style="font-size:9px;color:var(--muted)">commission</div></div>';
    if(p.net > 0){
-    h += '<div style="font-size:14px;font-weight:600;color:var(--grn);margin-top:4px">'+fmt(p.net)+'</div>';
-    h += '<div class="ph-meta">net deposited</div>';
+    h += '<div style="text-align:right"><div style="font-size:16px;font-weight:700;color:var(--grn)">'+fmt(p.net)+'</div><div style="font-size:9px;color:var(--muted)">net deposited</div></div>';
    }
-   h += '<button class="btn-del" onclick="deletePayPeriod('+p.id+')" style="margin-top:4px">delete</button>';
+   h += '</div>';
+   // Details line
+   h += '<div style="font-size:10px;color:var(--muted);margin-top:6px;border-top:1px solid var(--border);padding-top:4px">';
+   h += 'Credits: '+fmt(pCredits);
+   if(p.net > 0) h += ' | Gross: '+fmt(p.gross)+' | Tax: '+fmt(p.taxes);
    h += '</div>';
    h += '</div>';
   });
+  h += '</div>';
  }
  h += '</div>';
 
