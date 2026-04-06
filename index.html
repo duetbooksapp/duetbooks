@@ -1000,26 +1000,25 @@ function renderDashboard(){
 
  var h = '';
 
- // ── Take-Home Summary (hero) ──
- h += '<div class="card" style="border-top:4px solid var(--grn)">';
- h += '<div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">';
- h += '<div style="flex:1;min-width:200px;text-align:center">';
- h += '<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">YTD Net Deposited</div>';
- h += '<div style="font-size:36px;font-weight:800;color:var(--grn)">'+fmt(ytdNet)+'</div>';
- h += '<div style="font-size:12px;color:var(--muted)">'+takeHomeRate+'% take-home rate</div>';
- h += '</div>';
- h += '<div style="display:flex;gap:16px;flex-wrap:wrap">';
- h += '<div style="text-align:center;min-width:100px"><div style="font-size:10px;color:var(--muted)">Gross Commission</div><div style="font-size:20px;font-weight:700;color:var(--pri)">'+fmt(totalPaid)+'</div></div>';
- h += '<div style="text-align:center;min-width:80px"><div style="font-size:10px;color:var(--muted)">Taxes</div><div style="font-size:20px;font-weight:700;color:var(--red)">'+fmt(ytdTaxes)+'</div></div>';
- h += '<div style="text-align:center;min-width:80px"><div style="font-size:10px;color:var(--muted)">Deductions</div><div style="font-size:20px;font-weight:700;color:var(--amb)">'+fmt(ytdDeductions)+'</div></div>';
- h += '</div>';
- h += '</div>';
- // Current tier badge inline
+ // ── YTD Summary (matching Pay History format) ──
+ // Gross Pay hero
+ h += '<div class="card" style="text-align:center;border-top:4px solid var(--pri);margin-bottom:12px">';
+ h += '<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">YTD Gross Pay</div>';
+ h += '<div style="font-size:36px;font-weight:800;color:var(--pri)">'+fmt(ytdGross)+'</div>';
+ // Tier badge inline
  var tierColor = tier === 'T4' ? 'var(--grn)' : tier === 'T3' ? 'var(--amb)' : 'var(--red)';
- h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">';
- h += '<div style="display:flex;align-items:center;gap:10px"><span style="font-size:24px;font-weight:800;color:'+tierColor+'">'+tier+'</span><span style="font-size:12px;color:var(--muted)">Current Tier &middot; 3MMA: '+fmt(mma)+'</span></div>';
- h += '<div style="font-size:12px;color:var(--muted)">'+totalCases+' cases &middot; '+statusCounts['paid']+' paid &middot; '+(totalCases-statusCounts['paid'])+' in pipeline</div>';
+ h += '<div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:8px">';
+ h += '<span style="font-size:20px;font-weight:800;color:'+tierColor+'">'+tier+'</span>';
+ h += '<span style="font-size:12px;color:var(--muted)">Current Tier &middot; 3MMA: '+fmt(mma)+' &middot; '+totalCases+' cases &middot; '+statusCounts['paid']+' paid &middot; '+(totalCases-statusCounts['paid'])+' in pipeline</span>';
  h += '</div>';
+ h += '</div>';
+
+ // 4 stat boxes
+ h += '<div class="stat-grid" style="margin-bottom:16px">';
+ h += '<div class="stat-card green"><div class="stat-label">YTD Commission (Varicent)</div><div class="stat-value" style="color:var(--grn)">'+fmt(totalPaid)+'</div></div>';
+ h += '<div class="stat-card red"><div class="stat-label">YTD Taxes</div><div class="stat-value" style="color:var(--red)">'+fmt(ytdTaxes)+'</div></div>';
+ h += '<div class="stat-card amber"><div class="stat-label">YTD Deductions</div><div class="stat-value" style="color:var(--amb)">'+fmt(ytdDeductions)+'</div></div>';
+ h += '<div class="stat-card green"><div class="stat-label">YTD Net Pay (Deposited)</div><div class="stat-value" style="color:var(--grn)">'+fmt(ytdNet)+'</div></div>';
  h += '</div>';
 
  // ── Stat cards ──
