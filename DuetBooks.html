@@ -338,6 +338,11 @@ tr:hover td{background:#FAFAFA}
  <div class="modal fb-review-modal" id="fbReviewContent"></div>
 </div>
 
+<!-- Onboarding Modal -->
+<div class="modal-overlay" id="onboardModal">
+ <div class="modal" style="max-width:520px;padding:30px" id="onboardContent"></div>
+</div>
+
 <!-- Toast Container -->
 <div class="toast-container" id="toastContainer"></div>
 
@@ -655,8 +660,8 @@ async function doRegister(){
  payPeriods = [];
  savePayPeriods();
 
- showToast('Welcome to Duet Books, ' + name.split(' ')[0] + '!', 4000);
  enterApp();
+ showOnboarding();
 }
 
 async function doLogin(){
@@ -2785,6 +2790,7 @@ async function runAiAnalysis(id){
 document.addEventListener('click', function(e){
  if(e.target.id === 'editModal') closeEditModal();
  if(e.target.id === 'fbReviewModal') closeFbReview();
+ if(e.target.id === 'onboardModal') dismissOnboarding();
 });
 
 // Enter key on login
@@ -2798,6 +2804,53 @@ document.addEventListener('keydown', function(e){
   }
  }
 });
+
+// ════════════════════════════════════════════
+// ONBOARDING
+// ════════════════════════════════════════════
+function showOnboarding(){
+ var h = '';
+ h += '<div style="text-align:center;margin-bottom:20px">';
+ h += '<div style="font-size:28px;font-weight:800;color:var(--pri)">Welcome to Duet Books</div>';
+ h += '<div style="font-size:13px;color:var(--muted);margin-top:4px">Your Book of Business. One Place. Total Clarity.</div>';
+ h += '</div>';
+
+ h += '<div style="text-align:left;font-size:13px;line-height:1.8">';
+
+ h += '<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;padding:10px;background:var(--ptint);border-radius:6px">';
+ h += '<span style="font-size:18px">📊</span><div><b>Dashboard</b> — Your at-a-glance view: gross pay, commissions, taxes, deductions, and net deposited. See your current tier and case counts.</div></div>';
+
+ h += '<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;padding:10px;background:var(--gtint);border-radius:6px">';
+ h += '<span style="font-size:18px">📋</span><div><b>Book of Business</b> — Track all your cases from pending through paid. Add new cases, advance their status, and see which pay period each case landed in.</div></div>';
+
+ h += '<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;padding:10px;background:var(--ptint);border-radius:6px">';
+ h += '<span style="font-size:18px">💰</span><div><b>Pay Periods</b> — Upload your Varicent statements and Workday payslips. The AI reads them and imports your commission data and net pay automatically.</div></div>';
+
+ h += '<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;padding:10px;background:var(--gtint);border-radius:6px">';
+ h += '<span style="font-size:18px">📈</span><div><b>Forecasting</b> — See your current pay tier, what happens when the 3MMA window shifts, and what you need in production credits to maintain your tier.</div></div>';
+
+ h += '<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;padding:10px;background:var(--ptint);border-radius:6px">';
+ h += '<span style="font-size:18px">📑</span><div><b>Rate Table</b> — Full commission rate schedule across all 4 tiers for every product (AAA, MassMutual, Securian). Your current tier is highlighted.</div></div>';
+
+ h += '<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:16px;padding:10px;background:var(--atint);border-radius:6px;border:1px solid var(--amb)">';
+ h += '<span style="font-size:18px">💬</span><div><b>Feedback</b> — Have a question, found a bug, or have a suggestion? Use the Feedback tab to let us know. We review every submission and will keep you updated on the status.</div></div>';
+
+ h += '</div>';
+
+ h += '<div style="text-align:center;margin-top:16px">';
+ h += '<button class="btn btn-pri" style="padding:12px 40px;font-size:15px" onclick="dismissOnboarding()">Got It — Let\'s Go!</button>';
+ h += '</div>';
+
+ $1('#onboardContent').innerHTML = h;
+ $1('#onboardModal').className = 'modal-overlay show';
+}
+
+function dismissOnboarding(){
+ $1('#onboardModal').className = 'modal-overlay';
+ // Set flag so it doesn't show again
+ settings.onboardingDone = true;
+ saveSettings();
+}
 
 // ════════════════════════════════════════════
 // INITIALIZATION
