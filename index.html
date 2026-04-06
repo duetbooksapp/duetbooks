@@ -1730,6 +1730,9 @@ function renderCashFlow(){
  // Show the forecast math
  var forecastTier = tierText(fc.forecast3MMA);
  var forecastColor = fc.forecast3MMA >= 6667 ? 'var(--grn)' : fc.forecast3MMA >= 5000 ? 'var(--amb)' : 'var(--red)';
+ var fMonthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+ var fmi = fMonthNames.indexOf(forecastMonth);
+ var nextPayMonth = fmi >= 0 ? fMonthNames[(fmi+1)%12] : 'next month';
  h += '<div style="display:flex;gap:12px;margin:12px 0;flex-wrap:wrap;align-items:center">';
  h += '<div style="text-align:center;min-width:90px;padding:8px;background:var(--ptint);border-radius:6px"><div style="font-size:9px;color:var(--muted)">'+fc.carry1.name+'</div><div style="font-size:16px;font-weight:700">'+fmt(fc.carry1.credits)+'</div></div>';
  h += '<span style="font-size:18px;color:var(--muted)">+</span>';
@@ -1737,7 +1740,7 @@ function renderCashFlow(){
  h += '<span style="font-size:18px;color:var(--muted)">+</span>';
  h += '<div style="text-align:center;min-width:90px;padding:8px;background:var(--atint);border-radius:6px;border:1px solid var(--amb)"><div style="font-size:9px;color:var(--muted)">'+forecastMonth+'</div><div style="font-size:16px;font-weight:700;color:var(--amb)">'+fmt(fc.openMonth ? fc.openMonth.credits : 0)+'</div></div>';
  h += '<span style="font-size:18px;color:var(--muted)">=</span>';
- h += '<div style="text-align:center;min-width:120px;padding:8px;background:var(--card);border:2px solid '+forecastColor+';border-radius:6px"><div style="font-size:9px;color:var(--muted)">New 3MMA</div><div style="font-size:18px;font-weight:700;color:'+forecastColor+'">'+fmt(fc.forecast3MMA)+'</div><div style="font-size:10px;font-weight:700;color:'+forecastColor+'">'+forecastTier+'</div></div>';
+ h += '<div style="text-align:center;min-width:140px;padding:8px;background:var(--card);border:2px solid '+forecastColor+';border-radius:6px"><div style="font-size:9px;color:var(--muted)">Potential '+nextPayMonth+' Tier</div><div style="font-size:18px;font-weight:700;color:'+forecastColor+'">'+fmt(fc.forecast3MMA)+'</div><div style="font-size:10px;font-weight:700;color:'+forecastColor+'">'+forecastTier+'</div></div>';
  h += '</div>';
 
  // Tier targets
