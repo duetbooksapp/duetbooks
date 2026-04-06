@@ -919,16 +919,14 @@ function renderDashboard(){
  statusOrder.forEach(function(s){ statusCounts[s] = 0; });
  yearCases.forEach(function(c){ statusCounts[c.status] = (statusCounts[c.status]||0) + 1; });
 
- // Monthly production
+ // Monthly production — use Varicent pay period totals (authoritative)
  var monthlyProd = {};
  var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
  for(var m=0;m<12;m++) monthlyProd[m] = 0;
- yearCases.forEach(function(c){
-  var d = c.submitted || c.created || '';
-  if(d){
-   var month = parseInt(d.substring(5,7)) - 1;
-   monthlyProd[month] += calcCase(c).agentShare;
-  }
+ payPeriods.forEach(function(p){
+  if(!p) return;
+  var mi = monthNames.indexOf(p.month||'');
+  if(mi >= 0) monthlyProd[mi] += p.varicent || 0;
  });
  var maxMonth = Math.max.apply(null, Object.values(monthlyProd).concat([1]));
 
