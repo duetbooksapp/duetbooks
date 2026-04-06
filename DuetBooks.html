@@ -445,9 +445,9 @@ var products = [
  {name:'Securian Eclipse UL (target/planned)',carrier:'Securian',cat:'IUL / Universal Life',rate:70,t1:35,t2:50,t3:60,basis:'target/planned prem',pct:true,prodCredit:100,codes:'000330'},
  {name:'Securian Eclipse UL (excess)',carrier:'Securian',cat:'IUL / Universal Life',rate:1.85,t1:1.15,t2:1.45,t3:1.65,basis:'excess premium',pct:true,prodCredit:6,codes:'00033X'},
  // ── Banking / CD / Other ──
- {name:'Certificate of Deposit (CD)',carrier:'AAA',cat:'Banking / CD / Other',rate:0.05,t1:0.05,t2:0.05,t3:0.05,basis:'deposit',pct:true,hardwired:true,codes:'401'},
- {name:'Credit Card',carrier:'AAA',cat:'Banking / CD / Other',rate:0,t1:0,t2:0,t3:0,basis:'flat fee',pct:false,flat:true},
- {name:'AAA Membership',carrier:'AAA',cat:'Banking / CD / Other',rate:0,t1:0,t2:0,t3:0,basis:'flat fee',pct:false,flat:true}
+ {name:'Certificate of Deposit (CD)',carrier:'AAA',cat:'Banking / CD / Other',rate:0.05,t1:0.05,t2:0.05,t3:0.05,basis:'deposit',pct:true,hardwired:true,prodCredit:0,codes:'401'},
+ {name:'Credit Card',carrier:'AAA',cat:'Banking / CD / Other',rate:0,t1:0,t2:0,t3:0,basis:'flat fee',pct:false,flat:true,prodCredit:0},
+ {name:'AAA Membership',carrier:'AAA',cat:'Banking / CD / Other',rate:0,t1:0,t2:0,t3:0,basis:'flat fee',pct:false,flat:true,prodCredit:0}
 ];
 
 function findProd(n){ return products.find(function(p){return p.name===n}) || products[0]; }
@@ -894,12 +894,21 @@ function calc3MMAForecast(){
  var needT4 = Math.max(0, (6667 * 3) - carry1.credits - carry2.credits - (openMonth ? openMonth.credits : 0));
  var needT3 = Math.max(0, (5000 * 3) - carry1.credits - carry2.credits - (openMonth ? openMonth.credits : 0));
 
- // Pipeline — group by status
+ // Pipeline — group by status, estimate production credits from product catalog
  var pipelineByStatus = {pending:0, submitted:0, approved:0, issued:0};
  var pipelineTotal = 0;
  cases.forEach(function(c){
   if(c.status === 'paid') return;
-  var credits = c.productionCredit || c.amount || 0;
+  // If case already has production credit from Varicent, use it
+  var credits = 0;
+  if(c.productionCredit && c.productionCredit > 0){
+   credits = c.productionCredit;
+  } else {
+   // Estimate from product catalog: amount * prodCredit%
+   var prod = findProd(c.product);
+   var pcPct = prod && prod.prodCredit !== undefined ? prod.prodCredit : 100;
+   credits = (c.amount || 0) * pcPct / 100;
+  }
   pipelineTotal += credits;
   if(pipelineByStatus[c.status] !== undefined) pipelineByStatus[c.status] += credits;
  });
