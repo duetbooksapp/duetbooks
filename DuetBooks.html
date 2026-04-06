@@ -1454,18 +1454,26 @@ function renderPayPeriods(){
   h += '<div class="card" style="text-align:center;color:var(--muted);padding:40px">No pay periods recorded yet. Add your first pay period above.</div>';
  } else {
   // YTD summary
-  var ytdGross = 0, ytdNet = 0, ytdVaricent = 0, ytdTaxes = 0;
+  var ytdGross = 0, ytdNet = 0, ytdVaricent = 0, ytdTaxes = 0, ytdDeductions = 0;
   payPeriods.forEach(function(p){
    ytdVaricent += p.varicent || 0;
    ytdGross += p.gross || 0;
    ytdNet += p.net || 0;
    ytdTaxes += p.taxes || 0;
+   ytdDeductions += (p.preTax||0) + (p.postTax||0);
   });
 
+  // Gross Pay at top (full width)
+  h += '<div class="card" style="text-align:center;border-top:4px solid var(--pri);margin-bottom:12px">';
+  h += '<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">YTD Gross Pay</div>';
+  h += '<div style="font-size:36px;font-weight:800;color:var(--pri)">'+fmt(ytdGross)+'</div>';
+  h += '</div>';
+
+  // 4 boxes below
   h += '<div class="stat-grid" style="margin-bottom:16px">';
   h += '<div class="stat-card green"><div class="stat-label">YTD Commission (Varicent)</div><div class="stat-value" style="color:var(--grn)">'+fmt(ytdVaricent)+'</div></div>';
-  h += '<div class="stat-card"><div class="stat-label">YTD Gross Pay</div><div class="stat-value">'+fmt(ytdGross)+'</div></div>';
   h += '<div class="stat-card red"><div class="stat-label">YTD Taxes</div><div class="stat-value" style="color:var(--red)">'+fmt(ytdTaxes)+'</div></div>';
+  h += '<div class="stat-card amber"><div class="stat-label">YTD Deductions</div><div class="stat-value" style="color:var(--amb)">'+fmt(ytdDeductions)+'</div></div>';
   h += '<div class="stat-card green"><div class="stat-label">YTD Net Pay (Deposited)</div><div class="stat-value" style="color:var(--grn)">'+fmt(ytdNet)+'</div></div>';
   h += '</div>';
 
