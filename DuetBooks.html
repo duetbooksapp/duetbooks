@@ -1779,31 +1779,6 @@ function renderCashFlow(){
  h += '<div class="cf-card"><div class="cf-period">60-90 Days</div><div class="cf-amount" style="color:var(--muted)">'+fmt(pending90)+'</div><div class="cf-sub">estimated commission</div></div>';
  h += '</div>';
 
- // Gross Pay Commissions vs Actual Pay
- h += '<h3 style="margin-bottom:12px">Gross Pay Commissions vs. Actual Pay</h3>';
- h += '<div class="cf-vs">';
- h += '<div class="cf-vs-card" style="border-top-color:var(--pri)"><h4>Gross Pay Commissions</h4><div class="big" style="color:var(--pri)">'+fmt(ytdVaricent + pendingTotal)+'</div><div style="font-size:11px;color:var(--muted)">YTD Varicent + pending pipeline</div></div>';
- h += '<div class="cf-vs-card" style="border-top-color:var(--grn)"><h4>Actual Pay (YTD)</h4><div class="big" style="color:var(--grn)">'+fmt(ytdNet)+'</div><div style="font-size:11px;color:var(--muted)">Commission + Banking + Bonus + Other Income</div></div>';
- h += '</div>';
-
- // Tax burden
- var ytdTaxes = 0, ytdDeductions = 0;
- payPeriods.forEach(function(p){
-  ytdTaxes += p.taxes || 0;
-  ytdDeductions += (p.preTax||0) + (p.postTax||0);
- });
- var effectiveTaxRate = ytdGross > 0 ? (ytdTaxes / ytdGross * 100).toFixed(1) : '0.0';
- var effectiveDeductionRate = ytdGross > 0 ? (ytdDeductions / ytdGross * 100).toFixed(1) : '0.0';
- var takeHomeRate = ytdGross > 0 ? (ytdNet / ytdGross * 100).toFixed(1) : '0.0';
-
- h += '<div class="card">';
- h += '<h3>Tax & Deduction Summary</h3>';
- h += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:12px;text-align:center">';
- h += '<div><div style="font-size:11px;color:var(--muted)">Effective Tax Rate</div><div style="font-size:22px;font-weight:700;color:var(--red)">'+effectiveTaxRate+'%</div><div style="font-size:11px;color:var(--muted)">'+fmt(ytdTaxes)+' in taxes</div></div>';
- h += '<div><div style="font-size:11px;color:var(--muted)">Deduction Rate</div><div style="font-size:22px;font-weight:700;color:var(--amb)">'+effectiveDeductionRate+'%</div><div style="font-size:11px;color:var(--muted)">'+fmt(ytdDeductions)+' in deductions</div></div>';
- h += '<div><div style="font-size:11px;color:var(--muted)">Take-Home Rate</div><div style="font-size:22px;font-weight:700;color:var(--grn)">'+takeHomeRate+'%</div><div style="font-size:11px;color:var(--muted)">'+fmt(ytdNet)+' net deposited</div></div>';
- h += '</div></div>';
-
  // Annual Goal Tracker
  h += '<div class="needs-card">';
  h += '<h3>Annual Goal Tracker</h3>';
