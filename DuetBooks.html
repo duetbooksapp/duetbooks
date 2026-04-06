@@ -1209,16 +1209,13 @@ function renderBookOfBusiness(){
  h += '<thead><tr>';
  var cols = [
   {key:'client',label:'Client'},
-  {key:'carrier',label:'Carrier'},
   {key:'product',label:'Product'},
   {key:'amount',label:'Amount'},
-  {key:'commission',label:'Your Commission'},
+  {key:'commission',label:'Commission'},
   {key:'split',label:'Split'},
   {key:'status',label:'Status'},
   {key:'submitted',label:'Submitted'},
-  {key:'estPay',label:'Est. Pay'},
   {key:'paidIn',label:'Paid In'},
-  {key:'notes',label:'Notes'},
   {key:'actions',label:''}
  ];
  cols.forEach(function(col){
@@ -1232,7 +1229,7 @@ function renderBookOfBusiness(){
  h += '</tr></thead><tbody>';
 
  if(filtered.length === 0){
-  h += '<tr><td colspan="12" style="text-align:center;padding:40px;color:var(--muted)">No cases yet. Click "+ Add New Case" to get started.</td></tr>';
+  h += '<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--muted)">No cases yet. Click "+ Add New Case" to get started.</td></tr>';
  }
 
  filtered.forEach(function(c){
@@ -1240,16 +1237,13 @@ function renderBookOfBusiness(){
   var prod = findProd(c.product);
   h += '<tr>';
   h += '<td><b>'+c.client+'</b>'+(c.phone?'<br><a href="tel:'+c.phone+'" style="font-size:11px;color:var(--pri)">'+c.phone+'</a>':'')+'</td>';
-  h += '<td>'+carrierBadge(prod.carrier || 'AAA')+'</td>';
-  h += '<td style="font-size:11px">'+c.product+'</td>';
+  h += '<td style="font-size:11px">'+carrierBadge(prod.carrier || 'AAA')+' '+c.product+'</td>';
   h += '<td>'+fmt(c.amount)+'</td>';
   h += '<td><b>'+fmt(calc.agentShare)+'</b></td>';
   h += '<td>'+(c.split==='split'?'<span style="font-size:10px;color:var(--muted)">'+c.splitName+'</span>':'—')+'</td>';
-  h += '<td>'+statusBadge(c.status)+statusBar(c.status)+'</td>';
+  h += '<td>'+statusBadge(c.status)+'</td>';
   h += '<td style="font-size:11px">'+c.submitted+'</td>';
-  h += '<td style="font-size:11px">'+(c.estPay||'—')+'</td>';
   h += '<td style="font-size:11px">'+(c.paidIn||'—')+'</td>';
-  h += '<td style="font-size:10px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+(c.notes||'').replace(/"/g,'&quot;')+'">'+(c.notes||'—')+'</td>';
   h += '<td style="white-space:nowrap">';
   if(statusIdx(c.status) < 4){
    h += '<button class="btn-next" onclick="advanceStatus('+c.id+')">Next</button> ';
