@@ -1734,14 +1734,16 @@ function renderCashFlow(){
   h += '<div style="font-size:22px;font-weight:700;color:var(--amb)">'+fmt(fc.openMonth.credits)+'</div>';
   h += '<div style="font-size:10px;color:var(--muted)">'+fc.openMonth.periodCount+' of 2 pay periods imported</div>';
   h += '</div>';
-  h += '<div style="font-size:12px;color:var(--muted);flex:1">Cases in '+fc.openMonth.name+' are paid at <b style="color:'+tierColor+'">'+fc.settledTier+' rates</b></div>';
+  h += '<div style="flex:1;display:flex;align-items:center;gap:12px;flex-wrap:wrap">';
+  h += '<div style="font-size:12px;color:var(--muted)">Cases in '+fc.openMonth.name+' are paid at <b style="color:'+tierColor+'">'+fc.settledTier+' rates</b></div>';
+  h += '<div style="display:flex;gap:0;font-size:10px;font-weight:700;border-radius:6px;overflow:hidden;border:1px solid var(--border)">';
+  h += '<div style="padding:5px 10px;background:'+(fc.settledTier==='T1'?'var(--red);color:#fff':'var(--rtint);color:var(--red)')+'">T1<div style="font-weight:400;font-size:8px">0-3,333</div></div>';
+  h += '<div style="padding:5px 10px;background:'+(fc.settledTier==='T2'?'var(--amb);color:#fff':'var(--atint);color:var(--amb)')+'">T2<div style="font-weight:400;font-size:8px">3,334-4,999</div></div>';
+  h += '<div style="padding:5px 10px;background:'+(fc.settledTier==='T3'?'var(--pri);color:#fff':'var(--ptint);color:var(--pri)')+'">T3<div style="font-weight:400;font-size:8px">5,000-6,666</div></div>';
+  h += '<div style="padding:5px 10px;background:'+(fc.settledTier==='T4'?'var(--grn);color:#fff':'var(--gtint);color:var(--grn)')+'">T4<div style="font-weight:400;font-size:8px">6,667+</div></div>';
   h += '</div>';
-  h += '<table style="margin-top:10px;font-size:11px;max-width:360px;border:2px solid #333"><thead>';
-  h += '<tr><th colspan="4" style="text-align:center;background:#fff;color:#333;font-size:11px;padding:6px">3-MMA based on Varicent Production Credit</th></tr>';
-  h += '<tr><th style="text-align:center;padding:4px 8px;font-size:10px">0 -<br>&lt;3,334</th><th style="text-align:center;padding:4px 8px;font-size:10px">3,334 -<br>4,999</th><th style="text-align:center;padding:4px 8px;font-size:10px">5,000 -<br>6,666</th><th style="text-align:center;padding:4px 8px;font-size:10px">&gt; 6,666</th></tr>';
-  h += '<tr><th style="text-align:center;padding:4px 8px;font-size:10px;'+(fc.settledTier==='T1'?'background:var(--gtint)':'')+'">TIER 1</th><th style="text-align:center;padding:4px 8px;font-size:10px;'+(fc.settledTier==='T2'?'background:var(--gtint)':'')+'">TIER 2</th><th style="text-align:center;padding:4px 8px;font-size:10px;'+(fc.settledTier==='T3'?'background:var(--gtint)':'')+'">TIER 3</th><th style="text-align:center;padding:4px 8px;font-size:10px;'+(fc.settledTier==='T4'?'background:var(--gtint)':'')+'">TIER 4</th></tr>';
-  h += '</thead></table>';
   h += '</div>';
+  h += '</div></div>';
  }
 
  // ── Section C: Forecast — When Open Month Closes ──
