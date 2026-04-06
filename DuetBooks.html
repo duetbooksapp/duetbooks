@@ -1678,7 +1678,8 @@ function renderCashFlow(){
  var tierColor = fc.settledTier === 'T4' ? 'var(--grn)' : fc.settledTier === 'T3' ? 'var(--amb)' : 'var(--red)';
 
  h += '<div class="card">';
- h += '<h3>Current Pay Tier</h3>';
+ var curPayMonth = fc.openMonth ? fc.openMonth.name : (fc.settled3[2].name || '');
+ h += '<h3>Current Pay Tier — '+curPayMonth+'</h3>';
  h += '<div style="display:flex;gap:16px;margin:12px 0;align-items:center;flex-wrap:wrap">';
 
  // 3 settled months
@@ -1694,7 +1695,7 @@ function renderCashFlow(){
  // Tier badge
  h += '<div style="text-align:center;padding:12px 20px;background:var(--card);border:3px solid '+tierColor+';border-radius:10px">';
  h += '<div style="font-size:32px;font-weight:800;color:'+tierColor+'">'+fc.settledTier+'</div>';
- h += '<div style="font-size:11px;color:var(--muted)">All cases paid at '+fc.settledTier+' rates</div>';
+ h += '<div style="font-size:11px;color:var(--muted)">All cases paid in '+curPayMonth+' at '+fc.settledTier+' rates</div>';
  h += '</div>';
  h += '</div></div>';
 
