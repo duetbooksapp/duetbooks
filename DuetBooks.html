@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Duet Books — AAA Life Specialist Compensation Tracker</title>
+<title>DuetBooks — AAA Life Specialist Compensation Tracker</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--pri:#534AB7;--grn:#1D9E75;--amb:#EF9F27;--red:#D94545;--dgrn:#0F6E56;--bg:#f5f5f3;--card:#fff;--ptint:#EEEDFE;--gtint:#F0FBF7;--atint:#FFFCF5;--rtint:#FEF2F2;--txt:#222;--muted:#666;--border:#ddd;--radius:8px;--shadow:0 1px 3px rgba(0,0,0,.08)}
@@ -269,7 +269,7 @@ tr:hover td{background:#FAFAFA}
 <!-- ═══ LOGIN SCREEN ═══ -->
 <div id="loginScreen" class="login-screen">
  <div class="login-card">
-  <h1>Duet Books</h1>
+  <h1>DuetBooks</h1>
   <div class="subtitle">Your Book of Business. One Place. Total Clarity.</div>
 
   <!-- Sign In Mode -->
@@ -306,7 +306,7 @@ tr:hover td{background:#FAFAFA}
  <!-- Top Bar -->
  <div class="topbar">
   <div>
-   <div class="brand">Duet Books</div>
+   <div class="brand">DuetBooks</div>
    <div class="agent-info" id="topAgentInfo"></div>
   </div>
   <div class="topbar-right">
@@ -785,7 +785,7 @@ function enterApp(){
  $1('#appShell').style.display = 'block';
  $1('#topAgentInfo').textContent = currentAgent.name + ' | ' + currentAgent.branch;
  $1('#versionLine').style.display = 'block';
- $1('#versionLine').textContent = 'Duet Books ' + APP_VERSION + ' | Built ' + APP_BUILD_DATE;
+ $1('#versionLine').textContent = 'DuetBooks ' + APP_VERSION + ' | Built ' + APP_BUILD_DATE;
  // Set dark mode button icon
  var dmBtn = $1('#darkModeBtn');
  if(dmBtn) dmBtn.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
@@ -3020,7 +3020,7 @@ document.addEventListener('keydown', function(e){
 function showOnboarding(){
  var h = '';
  h += '<div style="text-align:center;margin-bottom:20px">';
- h += '<div style="font-size:28px;font-weight:800;color:var(--pri)">Welcome to Duet Books</div>';
+ h += '<div style="font-size:28px;font-weight:800;color:var(--pri)">Welcome to DuetBooks</div>';
  h += '<div style="font-size:13px;color:var(--muted);margin-top:4px">Your Book of Business. One Place. Total Clarity.</div>';
  h += '</div>';
 
