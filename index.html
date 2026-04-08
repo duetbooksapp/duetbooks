@@ -1992,8 +1992,13 @@ function renderSettings(){
  h += '<h3>AI Document Reader</h3>';
  h += '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">To auto-read your Varicent and Workday documents, enter your Anthropic API key. This stays in your browser only \u2014 never sent to the cloud.</div>';
  h += '<div class="form-group"><label>Anthropic API Key</label><input id="s_apikey" type="password" value="'+(getApiKey()||'')+'" placeholder="sk-ant-..."></div>';
- h += '<button class="btn btn-pri" onclick="saveApiKey()" style="margin-top:8px">Save API Key</button>';
+ h += '<div style="display:flex;gap:8px;margin-top:8px">';
+ h += '<button class="btn btn-pri" onclick="saveApiKey()">Save API Key</button>';
+ h += '<button class="btn btn-outline" onclick="testApiKey()" id="testApiBtn">Test Key</button>';
+ h += '</div>';
+ h += '<div id="apiTestResult"></div>';
  h += '<div style="font-size:10px;color:var(--muted);margin-top:6px">Get your key at <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--pri)">console.anthropic.com</a> \u2014 each document read costs ~$0.01-0.02</div>';
+ h += '<div style="margin-top:8px;padding:8px 12px;background:var(--atint);border-radius:6px;border:1px solid var(--amb);font-size:11px;color:var(--amb)"><b>Important:</b> Make sure you have credits loaded on your Anthropic account before uploading files. Go to <a href="https://console.anthropic.com/settings/billing" target="_blank" style="color:var(--pri)">console.anthropic.com/billing</a> to add credits. Without credits, document uploads will fail.</div>';
  h += '</div>';
 
  h += '<div class="card">';
@@ -2134,6 +2139,55 @@ function saveApiKey(){
  if(key) localStorage.setItem('db_anthropic_key', key);
  else localStorage.removeItem('db_anthropic_key');
  showToast(key ? 'API key saved (stored locally only)' : 'API key removed', 2000);
+}
+
+async function testApiKey(){
+ var key = getApiKey();
+ if(!key){
+  showToast('Please save an API key first', 2000);
+  return;
+ }
+ var btn = $1('#testApiBtn');
+ var result = $1('#apiTestResult');
+ if(btn) btn.textContent = 'Testing...';
+ if(btn) btn.disabled = true;
+
+ try {
+  var resp = await fetch('https://api.anthropic.com/v1/messages', {
+   method: 'POST',
+   headers: {
+    'Content-Type': 'application/json',
+    'x-api-key': key,
+    'anthropic-version': '2023-06-01',
+    'anthropic-dangerous-direct-browser-access': 'true'
+   },
+   body: JSON.stringify({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 10,
+    messages: [{role:'user', content:'Say OK'}]
+   })
+  });
+
+  if(resp.ok){
+   if(result) result.innerHTML = '<div style="margin-top:8px;padding:8px 12px;background:var(--gtint);border-radius:6px;font-size:12px;color:var(--grn);font-weight:600">✅ API key is working! You\'re all set to upload documents.</div>';
+   showToast('API key test passed!', 3000);
+  } else {
+   var errData = await resp.json().catch(function(){ return {}; });
+   var errMsg = errData.error ? errData.error.message : 'HTTP ' + resp.status;
+   if(resp.status === 401){
+    errMsg = 'Invalid API key. Please check and re-enter it.';
+   } else if(resp.status === 403){
+    errMsg = 'API key does not have permission. Check your Anthropic account.';
+   } else if(resp.status === 429){
+    errMsg = 'Rate limited or no credits. Please add credits at console.anthropic.com/billing.';
+   }
+   if(result) result.innerHTML = '<div style="margin-top:8px;padding:8px 12px;background:var(--rtint);border-radius:6px;font-size:12px;color:var(--red);font-weight:600">❌ '+errMsg+'</div>';
+  }
+ } catch(e){
+  if(result) result.innerHTML = '<div style="margin-top:8px;padding:8px 12px;background:var(--rtint);border-radius:6px;font-size:12px;color:var(--red);font-weight:600">❌ Connection error: '+e.message+'</div>';
+ }
+
+ if(btn){ btn.textContent = 'Test Key'; btn.disabled = false; }
 }
 
 var uploadedFiles = []; // [{name, base64, mediaType}]
