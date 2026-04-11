@@ -229,6 +229,13 @@ tr:hover td{background:#FAFAFA}
 .fb-comment{background:#f9f9f7;border-radius:6px;padding:10px 12px;margin-top:8px;font-size:12px;border-left:3px solid var(--border)}
 .fb-comment .fb-comment-meta{font-size:10px;color:var(--muted);margin-bottom:4px}
 
+/* ── Test Mode Banner ── */
+.test-mode-banner{position:sticky;top:0;z-index:100;background:linear-gradient(90deg,#F59E0B,#EF4444);color:#fff;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.2);font-weight:600}
+.test-mode-banner .tm-label{display:flex;align-items:center;gap:8px;font-size:13px}
+.test-mode-banner .tm-actions{display:flex;gap:8px}
+.test-mode-banner button{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;padding:4px 12px;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer}
+.test-mode-banner button:hover{background:rgba(255,255,255,.3)}
+
 /* ── Chat Bot Widget ── */
 .chat-fab{position:fixed;bottom:24px;right:24px;width:50px;height:50px;border-radius:50%;background:var(--pri);color:#fff;border:none;font-size:22px;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.25);z-index:9000;transition:transform .2s;padding:0;display:flex;align-items:center;justify-content:center}
 .chat-fab:hover{transform:scale(1.08)}
@@ -338,6 +345,15 @@ tr:hover td{background:#FAFAFA}
   </div>
  </div>
 
+ <!-- Test Mode Banner -->
+ <div class="test-mode-banner" id="testModeBanner" style="display:none">
+  <div class="tm-label">🧪 <span>TEST MODE — Sandbox active. Changes will NOT be saved.</span></div>
+  <div class="tm-actions">
+   <button onclick="resetTestMode()" title="Reset to starting state">Reset Sandbox</button>
+   <button onclick="exitTestMode()" title="Exit and restore your real data">Exit Test Mode</button>
+  </div>
+ </div>
+
  <!-- Tab Navigation -->
  <div class="tabs" id="tabBar">
   <div class="tab active" onclick="showTab(0)">Dashboard</div>
@@ -443,6 +459,10 @@ if(localStorage.getItem('db_darkmode') === '1'){
  document.body.classList.add('dark');
 }
 var showAddForm = false;
+
+// ── Test Mode (sandbox) ──
+var testMode = false;
+var testModeBackup = null; // { cases, payPeriods, settings }
 
 var defaultSettings = {
  lifeShare: 50,
@@ -590,18 +610,64 @@ function fbLoad(key){
 }
 
 function saveCases(){
+ if(testMode) return; // Test Mode: changes are in-memory only
  localStorage.setItem('db_cases_' + currentAgent.id, JSON.stringify(cases));
  fbSave('cases', cases);
 }
 
 function savePayPeriods(){
+ if(testMode) return; // Test Mode: changes are in-memory only
  localStorage.setItem('db_payperiods_' + currentAgent.id, JSON.stringify(payPeriods));
  fbSave('payperiods', payPeriods);
 }
 
 function saveSettings(){
+ if(testMode) return; // Test Mode: changes are in-memory only
  localStorage.setItem('db_settings_' + currentAgent.id, JSON.stringify(settings));
  fbSave('settings', settings);
+}
+
+// ── Test Mode Functions ──
+function enterTestMode(){
+ if(testMode) return;
+ testModeBackup = {
+  cases: JSON.parse(JSON.stringify(cases)),
+  payPeriods: JSON.parse(JSON.stringify(payPeriods)),
+  settings: JSON.parse(JSON.stringify(settings))
+ };
+ testMode = true;
+ updateTestModeBanner();
+ showToast('Test Mode active — changes will not be saved', 4000);
+ renderAll();
+}
+
+function exitTestMode(){
+ if(!testMode) return;
+ if(!confirm('Exit Test Mode? All changes will be discarded and your original data restored.')) return;
+ cases = testModeBackup.cases;
+ payPeriods = testModeBackup.payPeriods;
+ settings = testModeBackup.settings;
+ testModeBackup = null;
+ testMode = false;
+ updateTestModeBanner();
+ showToast('Test Mode exited — original data restored', 3000);
+ renderAll();
+}
+
+function resetTestMode(){
+ if(!testMode || !testModeBackup) return;
+ if(!confirm('Reset sandbox to starting state? All test changes will be wiped.')) return;
+ cases = JSON.parse(JSON.stringify(testModeBackup.cases));
+ payPeriods = JSON.parse(JSON.stringify(testModeBackup.payPeriods));
+ settings = JSON.parse(JSON.stringify(testModeBackup.settings));
+ showToast('Test Mode reset — back to starting state', 2000);
+ renderAll();
+}
+
+function updateTestModeBanner(){
+ var banner = $1('#testModeBanner');
+ if(!banner) return;
+ banner.style.display = testMode ? 'flex' : 'none';
 }
 
 // ── Feedback System ──
@@ -2184,6 +2250,21 @@ function renderSettings(){
   h += '<h3>Agent Chat Logs</h3>';
   h += '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">View help chat sessions from agents to identify common issues.</div>';
   h += '<button class="btn btn-pri" onclick="viewChatLogs()">View Chat Logs</button>';
+  h += '</div>';
+
+  // Admin: Test Mode (Sandbox)
+  h += '<div class="card" style="border:2px dashed var(--amb);background:var(--atint)">';
+  h += '<h3 style="color:var(--amb)">🧪 Test Mode (Sandbox)</h3>';
+  h += '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Enter Test Mode to experiment with feedback suggestions or new ideas using your real data as a starting point. Changes are in-memory only and will NOT save to Firebase or localStorage. Exit to restore your original data.</div>';
+  if(!testMode){
+   h += '<button class="btn btn-amb" onclick="enterTestMode()">Enter Test Mode</button>';
+  } else {
+   h += '<div style="font-size:12px;color:var(--amb);font-weight:600;margin-bottom:6px">🧪 Test Mode is ACTIVE</div>';
+   h += '<div style="display:flex;gap:8px">';
+   h += '<button class="btn btn-outline" onclick="resetTestMode()">Reset Sandbox</button>';
+   h += '<button class="btn btn-red" onclick="exitTestMode()">Exit Test Mode</button>';
+   h += '</div>';
+  }
   h += '</div>';
  }
 
