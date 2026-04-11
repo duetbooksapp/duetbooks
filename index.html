@@ -520,6 +520,16 @@ function findProd(n){ return products.find(function(p){return p.name===n}) || pr
 function $(sel){ return document.querySelectorAll(sel); }
 function $1(sel){ return document.querySelector(sel); }
 function fmt(n){ return '$' + (n||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+
+// Sum a pay period field including any extraDeposits
+function sumPeriodWithExtras(p, field){
+ if(!p) return 0;
+ var total = p[field] || 0;
+ if(p.extraDeposits && p.extraDeposits.length > 0){
+  p.extraDeposits.forEach(function(ed){ total += ed[field] || 0; });
+ }
+ return total;
+}
 function toYMD(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 
 function showToast(msg, dur){
@@ -1072,10 +1082,10 @@ function renderDashboard(){
  // YTD from pay periods for take-home
  var ytdNet = 0, ytdGross = 0, ytdTaxes = 0, ytdDeductions = 0;
  payPeriods.forEach(function(p){
-  ytdNet += p.net || 0;
-  ytdGross += p.gross || 0;
-  ytdTaxes += p.taxes || 0;
-  ytdDeductions += (p.preTax||0) + (p.postTax||0);
+  ytdNet += sumPeriodWithExtras(p, 'net');
+  ytdGross += sumPeriodWithExtras(p, 'gross');
+  ytdTaxes += sumPeriodWithExtras(p, 'taxes');
+  ytdDeductions += sumPeriodWithExtras(p, 'preTax') + sumPeriodWithExtras(p, 'postTax');
  });
  var takeHomeRate = totalPaid > 0 ? (ytdNet / totalPaid * 100).toFixed(0) : '—';
 
@@ -1527,14 +1537,14 @@ function renderPayPeriods(){
  if(payPeriods.length === 0){
   h += '<div class="card" style="text-align:center;color:var(--muted);padding:40px">No pay periods recorded yet. Add your first pay period above.</div>';
  } else {
-  // YTD summary
+  // YTD summary — includes extraDeposits on each period
   var ytdGross = 0, ytdNet = 0, ytdVaricent = 0, ytdTaxes = 0, ytdDeductions = 0;
   payPeriods.forEach(function(p){
    ytdVaricent += p.varicent || 0;
-   ytdGross += p.gross || 0;
-   ytdNet += p.net || 0;
-   ytdTaxes += p.taxes || 0;
-   ytdDeductions += (p.preTax||0) + (p.postTax||0);
+   ytdGross += sumPeriodWithExtras(p, 'gross');
+   ytdNet += sumPeriodWithExtras(p, 'net');
+   ytdTaxes += sumPeriodWithExtras(p, 'taxes');
+   ytdDeductions += sumPeriodWithExtras(p, 'preTax') + sumPeriodWithExtras(p, 'postTax');
   });
 
   // Gross Pay at top (full width)
@@ -1568,19 +1578,22 @@ function renderPayPeriods(){
    var pTier = p.mmaTier ? p.mmaTier.replace('TIER','T') : '';
    var pTierColor = p.mmaTier==='TIER4'?'var(--grn)':p.mmaTier==='TIER3'?'var(--amb)':'var(--muted)';
    var pCredits = (p.newProdCredits||0) + (p.renewalProdCredits||0);
+   var extras = p.extraDeposits || [];
+   var extrasNet = 0; extras.forEach(function(ed){ extrasNet += ed.net || 0; });
+   var totalNet = (p.net||0) + extrasNet;
    h += '<div style="background:var(--card);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow);border-left:4px solid var(--pri)">';
    // Header row
    h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
    h += '<div style="font-weight:700;font-size:14px">'+p.label;
    if(pTier) h += ' <span style="font-size:10px;font-weight:700;color:'+pTierColor+'">'+pTier+'</span>';
    h += '</div>';
-   h += '';
+   h += '<button onclick="addManualDeposit('+p.id+')" title="Add deposit manually" style="background:none;border:1px solid var(--border);color:var(--muted);width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:12px;line-height:1">+</button>';
    h += '</div>';
    // Commission + Net
    h += '<div style="display:flex;justify-content:space-between;align-items:baseline">';
    h += '<div><div style="font-size:18px;font-weight:700;color:var(--pri)">'+fmt(p.varicent)+'</div><div style="font-size:9px;color:var(--muted)">commission</div></div>';
-   if(p.net > 0){
-    h += '<div style="text-align:right"><div style="font-size:16px;font-weight:700;color:var(--grn)">'+fmt(p.net)+'</div><div style="font-size:9px;color:var(--muted)">net deposited</div></div>';
+   if(totalNet > 0){
+    h += '<div style="text-align:right"><div style="font-size:16px;font-weight:700;color:var(--grn)">'+fmt(totalNet)+'</div><div style="font-size:9px;color:var(--muted)">net deposited'+(extras.length>0?' (incl. '+extras.length+' extra)':'')+'</div></div>';
    }
    h += '</div>';
    // Details line
@@ -1588,6 +1601,18 @@ function renderPayPeriods(){
    h += 'Credits: '+fmt(pCredits);
    if(p.net > 0) h += ' | Gross: '+fmt(p.gross)+' | Tax: '+fmt(p.taxes);
    h += '</div>';
+   // Extra deposits list
+   if(extras.length > 0){
+    h += '<div style="margin-top:6px;border-top:1px dashed var(--border);padding-top:6px">';
+    extras.forEach(function(ed){
+     h += '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:10px">';
+     h += '<div style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+(ed.description||'').replace(/"/g,'&quot;')+'">+ '+(ed.description||'Deposit')+'</div>';
+     h += '<div style="color:var(--grn);font-weight:600;margin-left:8px">'+fmt(ed.net)+'</div>';
+     h += '<button onclick="deleteExtraDeposit('+p.id+','+ed.id+')" title="Remove" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:12px;margin-left:4px">&times;</button>';
+     h += '</div>';
+    });
+    h += '</div>';
+   }
    h += '</div>';
   });
   h += '</div>';
@@ -1712,6 +1737,67 @@ function deletePayPeriod(id){
  payPeriods = payPeriods.filter(function(p){return p.id!==id});
  savePayPeriods();
  showToast('Pay period deleted', 2000);
+ renderPayPeriods();
+ renderDashboard();
+ renderCashFlow();
+}
+
+// ── Extra Deposits (bonuses, additional paychecks) ──
+function addManualDeposit(periodId){
+ var p = payPeriods.find(function(x){return x.id===periodId});
+ if(!p) return;
+ var h = '';
+ h += '<h3 style="margin-bottom:12px;color:var(--pri)">Add Deposit to '+p.label+'</h3>';
+ h += '<div class="form-group" style="margin-bottom:10px"><label>Description</label><input id="md_desc" placeholder="e.g. Q1 Bonus, Contest Payout" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit"></div>';
+ h += '<div class="form-group" style="margin-bottom:10px"><label>Date</label><input id="md_date" type="date" value="'+toYMD(new Date())+'" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit"></div>';
+ h += '<div class="form-row">';
+ h += '<div class="form-group"><label>Gross ($)</label><input id="md_gross" type="number" step="0.01" placeholder="0.00" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit"></div>';
+ h += '<div class="form-group"><label>Taxes ($)</label><input id="md_taxes" type="number" step="0.01" placeholder="0.00" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit"></div>';
+ h += '</div>';
+ h += '<div class="form-group" style="margin-bottom:14px"><label>Net Deposited ($) — required</label><input id="md_net" type="number" step="0.01" placeholder="0.00" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit"></div>';
+ h += '<div style="display:flex;gap:8px">';
+ h += '<button class="btn btn-outline" onclick="closeEditModal()">Cancel</button>';
+ h += '<button class="btn btn-pri" onclick="saveManualDeposit('+periodId+')">Save Deposit</button>';
+ h += '</div>';
+ $1('#editModalContent').innerHTML = h;
+ $1('#editModal').className = 'modal-overlay show';
+}
+
+function saveManualDeposit(periodId){
+ var p = payPeriods.find(function(x){return x.id===periodId});
+ if(!p) return;
+ var net = parseFloat($1('#md_net').value) || 0;
+ if(net <= 0){ showToast('Net amount is required', 2000); return; }
+ if(!p.extraDeposits) p.extraDeposits = [];
+ var edId = 1;
+ p.extraDeposits.forEach(function(ed){ if(ed.id >= edId) edId = ed.id + 1; });
+ p.extraDeposits.push({
+  id: edId,
+  date: $1('#md_date').value || toYMD(new Date()),
+  description: ($1('#md_desc').value||'Manual Deposit').trim(),
+  gross: parseFloat($1('#md_gross').value) || 0,
+  taxes: parseFloat($1('#md_taxes').value) || 0,
+  preTax: 0,
+  postTax: 0,
+  net: net,
+  bonuses: 0,
+  source: 'manual'
+ });
+ savePayPeriods();
+ closeEditModal();
+ showToast('Deposit added to ' + p.label, 2000);
+ renderPayPeriods();
+ renderDashboard();
+ renderCashFlow();
+}
+
+function deleteExtraDeposit(periodId, depositId){
+ var p = payPeriods.find(function(x){return x.id===periodId});
+ if(!p || !p.extraDeposits) return;
+ if(!confirm('Remove this deposit?')) return;
+ p.extraDeposits = p.extraDeposits.filter(function(ed){return ed.id!==depositId});
+ savePayPeriods();
+ showToast('Deposit removed', 2000);
  renderPayPeriods();
  renderDashboard();
  renderCashFlow();
@@ -2497,13 +2583,52 @@ async function processUploads(){
   var wMonth = (w.month || '').toLowerCase().trim();
   var wNet = Math.round((w.net_pay || 0) * 100);
 
-  // DUPLICATE CHECK — skip if a period already has this workday data
+  // DUPLICATE CHECK — only true duplicates (same label + same net to the penny, OR same net amount in same month)
+  // Also checks extraDeposits so re-uploading a prior bonus is blocked
   var dupW = payPeriods.find(function(p){
-   if(wLabel && p.label && p.label.toLowerCase().trim() === wLabel && (p.net||0) > 0) return true;
+   // Same label + same primary net = same file re-uploaded
+   if(wLabel && p.label && p.label.toLowerCase().trim() === wLabel && Math.round((p.net||0)*100) === wNet && wNet > 0) return true;
+   // Same month + same net amount = same file re-uploaded
    if(wMonth && p.month && p.month.toLowerCase().trim() === wMonth && Math.round((p.net||0)*100) === wNet && wNet > 0) return true;
+   // Already in extraDeposits with same net
+   if(wLabel && p.label && p.label.toLowerCase().trim() === wLabel && p.extraDeposits){
+    for(var ei=0;ei<p.extraDeposits.length;ei++){
+     if(Math.round((p.extraDeposits[ei].net||0)*100) === wNet) return true;
+    }
+   }
    return false;
   });
   if(dupW){ duplicatesSkipped++; return; }
+
+  // EXTRA DEPOSIT CHECK — label matches but different net amount = second paycheck for same period
+  var extraTarget = null;
+  if(wLabel){
+   extraTarget = payPeriods.find(function(p){
+    return p.label && p.label.toLowerCase().trim() === wLabel && (p.net||0) > 0;
+   });
+  }
+  if(extraTarget){
+   // Append as extra deposit
+   if(!extraTarget.extraDeposits) extraTarget.extraDeposits = [];
+   var edId = 1;
+   extraTarget.extraDeposits.forEach(function(ed){ if(ed.id >= edId) edId = ed.id + 1; });
+   // Build description from filename
+   var desc = (w._filename || 'Additional Payment').replace(/\.pdf$/i,'').replace(/_/g,' ');
+   extraTarget.extraDeposits.push({
+    id: edId,
+    date: toYMD(new Date()),
+    description: desc,
+    gross: w.gross_pay || 0,
+    taxes: w.employee_taxes || 0,
+    preTax: w.pre_tax_deductions || 0,
+    postTax: w.post_tax_deductions || 0,
+    net: w.net_pay || 0,
+    bonuses: w.bonuses || 0,
+    source: w._filename || 'manual'
+   });
+   periodsCreated++;
+   return;
+  }
 
   // MERGE-BACK: try to find an existing period that doesn't have workday data yet
   var mergeTarget = null;
