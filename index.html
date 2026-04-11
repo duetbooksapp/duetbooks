@@ -445,8 +445,10 @@ if(localStorage.getItem('db_darkmode') === '1'){
 var showAddForm = false;
 
 var defaultSettings = {
- yourShare: 80,
- partnerShare: 20,
+ lifeShare: 50,
+ lifePartnerShare: 50,
+ pcShare: 80,
+ pcPartnerShare: 20,
  yearlyGoal: 100000
 };
 
@@ -791,11 +793,6 @@ async function doLogin(){
 }
 
 async function loadAgentData(){
- // Determine type-based split defaults (applied only if no saved settings exist)
- var typeDefaults = (currentAgent && currentAgent.agentType === 'Life')
-  ? {yourShare:50, partnerShare:50}
-  : {yourShare:80, partnerShare:20};
-
  // Load from Firebase, fall back to localStorage
  try {
   var fbCases = await fbLoad('cases');
@@ -803,12 +800,20 @@ async function loadAgentData(){
   var fbPay = await fbLoad('payperiods');
   cases = (fbCases || JSON.parse(localStorage.getItem('db_cases_' + currentAgent.id) || '[]')).filter(function(c){ return c !== null; });
   payPeriods = (fbPay || JSON.parse(localStorage.getItem('db_payperiods_' + currentAgent.id) || '[]')).filter(function(p){ return p !== null; });
-  settings = Object.assign({}, defaultSettings, typeDefaults, fbSettings || JSON.parse(localStorage.getItem('db_settings_' + currentAgent.id) || '{}'));
+  settings = Object.assign({}, defaultSettings, fbSettings || JSON.parse(localStorage.getItem('db_settings_' + currentAgent.id) || '{}'));
  } catch(e){
   cases = JSON.parse(localStorage.getItem('db_cases_' + currentAgent.id) || '[]').filter(function(c){ return c !== null; });
   payPeriods = JSON.parse(localStorage.getItem('db_payperiods_' + currentAgent.id) || '[]').filter(function(p){ return p !== null; });
-  settings = Object.assign({}, defaultSettings, typeDefaults, JSON.parse(localStorage.getItem('db_settings_' + currentAgent.id) || '{}'));
+  settings = Object.assign({}, defaultSettings, JSON.parse(localStorage.getItem('db_settings_' + currentAgent.id) || '{}'));
  }
+ // Backward compatibility: map old yourShare/partnerShare to PC split
+ if(settings.yourShare !== undefined && settings.pcShare === undefined){
+  settings.pcShare = settings.yourShare;
+  settings.pcPartnerShare = settings.partnerShare;
+ }
+ // Ensure all split fields exist
+ if(settings.lifeShare === undefined){ settings.lifeShare = 50; settings.lifePartnerShare = 50; }
+ if(settings.pcShare === undefined){ settings.pcShare = 80; settings.pcPartnerShare = 20; }
  // Cache locally
  localStorage.setItem('db_cases_' + currentAgent.id, JSON.stringify(cases));
  localStorage.setItem('db_payperiods_' + currentAgent.id, JSON.stringify(payPeriods));
@@ -857,27 +862,22 @@ function calcCase(c){
  }
 
  // Manual entry — calculate from amount × rate, then split
- if(p.flat){
-  fullComm = c.amount;
-  if(c.split === 'split'){
-   agentShare = fullComm * (settings.yourShare/100);
-   partnerGets = fullComm * (settings.partnerShare/100);
-  } else {
-   agentShare = fullComm;
-   partnerGets = 0;
-  }
-  origGross = fullComm;
- } else {
-  fullComm = c.amount * (c.rate / 100);
-  origGross = fullComm;
-  if(c.split === 'split'){
-   agentShare = fullComm * (settings.yourShare/100);
-   partnerGets = fullComm * (settings.partnerShare/100);
-  } else {
-   agentShare = fullComm;
-   partnerGets = 0;
-  }
+ fullComm = p.flat ? c.amount : c.amount * (c.rate / 100);
+ origGross = fullComm;
+
+ // Determine split percentages based on case split type
+ // 'life' uses lifeShare, 'pc' or legacy 'split' uses pcShare, 'full' or anything else = no split
+ var yourPct = 100, partnerPct = 0;
+ if(c.split === 'life'){
+  yourPct = settings.lifeShare || 50;
+  partnerPct = settings.lifePartnerShare || 50;
+ } else if(c.split === 'pc' || c.split === 'split'){
+  yourPct = settings.pcShare || 80;
+  partnerPct = settings.pcPartnerShare || 20;
  }
+ agentShare = fullComm * (yourPct/100);
+ partnerGets = fullComm * (partnerPct/100);
+
  return {origGross:origGross, agentShare:agentShare, partnerGets:partnerGets, fullComm:fullComm};
 }
 
@@ -1215,7 +1215,12 @@ function renderBookOfBusiness(){
   h += '</div>';
 
   h += '<div class="form-row">';
-  h += '<div class="form-group"><label>Split Type</label><select id="nc_split" onchange="ncCalcPreview()"><option value="full">Full (no split)</option><option value="split">Split (partner gets their %)</option></select></div>';
+  var defSplit = (currentAgent && currentAgent.agentType === 'Life') ? 'life' : 'pc';
+  h += '<div class="form-group"><label>Split Type</label><select id="nc_split" onchange="ncCalcPreview()">';
+  h += '<option value="full"'+(defSplit==='full'?' selected':'')+'>Full (no split)</option>';
+  h += '<option value="life"'+(defSplit==='life'?' selected':'')+'>Life Split ('+settings.lifeShare+'/'+settings.lifePartnerShare+')</option>';
+  h += '<option value="pc"'+(defSplit==='pc'?' selected':'')+'>PC Split ('+settings.pcShare+'/'+settings.pcPartnerShare+')</option>';
+  h += '</select></div>';
   h += '<div class="form-group"><label>Split Agent Name</label><input id="nc_splitname" type="text" placeholder="Partner name"></div>';
   h += '<div class="form-group"><label>Split Agent Email</label><input id="nc_splitemail" type="text" placeholder="partner@acg.aaa.com"></div>';
   h += '<div class="form-group"><label>Submitted Date</label><input id="nc_submitted" type="date" value="'+toYMD(new Date())+'"></div>';
@@ -1381,16 +1386,22 @@ function ncCalcPreview(){
  }
  var p = findProd(prodName);
  var fullComm = p.flat ? amount : amount * (rate/100);
- var agentShare = fullComm;
- var partnerGets = 0;
- if(split === 'split'){
-  agentShare = fullComm * (settings.yourShare/100);
-  partnerGets = fullComm * (settings.partnerShare/100);
+ var yourPct = 100, partnerPct = 0, splitLabel = 'Full';
+ if(split === 'life'){
+  yourPct = settings.lifeShare || 50;
+  partnerPct = settings.lifePartnerShare || 50;
+  splitLabel = 'Life';
+ } else if(split === 'pc' || split === 'split'){
+  yourPct = settings.pcShare || 80;
+  partnerPct = settings.pcPartnerShare || 20;
+  splitLabel = 'PC';
  }
+ var agentShare = fullComm * (yourPct/100);
+ var partnerGets = fullComm * (partnerPct/100);
  el.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center">'
   + (partnerGets > 0 ? '<div><div style="font-size:11px;color:var(--muted)">Total Commission</div><div style="font-size:16px;font-weight:600">'+fmt(fullComm)+'</div></div>' : '')
-  + '<div><div style="font-size:11px;color:var(--muted)">Your Commission ('+(partnerGets>0?settings.yourShare+'%':'100%')+')</div><div class="big">'+fmt(agentShare)+'</div></div>'
-  + (partnerGets > 0 ? '<div style="text-align:right"><div style="font-size:11px;color:var(--muted)">Partner Gets ('+settings.partnerShare+'%)</div><div style="font-size:16px;font-weight:600">'+fmt(partnerGets)+'</div></div>' : '')
+  + '<div><div style="font-size:11px;color:var(--muted)">Your Commission ('+splitLabel+' '+yourPct+'%)</div><div class="big">'+fmt(agentShare)+'</div></div>'
+  + (partnerGets > 0 ? '<div style="text-align:right"><div style="font-size:11px;color:var(--muted)">Partner Gets ('+partnerPct+'%)</div><div style="font-size:16px;font-weight:600">'+fmt(partnerGets)+'</div></div>' : '')
   + '</div>';
 }
 
@@ -1465,7 +1476,13 @@ function editCase(caseId){
  h += '<div class="form-group"><label>Rate (%)</label><input id="ec_rate" type="number" step="0.01" value="'+c.rate+'"></div>';
  h += '</div>';
  h += '<div class="form-row">';
- h += '<div class="form-group"><label>Split</label><select id="ec_split"><option value="full"'+(c.split==='full'?' selected':'')+'>Full</option><option value="split"'+(c.split==='split'?' selected':'')+'>Split</option></select></div>';
+ // Map legacy 'split' value to 'pc' for display
+ var curSplit = c.split === 'split' ? 'pc' : (c.split || 'full');
+ h += '<div class="form-group"><label>Split</label><select id="ec_split">';
+ h += '<option value="full"'+(curSplit==='full'?' selected':'')+'>Full (no split)</option>';
+ h += '<option value="life"'+(curSplit==='life'?' selected':'')+'>Life Split ('+settings.lifeShare+'/'+settings.lifePartnerShare+')</option>';
+ h += '<option value="pc"'+(curSplit==='pc'?' selected':'')+'>PC Split ('+settings.pcShare+'/'+settings.pcPartnerShare+')</option>';
+ h += '</select></div>';
  h += '<div class="form-group"><label>Split Agent</label><input id="ec_splitname" type="text" value="'+(c.splitName||'')+'"></div>';
  h += '<div class="form-group"><label>Status</label><select id="ec_status">';
  statusOrder.forEach(function(s){ h += '<option value="'+s+'"'+(c.status===s?' selected':'')+'>'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>'; });
@@ -2101,20 +2118,37 @@ function renderSettings(){
  h += '</div>';
 
  h += '<div class="card">';
- h += '<h3>Agent Type & Commission Split</h3>';
+ h += '<h3>Commission Splits</h3>';
+ h += '<div style="font-size:11px;color:var(--muted);margin-bottom:12px">Set your two split scenarios. Each case you add can use Life, PC, or Full (no split) \u2014 pick per case.</div>';
+
+ // Life Split
+ h += '<div style="padding:10px;background:var(--ptint);border-radius:6px;margin-bottom:10px">';
+ h += '<div style="font-weight:600;font-size:12px;margin-bottom:6px;color:var(--pri)">Life Split</div>';
+ h += '<div class="form-row">';
+ h += '<div class="form-group"><label>Your Share (%)</label><input id="s_lifeshare" type="number" value="'+settings.lifeShare+'" min="0" max="100"></div>';
+ h += '<div class="form-group"><label>Partner Share (%)</label><input id="s_lifepartner" type="number" value="'+settings.lifePartnerShare+'" min="0" max="100"></div>';
+ h += '</div>';
+ h += '</div>';
+
+ // PC Split
+ h += '<div style="padding:10px;background:var(--gtint);border-radius:6px;margin-bottom:10px">';
+ h += '<div style="font-weight:600;font-size:12px;margin-bottom:6px;color:var(--grn)">PC Split</div>';
+ h += '<div class="form-row">';
+ h += '<div class="form-group"><label>Your Share (%)</label><input id="s_pcshare" type="number" value="'+settings.pcShare+'" min="0" max="100"></div>';
+ h += '<div class="form-group"><label>Partner Share (%)</label><input id="s_pcpartner" type="number" value="'+settings.pcPartnerShare+'" min="0" max="100"></div>';
+ h += '</div>';
+ h += '</div>';
+
+ // Default split type (preference for new cases)
  var curType = (currentAgent && currentAgent.agentType) || 'PC';
  h += '<div class="form-row">';
- h += '<div class="form-group"><label>Agent Type</label>';
- h += '<select id="s_agenttype" onchange="onAgentTypeChange()">';
- h += '<option value="PC"'+(curType==='PC'?' selected':'')+'>PC Agent (80/20 default)</option>';
- h += '<option value="Life"'+(curType==='Life'?' selected':'')+'>Life Agent (50/50 default)</option>';
+ h += '<div class="form-group"><label>Default Split Type for New Cases</label>';
+ h += '<select id="s_agenttype">';
+ h += '<option value="PC"'+(curType==='PC'?' selected':'')+'>PC Split</option>';
+ h += '<option value="Life"'+(curType==='Life'?' selected':'')+'>Life Split</option>';
  h += '</select></div>';
  h += '</div>';
- h += '<div style="font-size:11px;color:var(--muted);margin-bottom:8px">Split values below are editable — change the type to use the preset, or fine-tune manually.</div>';
- h += '<div class="form-row">';
- h += '<div class="form-group"><label>Your Share (%)</label><input id="s_yourshare" type="number" value="'+settings.yourShare+'" min="0" max="100"></div>';
- h += '<div class="form-group"><label>Partner Share (%)</label><input id="s_partnershare" type="number" value="'+settings.partnerShare+'" min="0" max="100"></div>';
- h += '</div>';
+
  h += '<button class="btn btn-pri" onclick="saveSettingsForm()" style="margin-top:8px">Save Settings</button>';
  h += '</div>';
 
@@ -2157,11 +2191,13 @@ function renderSettings(){
 }
 
 function saveSettingsForm(){
- settings.yourShare = parseInt($1('#s_yourshare').value) || 80;
- settings.partnerShare = parseInt($1('#s_partnershare').value) || 20;
+ settings.lifeShare = parseInt($1('#s_lifeshare').value) || 50;
+ settings.lifePartnerShare = parseInt($1('#s_lifepartner').value) || 50;
+ settings.pcShare = parseInt($1('#s_pcshare').value) || 80;
+ settings.pcPartnerShare = parseInt($1('#s_pcpartner').value) || 20;
  saveSettings();
 
- // Save agent type if changed
+ // Save default split type preference if changed
  var newType = ($1('#s_agenttype') && $1('#s_agenttype').value) || 'PC';
  if(currentAgent && currentAgent.agentType !== newType){
   currentAgent.agentType = newType;
@@ -2177,31 +2213,6 @@ function saveSettingsForm(){
 
  showToast('Settings saved', 2000);
  renderAll();
-}
-
-function onAgentTypeChange(){
- var newType = $1('#s_agenttype').value;
- var yourField = $1('#s_yourshare');
- var partnerField = $1('#s_partnershare');
- if(!yourField || !partnerField) return;
- // Only update the preset if the current values match the OLD preset (don't overwrite a custom split)
- var cur = (currentAgent && currentAgent.agentType) || 'PC';
- var curPreset = cur === 'Life' ? [50,50] : [80,20];
- var curVals = [parseInt(yourField.value)||0, parseInt(partnerField.value)||0];
- var isAtCurPreset = curVals[0] === curPreset[0] && curVals[1] === curPreset[1];
- if(isAtCurPreset){
-  // Safe to switch to new preset
-  var newPreset = newType === 'Life' ? [50,50] : [80,20];
-  yourField.value = newPreset[0];
-  partnerField.value = newPreset[1];
- } else {
-  // Custom split — ask first
-  if(confirm('Switch to '+(newType==='Life'?'50/50':'80/20')+' split? Your current custom split will be replaced.')){
-   var newPreset = newType === 'Life' ? [50,50] : [80,20];
-   yourField.value = newPreset[0];
-   partnerField.value = newPreset[1];
-  }
- }
 }
 
 async function changePin(){
