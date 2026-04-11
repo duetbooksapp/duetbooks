@@ -306,6 +306,11 @@ tr:hover td{background:#FAFAFA}
    <input id="reg_name" type="text" placeholder="First Last" autocomplete="name">
    <label>Branch</label>
    <input id="reg_branch" type="text" placeholder="e.g. Z012, Palm Harbor, etc.">
+   <label>Agent Type</label>
+   <select id="reg_type">
+    <option value="PC">PC Agent (80/20 split)</option>
+    <option value="Life">Life Agent (50/50 split)</option>
+   </select>
    <label>Create a PIN (4-6 digits)</label>
    <input id="reg_pin" type="password" placeholder="PIN" maxlength="6" inputmode="numeric">
    <label>Confirm PIN</label>
@@ -692,6 +697,7 @@ function toggleLoginMode(){
 async function doRegister(){
  var name = $1('#reg_name').value.trim();
  var branch = $1('#reg_branch').value.trim();
+ var agentType = ($1('#reg_type') && $1('#reg_type').value) || 'PC';
  var pin = $1('#reg_pin').value.trim();
  var pin2 = $1('#reg_pin2').value.trim();
  var errEl = $1('#regError');
@@ -713,11 +719,11 @@ async function doRegister(){
  } catch(e){}
 
  var pinHash = await sha256(pin);
- var profile = { name: name, branch: branch, pin: pinHash, created: new Date().toISOString() };
+ var profile = { name: name, branch: branch, agentType: agentType, pin: pinHash, created: new Date().toISOString() };
 
  await fetch(FIREBASE_URL + '/' + agentId + '/profile.json', {method:'PUT', body: JSON.stringify(profile)});
 
- currentAgent = { id: agentId, name: name, branch: branch };
+ currentAgent = { id: agentId, name: name, branch: branch, agentType: agentType };
  sessionStorage.setItem('db_agent', JSON.stringify(currentAgent));
 
  // Save to remembered agents list
@@ -727,7 +733,9 @@ async function doRegister(){
   localStorage.setItem('db_remembered_agents', JSON.stringify(remembered));
  }
 
- settings = Object.assign({}, defaultSettings);
+ // Set initial split based on agent type
+ var typeDefaults = agentType === 'Life' ? {yourShare:50, partnerShare:50} : {yourShare:80, partnerShare:20};
+ settings = Object.assign({}, defaultSettings, typeDefaults);
  saveSettings();
  cases = [];
  saveCases();
@@ -762,7 +770,7 @@ async function doLogin(){
    return;
   }
 
-  currentAgent = { id: agentId, name: profile.name, branch: profile.branch };
+  currentAgent = { id: agentId, name: profile.name, branch: profile.branch, agentType: profile.agentType || 'PC' };
   sessionStorage.setItem('db_agent', JSON.stringify(currentAgent));
 
   // Save to remembered
@@ -783,6 +791,11 @@ async function doLogin(){
 }
 
 async function loadAgentData(){
+ // Determine type-based split defaults (applied only if no saved settings exist)
+ var typeDefaults = (currentAgent && currentAgent.agentType === 'Life')
+  ? {yourShare:50, partnerShare:50}
+  : {yourShare:80, partnerShare:20};
+
  // Load from Firebase, fall back to localStorage
  try {
   var fbCases = await fbLoad('cases');
@@ -790,11 +803,11 @@ async function loadAgentData(){
   var fbPay = await fbLoad('payperiods');
   cases = (fbCases || JSON.parse(localStorage.getItem('db_cases_' + currentAgent.id) || '[]')).filter(function(c){ return c !== null; });
   payPeriods = (fbPay || JSON.parse(localStorage.getItem('db_payperiods_' + currentAgent.id) || '[]')).filter(function(p){ return p !== null; });
-  settings = Object.assign({}, defaultSettings, fbSettings || JSON.parse(localStorage.getItem('db_settings_' + currentAgent.id) || '{}'));
+  settings = Object.assign({}, defaultSettings, typeDefaults, fbSettings || JSON.parse(localStorage.getItem('db_settings_' + currentAgent.id) || '{}'));
  } catch(e){
   cases = JSON.parse(localStorage.getItem('db_cases_' + currentAgent.id) || '[]').filter(function(c){ return c !== null; });
   payPeriods = JSON.parse(localStorage.getItem('db_payperiods_' + currentAgent.id) || '[]').filter(function(p){ return p !== null; });
-  settings = Object.assign({}, defaultSettings, JSON.parse(localStorage.getItem('db_settings_' + currentAgent.id) || '{}'));
+  settings = Object.assign({}, defaultSettings, typeDefaults, JSON.parse(localStorage.getItem('db_settings_' + currentAgent.id) || '{}'));
  }
  // Cache locally
  localStorage.setItem('db_cases_' + currentAgent.id, JSON.stringify(cases));
@@ -2088,7 +2101,16 @@ function renderSettings(){
  h += '</div>';
 
  h += '<div class="card">';
- h += '<h3>Commission Split</h3>';
+ h += '<h3>Agent Type & Commission Split</h3>';
+ var curType = (currentAgent && currentAgent.agentType) || 'PC';
+ h += '<div class="form-row">';
+ h += '<div class="form-group"><label>Agent Type</label>';
+ h += '<select id="s_agenttype" onchange="onAgentTypeChange()">';
+ h += '<option value="PC"'+(curType==='PC'?' selected':'')+'>PC Agent (80/20 default)</option>';
+ h += '<option value="Life"'+(curType==='Life'?' selected':'')+'>Life Agent (50/50 default)</option>';
+ h += '</select></div>';
+ h += '</div>';
+ h += '<div style="font-size:11px;color:var(--muted);margin-bottom:8px">Split values below are editable — change the type to use the preset, or fine-tune manually.</div>';
  h += '<div class="form-row">';
  h += '<div class="form-group"><label>Your Share (%)</label><input id="s_yourshare" type="number" value="'+settings.yourShare+'" min="0" max="100"></div>';
  h += '<div class="form-group"><label>Partner Share (%)</label><input id="s_partnershare" type="number" value="'+settings.partnerShare+'" min="0" max="100"></div>';
@@ -2138,8 +2160,48 @@ function saveSettingsForm(){
  settings.yourShare = parseInt($1('#s_yourshare').value) || 80;
  settings.partnerShare = parseInt($1('#s_partnershare').value) || 20;
  saveSettings();
+
+ // Save agent type if changed
+ var newType = ($1('#s_agenttype') && $1('#s_agenttype').value) || 'PC';
+ if(currentAgent && currentAgent.agentType !== newType){
+  currentAgent.agentType = newType;
+  sessionStorage.setItem('db_agent', JSON.stringify(currentAgent));
+  // Update profile in Firebase
+  fetch(FIREBASE_URL + '/' + currentAgent.id + '/profile.json').then(function(r){return r.json();}).then(function(profile){
+   if(profile){
+    profile.agentType = newType;
+    fetch(FIREBASE_URL + '/' + currentAgent.id + '/profile.json', {method:'PUT', body: JSON.stringify(profile)});
+   }
+  });
+ }
+
  showToast('Settings saved', 2000);
  renderAll();
+}
+
+function onAgentTypeChange(){
+ var newType = $1('#s_agenttype').value;
+ var yourField = $1('#s_yourshare');
+ var partnerField = $1('#s_partnershare');
+ if(!yourField || !partnerField) return;
+ // Only update the preset if the current values match the OLD preset (don't overwrite a custom split)
+ var cur = (currentAgent && currentAgent.agentType) || 'PC';
+ var curPreset = cur === 'Life' ? [50,50] : [80,20];
+ var curVals = [parseInt(yourField.value)||0, parseInt(partnerField.value)||0];
+ var isAtCurPreset = curVals[0] === curPreset[0] && curVals[1] === curPreset[1];
+ if(isAtCurPreset){
+  // Safe to switch to new preset
+  var newPreset = newType === 'Life' ? [50,50] : [80,20];
+  yourField.value = newPreset[0];
+  partnerField.value = newPreset[1];
+ } else {
+  // Custom split — ask first
+  if(confirm('Switch to '+(newType==='Life'?'50/50':'80/20')+' split? Your current custom split will be replaced.')){
+   var newPreset = newType === 'Life' ? [50,50] : [80,20];
+   yourField.value = newPreset[0];
+   partnerField.value = newPreset[1];
+  }
+ }
 }
 
 async function changePin(){
