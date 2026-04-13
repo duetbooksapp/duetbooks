@@ -613,12 +613,30 @@ function saveCases(){
  if(testMode) return; // Test Mode: changes are in-memory only
  localStorage.setItem('db_cases_' + currentAgent.id, JSON.stringify(cases));
  fbSave('cases', cases);
+ // Cross-sync to DuetCRM pipeline (Steve only)
+ if(currentAgent && currentAgent.id === 'steve_maxim'){
+  var yr = new Date().getFullYear();
+  fetch('https://duet-crm-default-rtdb.firebaseio.com/pipeline_' + yr + '.json', {
+   method:'PUT',
+   headers:{'Content-Type':'application/json'},
+   body: JSON.stringify({data: cases, updated: new Date().toISOString(), device: 'DuetBooks'})
+  }).catch(function(e){ console.log('CRM cross-sync error:', e); });
+ }
 }
 
 function savePayPeriods(){
  if(testMode) return; // Test Mode: changes are in-memory only
  localStorage.setItem('db_payperiods_' + currentAgent.id, JSON.stringify(payPeriods));
  fbSave('payperiods', payPeriods);
+ // Cross-sync to DuetCRM periods (Steve only)
+ if(currentAgent && currentAgent.id === 'steve_maxim'){
+  var yr = new Date().getFullYear();
+  fetch('https://duet-crm-default-rtdb.firebaseio.com/periods_' + yr + '.json', {
+   method:'PUT',
+   headers:{'Content-Type':'application/json'},
+   body: JSON.stringify({data: payPeriods, updated: new Date().toISOString(), device: 'DuetBooks'})
+  }).catch(function(e){ console.log('CRM cross-sync error:', e); });
+ }
 }
 
 function saveSettings(){
