@@ -2390,23 +2390,37 @@ function updateSplitAgentDropdown(){
 }
 
 function addSplitAgent(){
- var name = ($1('#sa_name').value||'').trim();
+ var nameEl = $1('#sa_name');
+ var emailEl = $1('#sa_email');
+ var name = (nameEl ? nameEl.value : '').trim();
  if(!name){ showToast('Partner name is required', 2000); return; }
- var email = ($1('#sa_email').value||'').trim();
- var phone = ($1('#sa_phone').value||'').trim();
- var isLife = $1('#sa_type_life') && $1('#sa_type_life').checked;
- var isPC = $1('#sa_type_pc') && $1('#sa_type_pc').checked;
- if(!isLife && !isPC){ showToast('Select at least one type (Life or PC)', 2000); return; }
+ var email = (emailEl ? emailEl.value : '').trim();
+ var lifeEl = $1('#sa_type_life');
+ var pcEl = $1('#sa_type_pc');
+ var isLife = lifeEl && lifeEl.checked;
+ var isPC = pcEl && pcEl.checked;
+ if(!isLife && !isPC){ showToast('Please check at least one: Life Partner or PC Partner', 3000); return; }
  var types = [];
  if(isLife) types.push('life');
  if(isPC) types.push('pc');
  if(!settings.splitAgents) settings.splitAgents = [];
  var maxId = 0;
  settings.splitAgents.forEach(function(a){ if(a.id > maxId) maxId = a.id; });
- settings.splitAgents.push({ id: maxId+1, name:name, email:email, phone:phone, types:types, active:true });
+ settings.splitAgents.push({ id: maxId+1, name:name, email:email, phone:'', types:types, active:true });
  saveSettings();
- showToast('Split partner added: '+name, 2000);
+ // Clear form inputs
+ if(nameEl) nameEl.value = '';
+ if(emailEl) emailEl.value = '';
+ if(lifeEl) lifeEl.checked = false;
+ if(pcEl) pcEl.checked = false;
+ // Re-render just the partner table instead of entire Settings (preserves scroll)
+ showToast('✅ Split partner added: ' + name + ' (' + types.join(' & ') + ')', 3000);
  renderSettings();
+ // Scroll to the split partners section after render
+ setTimeout(function(){
+  var card = document.querySelector('#p5 .tbl-wrap');
+  if(card) card.scrollIntoView({behavior:'smooth', block:'center'});
+ }, 100);
 }
 
 function toggleSplitAgent(id){
