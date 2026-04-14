@@ -2239,7 +2239,7 @@ function renderSettings(){
    h += '<td style="font-size:11px">'+(a.email||'—')+'</td>';
    h += '<td>'+typeBadges+'</td>';
    h += '<td><button class="btn btn-sm btn-outline" onclick="toggleSplitAgent('+a.id+')">'+(a.active?'Active':'Inactive')+'</button></td>';
-   h += '<td><button class="btn-del" onclick="deleteSplitAgent('+a.id+')">remove</button></td>';
+   h += '<td><button class="btn-del" onclick="editSplitAgent('+a.id+')" style="color:var(--pri)">edit</button> <button class="btn-del" onclick="deleteSplitAgent('+a.id+')">remove</button></td>';
    h += '</tr>';
   });
   h += '</tbody></table></div>';
@@ -2421,6 +2421,58 @@ function addSplitAgent(){
   var card = document.querySelector('#p5 .tbl-wrap');
   if(card) card.scrollIntoView({behavior:'smooth', block:'center'});
  }, 100);
+}
+
+function editSplitAgent(id){
+ var a = getSplitAgents().find(function(x){return x.id===id});
+ if(!a) return;
+ var h = '';
+ h += '<h3 style="margin-bottom:12px;color:var(--pri)">Edit Split Partner</h3>';
+ h += '<div class="form-group" style="margin-bottom:10px"><label>Name</label><input id="sae_name" value="'+(a.name||'')+'" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--txt)"></div>';
+ h += '<div class="form-group" style="margin-bottom:10px"><label>Email</label><input id="sae_email" value="'+(a.email||'')+'" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--txt)"></div>';
+ h += '<div class="form-group" style="margin-bottom:10px"><label>Phone</label><input id="sae_phone" value="'+(a.phone||'')+'" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--txt)"></div>';
+ h += '<div style="display:flex;gap:16px;align-items:center;margin:10px 0">';
+ h += '<label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="checkbox" id="sae_type_life"'+(a.types && a.types.indexOf('life')!==-1?' checked':'')+'>Life Partner</label>';
+ h += '<label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="checkbox" id="sae_type_pc"'+(a.types && a.types.indexOf('pc')!==-1?' checked':'')+'>PC Partner</label>';
+ h += '</div>';
+ h += '<div style="display:flex;gap:8px;margin-top:12px">';
+ h += '<button class="btn btn-outline" onclick="closeEditModal()">Cancel</button>';
+ h += '<button class="btn btn-pri" onclick="saveSplitAgentEdit('+id+')">Save Changes</button>';
+ h += '</div>';
+ $1('#editModalContent').innerHTML = h;
+ $1('#editModal').className = 'modal-overlay show';
+}
+
+function saveSplitAgentEdit(id){
+ var a = getSplitAgents().find(function(x){return x.id===id});
+ if(!a) return;
+ var name = ($1('#sae_name').value||'').trim();
+ if(!name){ showToast('Name is required', 2000); return; }
+ var isLife = $1('#sae_type_life') && $1('#sae_type_life').checked;
+ var isPC = $1('#sae_type_pc') && $1('#sae_type_pc').checked;
+ if(!isLife && !isPC){ showToast('Select at least one type', 2000); return; }
+
+ // Update existing cases that reference the old name
+ var oldName = a.name;
+ a.name = name;
+ a.email = ($1('#sae_email').value||'').trim();
+ a.phone = ($1('#sae_phone').value||'').trim();
+ a.types = [];
+ if(isLife) a.types.push('life');
+ if(isPC) a.types.push('pc');
+
+ // Update splitName on any cases that used the old name
+ if(oldName !== name){
+  cases.forEach(function(c){
+   if(c.splitName === oldName) c.splitName = name;
+  });
+  saveCases();
+ }
+
+ saveSettings();
+ closeEditModal();
+ showToast('✅ Partner updated: ' + name, 2000);
+ renderSettings();
 }
 
 function toggleSplitAgent(id){
