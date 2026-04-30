@@ -1315,7 +1315,7 @@ function renderBookOfBusiness(){
  var cats = ['IUL / Universal Life','Annuities','Life (Whole / Term)','Banking / CD / Other'];
  cats.forEach(function(c){ h += '<option value="'+c+'"'+(filterCat===c?' selected':'')+'>'+c+'</option>'; });
  h += '</select>';
- h += '<input type="text" placeholder="Search client..." value="'+searchQuery+'" oninput="searchQuery=this.value;renderBookOfBusiness()" style="min-width:160px">';
+ h += '<input id="bobSearch" type="text" placeholder="Search client..." value="'+searchQuery+'" oninput="searchQuery=this.value;renderBookOfBusiness()" style="min-width:160px">';
 
  // Count
  var filtered = getFilteredCases();
@@ -1378,6 +1378,16 @@ function renderBookOfBusiness(){
  h += '</tbody></table></div>';
 
  $1('#p1').innerHTML = h;
+
+ // Restore focus to search input if it was active (preserves typing experience)
+ if(searchQuery){
+  var sb = $1('#bobSearch');
+  if(sb){
+   sb.focus();
+   var len = sb.value.length;
+   sb.setSelectionRange(len, len);
+  }
+ }
 }
 
 function getFilteredCases(){
