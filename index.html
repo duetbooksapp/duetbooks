@@ -395,6 +395,16 @@ tr:hover td{background:#FAFAFA}
  <div class="modal fb-review-modal" id="fbReviewContent"></div>
 </div>
 
+<!-- Import Preview Modal -->
+<div class="modal-overlay" id="importPreviewModal">
+ <div class="modal" id="importPreviewContent" style="max-width:900px;width:95%;max-height:90vh;overflow-y:auto"></div>
+</div>
+
+<!-- Duplicate Scanner Modal -->
+<div class="modal-overlay" id="dupScannerModal">
+ <div class="modal" id="dupScannerContent" style="max-width:900px;width:95%;max-height:90vh;overflow-y:auto"></div>
+</div>
+
 <!-- Chat Bot Widget -->
 <button class="chat-fab" onclick="toggleChat()" title="DuetBooks Help">💬</button>
 <div class="chat-panel" id="chatPanel">
@@ -542,6 +552,86 @@ var products = [
 ];
 
 function findProd(n){ return products.find(function(p){return p.name===n}) || products[0]; }
+
+// Normalize client name for matching: lowercase, trim, collapse internal whitespace
+function normalizeClientName(s){
+ return (s||'').toLowerCase().trim().replace(/\s+/g,' ');
+}
+
+// Find product by plan code (any product whose codes string contains the given plan code)
+function findProdByPlanCode(planCode){
+ if(!planCode) return null;
+ var pc = planCode.toUpperCase().trim();
+ return products.find(function(p){
+  if(!p.codes) return false;
+  // codes is a comma-separated string like "G22AR, G22ARN" or "W21GN, RWL21, TAR20E"
+  return p.codes.toUpperCase().split(/[,\s]+/).indexOf(pc) !== -1;
+ }) || null;
+}
+
+// Find candidate matches for a Varicent case in the existing pipeline.
+// Returns { tier: 'A'|'B'|'C'|'D', candidate: caseObj|null, varianceAmt: number }
+// Tier A: exact match (client + plan code in product OR product matches plan_code's product, premium to penny)
+// Tier B: same client + plan code matches product (any premium)
+// Tier C: same client name only, status is open (not paid)
+// Tier D: no match
+function findCaseMatchCandidates(vc){
+ var vcName = normalizeClientName(vc.client);
+ if(!vcName) return {tier:'D', candidate:null, varianceAmt:0};
+ var vcAmt = Math.round((vc.paid_premium||0)*100);
+ var vcPlan = (vc.plan_code||'').toUpperCase().trim();
+ var planProd = findProdByPlanCode(vc.plan_code); // resolved product object for the plan code
+
+ var sameName = cases.filter(function(c){
+  return c && normalizeClientName(c.client) === vcName;
+ });
+ if(sameName.length === 0) return {tier:'D', candidate:null, varianceAmt:0};
+
+ // Helper: does this case's product match the Varicent plan code?
+ function caseProductMatchesPlan(c){
+  if(!vcPlan) return false;
+  var prod = c.product || '';
+  if(prod.toUpperCase().indexOf(vcPlan) !== -1) return true;
+  // Also check: does the case's product look up to a product whose codes include this plan
+  var cp = findProd(c.product);
+  if(cp && cp.codes && cp.codes.toUpperCase().split(/[,\s]+/).indexOf(vcPlan) !== -1) return true;
+  // Or: did the user enter a product that maps to the same product object as the plan code?
+  if(planProd && cp && planProd.name === cp.name) return true;
+  return false;
+ }
+
+ // Tier A: exact match
+ var exact = sameName.find(function(c){
+  return caseProductMatchesPlan(c) && Math.round((c.amount||0)*100) === vcAmt && c.status !== 'paid' && c.status !== 'paid-partial';
+ });
+ if(exact){
+  return {tier:'A', candidate:exact, varianceAmt:0};
+ }
+
+ // Tier B: same client + plan code match (any premium), not yet paid
+ var strong = sameName.find(function(c){
+  return caseProductMatchesPlan(c) && c.status !== 'paid' && c.status !== 'paid-partial';
+ });
+ if(strong){
+  // Compute variance: actual commission - what calcCase would estimate at Tier amount
+  var expected = calcCase(strong).agentShare || 0;
+  var actual = vc.commission || 0;
+  return {tier:'B', candidate:strong, varianceAmt: actual - expected};
+ }
+
+ // Tier C: same client name only, open status
+ var openStatuses = ['pending','submitted','approved','issued'];
+ var possible = sameName.find(function(c){
+  return openStatuses.indexOf(c.status) !== -1;
+ });
+ if(possible){
+  var expected2 = calcCase(possible).agentShare || 0;
+  var actual2 = vc.commission || 0;
+  return {tier:'C', candidate:possible, varianceAmt: actual2 - expected2};
+ }
+
+ return {tier:'D', candidate:null, varianceAmt:0};
+}
 
 // ── Utilities ──
 function $(sel){ return document.querySelectorAll(sel); }
@@ -948,8 +1038,13 @@ function calcCase(c){
 }
 
 var statusOrder = ['pending','submitted','approved','issued','paid'];
-function statusIdx(s){ return statusOrder.indexOf((s||'').toLowerCase()); }
+function statusIdx(s){
+ // 'paid-partial' counts as paid for ordering/progress
+ if(s === 'paid-partial') return statusOrder.indexOf('paid');
+ return statusOrder.indexOf((s||'').toLowerCase());
+}
 function statusBadge(s){
+ if(s === 'paid-partial') return '<span class="badge badge-amb" title="Paid less than expected">Paid (Partial)</span>';
  var cls = s==='paid'?'badge-grn':s==='issued'?'badge-pri':s==='approved'?'badge-pri':s==='submitted'?'badge-amb':'badge-red';
  return '<span class="badge '+cls+'">'+s.charAt(0).toUpperCase()+s.slice(1)+'</span>';
 }
@@ -1054,7 +1149,7 @@ function calc3MMAForecast(){
  var pipelineByStatus = {pending:0, submitted:0, approved:0, issued:0};
  var pipelineTotal = 0;
  cases.forEach(function(c){
-  if(c.status === 'paid') return;
+  if(c.status === 'paid' || c.status === 'paid-partial') return;
   // If case already has production credit from Varicent, use it
   var credits = 0;
   if(c.productionCredit && c.productionCredit > 0){
@@ -1128,7 +1223,7 @@ function renderDashboard(){
  yearCases.forEach(function(c){
   var calc = calcCase(c);
   totalProduction += calc.agentShare;
-  if(c.status !== 'paid') totalPending += calc.agentShare;
+  if(c.status !== 'paid' && c.status !== 'paid-partial') totalPending += calc.agentShare;
  });
 
  // YTD Paid = sum of varicent payouts from pay periods (authoritative Varicent number)
@@ -1309,6 +1404,7 @@ function renderBookOfBusiness(){
  h += '<div class="filter-bar">';
  h += '<select onchange="filterStatus=this.value;renderBookOfBusiness()"><option value="">All Statuses</option>';
  statusOrder.forEach(function(s){ h += '<option value="'+s+'"'+(filterStatus===s?' selected':'')+'>'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>'; });
+ h += '<option value="paid-partial"'+(filterStatus==='paid-partial'?' selected':'')+'>Paid (Partial)</option>';
  h += '</select>';
  h += '<select onchange="filterCarrier=this.value;renderBookOfBusiness()"><option value="">All Carriers</option><option value="AAA"'+(filterCarrier==='AAA'?' selected':'')+'>AAA</option><option value="MassMutual"'+(filterCarrier==='MassMutual'?' selected':'')+'>MassMutual</option><option value="Securian"'+(filterCarrier==='Securian'?' selected':'')+'>Securian</option></select>';
  h += '<select onchange="filterCat=this.value;renderBookOfBusiness()"><option value="">All Categories</option>';
@@ -1362,7 +1458,13 @@ function renderBookOfBusiness(){
   if(c.split === 'life') splitDisplay = '<span style="font-size:10px"><span class="badge badge-pri" style="font-size:8px">Life</span> '+(c.splitName||'')+'</span>';
   else if(c.split === 'pc' || c.split === 'split') splitDisplay = '<span style="font-size:10px"><span class="badge badge-grn" style="font-size:8px">PC</span> '+(c.splitName||'')+'</span>';
   h += '<td>'+splitDisplay+'</td>';
-  h += '<td>'+statusBadge(c.status)+'</td>';
+  var statusCell = statusBadge(c.status);
+  if(c.status === 'paid-partial' && c.paidVariance){
+   var vAmt = c.paidVariance;
+   var vSign = vAmt < 0 ? '−' : '+';
+   statusCell += '<div style="font-size:9px;color:var(--amb);margin-top:2px" title="Expected: '+fmt(c.expectedCommission||0)+' / Paid: '+fmt(c.actualCommission||0)+'">var '+vSign+fmt(Math.abs(vAmt))+'</div>';
+  }
+  h += '<td>'+statusCell+'</td>';
   h += '<td style="font-size:11px">'+c.submitted+'</td>';
   h += '<td style="font-size:11px">'+(c.paidIn||'—')+'</td>';
   h += '<td style="white-space:nowrap">';
@@ -1565,6 +1667,7 @@ function editCase(caseId){
  h += '<div class="form-group"><label>Split Agent</label><select id="ec_splitname_sel" onchange="onSplitAgentChange(\'ec_splitname_sel\',\'ec_splitname_custom\')" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--txt)">'+getSplitAgentOptions(ecSplitType, c.splitName||'')+'</select><input id="ec_splitname_custom" type="text" placeholder="Type partner name..." style="display:none;width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;margin-top:4px;background:var(--bg);color:var(--txt)"></div>';
  h += '<div class="form-group"><label>Status</label><select id="ec_status">';
  statusOrder.forEach(function(s){ h += '<option value="'+s+'"'+(c.status===s?' selected':'')+'>'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>'; });
+ h += '<option value="paid-partial"'+(c.status==='paid-partial'?' selected':'')+'>Paid (Partial)</option>';
  h += '</select></div>';
  h += '</div>';
  h += '<div class="form-row">';
@@ -1775,7 +1878,7 @@ function updatePayPreview(){
  if(varicent > 0){
   var matches = [];
   cases.forEach(function(c){
-   if(c.status === 'paid') return;
+   if(c.status === 'paid' || c.status === 'paid-partial') return;
    var calc = calcCase(c);
    if(calc.agentShare <= 0) return;
    var pctDiff = Math.abs(calc.agentShare - varicent) / calc.agentShare;
@@ -1929,7 +2032,7 @@ function renderCashFlow(){
 
  cases.forEach(function(c){
   var calc = calcCase(c);
-  if(c.status === 'paid'){
+  if(c.status === 'paid' || c.status === 'paid-partial'){
    paid += calc.agentShare;
   } else {
    pendingTotal += calc.agentShare;
@@ -2270,6 +2373,15 @@ function renderSettings(){
  h += '</div>';
  h += '<button class="btn btn-pri btn-sm" onclick="addSplitAgent()">Add Partner</button>';
  h += '</div>';
+ h += '</div>';
+
+ // Duplicate Audit
+ h += '<div class="card">';
+ h += '<h3>Duplicate Audit</h3>';
+ h += '<div style="font-size:11px;color:var(--muted);margin-bottom:8px">Scan your Book of Business for cases with the same client name. Useful for cleaning up after Varicent imports created duplicates.</div>';
+ var dupCount = findDuplicates().length;
+ var btnLabel = dupCount > 0 ? '🔎 Scan for Duplicates ('+dupCount+' group'+(dupCount>1?'s':'')+' found)' : '🔎 Scan for Duplicates';
+ h += '<button class="btn btn-pri" onclick="showDuplicateScanner()">'+btnLabel+'</button>';
  h += '</div>';
 
  h += '<div class="card">';
@@ -2721,6 +2833,296 @@ document.addEventListener('paste', function(e){
  }
 });
 
+// ════════════════════════════════════════════
+// DUPLICATE SCANNER
+// ════════════════════════════════════════════
+function findDuplicates(){
+ // Group cases by normalized client name; return groups with 2+ cases that aren't already marked dupReviewed
+ var groups = {};
+ (cases || []).forEach(function(c){
+  if(!c || !c.client) return;
+  var key = normalizeClientName(c.client);
+  if(!key) return;
+  if(!groups[key]) groups[key] = [];
+  groups[key].push(c);
+ });
+ var dupGroups = [];
+ Object.keys(groups).forEach(function(k){
+  if(groups[k].length < 2) return;
+  // Skip groups where all members have been marked dupReviewed:true
+  var allReviewed = groups[k].every(function(c){ return c.dupReviewed === true; });
+  if(allReviewed) return;
+  dupGroups.push({ key: k, name: groups[k][0].client, cases: groups[k] });
+ });
+ return dupGroups;
+}
+
+function showDuplicateScanner(){
+ var groups = findDuplicates();
+ var h = '';
+ h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">';
+ h += '<div style="font-size:18px;font-weight:700;color:var(--pri)">🔎 Duplicate Audit</div>';
+ h += '<button class="btn btn-outline btn-sm" onclick="closeDupScanner()">&times; Close</button>';
+ h += '</div>';
+
+ if(groups.length === 0){
+  h += '<div style="padding:30px;text-align:center;color:var(--muted)">✅ No duplicates found. Your Book of Business is clean.</div>';
+ } else {
+  h += '<div style="font-size:11px;color:var(--muted);margin-bottom:12px">Found '+groups.length+' client name'+(groups.length>1?'s':'')+' with 2+ cases. Review each pair and choose to merge or keep both.</div>';
+
+  groups.forEach(function(g){
+   h += '<div style="border:1px solid var(--border);border-radius:6px;padding:12px;margin-bottom:10px">';
+   h += '<div style="font-weight:700;font-size:13px;margin-bottom:8px">'+g.name+' — '+g.cases.length+' cases</div>';
+   h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">';
+   g.cases.forEach(function(c){
+    h += '<div style="padding:8px;background:var(--bg);border-radius:4px;font-size:11px">';
+    h += '<div style="font-size:10px;color:var(--muted)">ID: '+c.id+'</div>';
+    h += '<div style="font-weight:600">'+(c.product||'?')+'</div>';
+    h += '<div>Premium: '+fmt(c.amount||0)+'</div>';
+    h += '<div>Comm: '+fmt(c.actualCommission||calcCase(c).agentShare||0)+'</div>';
+    h += '<div>Status: '+statusBadge(c.status)+'</div>';
+    if(c.paidIn) h += '<div>Paid In: '+c.paidIn+'</div>';
+    if(c.splitName) h += '<div>Partner: '+c.splitName+'</div>';
+    h += '</div>';
+   });
+   h += '</div>';
+   // Merge controls
+   h += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">';
+   h += '<button class="btn btn-outline btn-sm" onclick="markDupReviewed(\''+g.key+'\')">Keep all (separate cases)</button>';
+   g.cases.forEach(function(c){
+    h += '<button class="btn btn-pri btn-sm" onclick="mergeIntoCase('+c.id+',\''+g.key+'\')">Merge into ID '+c.id+'</button>';
+   });
+   h += '</div>';
+   h += '</div>';
+  });
+ }
+
+ $1('#dupScannerContent').innerHTML = h;
+ $1('#dupScannerModal').className = 'modal-overlay show';
+}
+
+function closeDupScanner(){
+ $1('#dupScannerModal').className = 'modal-overlay';
+}
+
+function markDupReviewed(groupKey){
+ var n = 0;
+ cases.forEach(function(c){
+  if(c && normalizeClientName(c.client) === groupKey){
+   c.dupReviewed = true;
+   n++;
+  }
+ });
+ if(n > 0) saveCases();
+ showToast('Marked '+n+' cases as separate (not duplicates)', 2500);
+ showDuplicateScanner();
+}
+
+function mergeIntoCase(keepId, groupKey){
+ var keep = cases.find(function(c){ return c && c.id === keepId; });
+ if(!keep) return;
+ if(!confirm('Merge other "'+keep.client+'" cases into ID '+keepId+'? This will delete the other cases.')) return;
+
+ var others = cases.filter(function(c){
+  return c && normalizeClientName(c.client) === groupKey && c.id !== keepId;
+ });
+
+ // Pick the most "advanced" status: prefer paid > paid-partial > issued > approved > submitted > pending
+ function statusRank(s){
+  if(s === 'paid') return 100;
+  if(s === 'paid-partial') return 95;
+  if(s === 'issued') return 80;
+  if(s === 'approved') return 70;
+  if(s === 'submitted') return 60;
+  return 50;
+ }
+ var allCases = [keep].concat(others);
+ var bestStatus = allCases.reduce(function(best, c){
+  return statusRank(c.status) > statusRank(best.status) ? c : best;
+ }, keep);
+
+ // Pull paid data from the most-advanced case
+ if(bestStatus.id !== keep.id || statusRank(bestStatus.status) > statusRank(keep.status)){
+  if(bestStatus.actualCommission !== undefined) keep.actualCommission = bestStatus.actualCommission;
+  if(bestStatus.productionCredit !== undefined) keep.productionCredit = bestStatus.productionCredit;
+  if(bestStatus.paidIn) keep.paidIn = bestStatus.paidIn;
+  if(bestStatus.paidDate) keep.paidDate = bestStatus.paidDate;
+  if(statusRank(bestStatus.status) > statusRank(keep.status)) keep.status = bestStatus.status;
+  // If kept case has no amount but the paid one does, use it
+  if(!keep.amount && bestStatus.amount) keep.amount = bestStatus.amount;
+  if(!keep.rate && bestStatus.rate) keep.rate = bestStatus.rate;
+ }
+
+ // Fill in any missing fields from others (splitName, etc.)
+ others.forEach(function(o){
+  if(!keep.splitName && o.splitName) keep.splitName = o.splitName;
+  if(!keep.splitEmail && o.splitEmail) keep.splitEmail = o.splitEmail;
+  if(!keep.phone && o.phone) keep.phone = o.phone;
+  if(!keep.policyType && o.policyType) keep.policyType = o.policyType;
+ });
+
+ keep.notes = (keep.notes || '') + ' | Merged from IDs: ' + others.map(function(o){return o.id;}).join(', ');
+ keep.updated = new Date().toISOString();
+
+ // Remove the other cases
+ var removeIds = others.map(function(o){return o.id;});
+ cases = cases.filter(function(c){ return !c || removeIds.indexOf(c.id) === -1; });
+
+ saveCases();
+ showToast('Merged '+others.length+' case'+(others.length>1?'s':'')+' into ID '+keepId, 3000);
+ showDuplicateScanner();
+}
+
+// ════════════════════════════════════════════
+// IMPORT PREVIEW & CONFIRM
+// ════════════════════════════════════════════
+var _pendingPreviewActions = null;
+
+function showImportPreview(actions){
+ _pendingPreviewActions = actions;
+ var h = '';
+ h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">';
+ h += '<div style="font-size:18px;font-weight:700;color:var(--pri)">Review Varicent Import (' + actions.length + ' cases)</div>';
+ h += '<button class="btn btn-outline btn-sm" onclick="cancelImportPreview()">&times; Cancel</button>';
+ h += '</div>';
+ h += '<div style="font-size:11px;color:var(--muted);margin-bottom:12px">Review each case below. Auto-matches are pre-selected (green). Possible matches needing review are amber. New cases will be added fresh.</div>';
+
+ actions.forEach(function(a, idx){
+  var vc = a.varicentCase;
+  var tier = a.tier;
+  var bg = tier === 'A' ? 'var(--gtint)' : tier === 'B' ? 'var(--ptint)' : tier === 'C' ? 'var(--atint)' : 'var(--card)';
+  var borderColor = tier === 'A' ? 'var(--grn)' : tier === 'B' ? 'var(--pri)' : tier === 'C' ? 'var(--amb)' : 'var(--border)';
+  var icon = tier === 'A' ? '✓' : tier === 'B' ? '✓' : tier === 'C' ? '⚠' : '+';
+  var label = tier === 'A' ? 'Auto-match' : tier === 'B' ? 'Match (variance)' : tier === 'C' ? 'Possible match — REVIEW' : 'New case';
+
+  h += '<div style="border:2px solid '+borderColor+';background:'+bg+';border-radius:6px;padding:10px 12px;margin-bottom:8px">';
+  h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+  h += '<div style="font-size:11px;font-weight:700">'+icon+' '+label+'</div>';
+  h += '<div style="font-size:10px;color:var(--muted)">'+a.section+' &middot; '+(a.vMeta.period_label||'')+'</div>';
+  h += '</div>';
+
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px">';
+  // Varicent side
+  h += '<div style="padding:8px;background:var(--card);border-radius:4px">';
+  h += '<div style="font-weight:600;color:var(--pri);margin-bottom:4px">From Varicent</div>';
+  h += '<div><b>'+(vc.client||'(no name)')+'</b></div>';
+  h += '<div style="font-size:11px;color:var(--muted)">'+(vc.product||'')+' '+(vc.plan_code||'')+'</div>';
+  h += '<div style="font-size:11px">Premium: '+fmt(vc.paid_premium||0)+' &middot; Commission: <b>'+fmt(vc.commission||0)+'</b></div>';
+  h += '</div>';
+
+  // Existing case side
+  h += '<div style="padding:8px;background:var(--card);border-radius:4px">';
+  if(a.candidate){
+   var c = a.candidate;
+   h += '<div style="font-weight:600;color:var(--pri);margin-bottom:4px">Existing Pipeline Case (ID '+c.id+')</div>';
+   h += '<div><b>'+c.client+'</b></div>';
+   h += '<div style="font-size:11px;color:var(--muted)">'+c.product+' &middot; '+c.status+'</div>';
+   h += '<div style="font-size:11px">Premium: '+fmt(c.amount||0)+' &middot; Est: '+fmt(calcCase(c).agentShare||0)+'</div>';
+   if(Math.abs(a.varianceAmt) > 0.5){
+    var vSign = a.varianceAmt < 0 ? '−' : '+';
+    h += '<div style="font-size:11px;color:var(--amb);font-weight:600">Variance: '+vSign+fmt(Math.abs(a.varianceAmt))+'</div>';
+   }
+  } else {
+   h += '<div style="font-size:11px;color:var(--muted)">No matching pipeline case found</div>';
+  }
+  h += '</div>';
+  h += '</div>';
+
+  // Action controls
+  h += '<div style="display:flex;gap:10px;align-items:center;margin-top:8px;font-size:12px">';
+  h += '<label style="display:flex;align-items:center;gap:4px"><input type="radio" name="imp_act_'+idx+'" value="match" '+(a.chosenAction==='match'?'checked':'')+(a.candidate?'':' disabled')+' onchange="_pendingPreviewActions['+idx+'].chosenAction=this.value"> Match</label>';
+  h += '<label style="display:flex;align-items:center;gap:4px"><input type="radio" name="imp_act_'+idx+'" value="new" '+(a.chosenAction==='new'?'checked':'')+' onchange="_pendingPreviewActions['+idx+'].chosenAction=this.value"> Create new</label>';
+  h += '<label style="display:flex;align-items:center;gap:4px"><input type="radio" name="imp_act_'+idx+'" value="skip" '+(a.chosenAction==='skip'?'checked':'')+' onchange="_pendingPreviewActions['+idx+'].chosenAction=this.value"> Skip</label>';
+  if(a.candidate && Math.abs(a.varianceAmt) > 0.5){
+   h += '<label style="display:flex;align-items:center;gap:4px;margin-left:auto"><input type="checkbox" '+(a.markPartial?'checked':'')+' onchange="_pendingPreviewActions['+idx+'].markPartial=this.checked"> Mark as Paid (Partial)</label>';
+  }
+  h += '</div>';
+  h += '</div>';
+ });
+
+ h += '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">';
+ h += '<button class="btn btn-outline" onclick="cancelImportPreview()">Cancel</button>';
+ h += '<button class="btn btn-pri" onclick="confirmImport()">Confirm Import ('+actions.length+' cases)</button>';
+ h += '</div>';
+
+ $1('#importPreviewContent').innerHTML = h;
+ $1('#importPreviewModal').className = 'modal-overlay show';
+}
+
+function cancelImportPreview(){
+ $1('#importPreviewModal').className = 'modal-overlay';
+ _pendingPreviewActions = null;
+ // Pay periods were already saved; just finalize with no case changes
+ finishImport(0, 0);
+}
+
+function confirmImport(){
+ var actions = _pendingPreviewActions || [];
+ var newCount = 0, updatedCount = 0;
+ var ctx = window._importContext || {};
+ var getCaseDate = ctx.getCaseDate || function(m,p){ return {submitted: toYMD(new Date()), year: new Date().getFullYear()}; };
+
+ actions.forEach(function(a){
+  var vc = a.varicentCase;
+  var v = a.vMeta;
+  if(a.chosenAction === 'skip') return;
+
+  if(a.chosenAction === 'match' && a.candidate){
+   var c = a.candidate;
+   // Compute expected commission BEFORE we overwrite case fields
+   var expected = calcCase(c).agentShare || 0;
+   c.expectedCommission = expected;
+   c.expectedAmount = c.amount;
+   c.paidVariance = (vc.commission || 0) - expected;
+   c.actualCommission = vc.commission || 0;
+   c.productionCredit = vc.production_credit || 0;
+   if(vc.paid_premium) c.amount = vc.paid_premium;
+   if(vc.mma_rate || vc.commission_rate) c.rate = vc.mma_rate || vc.commission_rate;
+   if(vc.is_split && (!c.split || c.split === 'full')) c.split = 'pc';
+   c.status = a.markPartial ? 'paid-partial' : 'paid';
+   c.paidDate = toYMD(new Date());
+   c.paidIn = v.period_label || '';
+   c.notes = (c.notes || '') + ' | Matched from Varicent ' + (v._filename||'');
+   c.updated = new Date().toISOString();
+   updatedCount++;
+   return;
+  }
+
+  // Create new case
+  var prodLabel = vc.product || 'Unknown Product';
+  if(vc.plan_code) prodLabel += ' (' + vc.plan_code + ')';
+  var dateInfo = getCaseDate(v.month, v.period_label);
+  cases.push({
+   id: nextCaseId++,
+   client: (vc.client || '').trim(),
+   phone: '',
+   product: prodLabel,
+   policyType: vc.policy_type || 'New',
+   section: a.section,
+   amount: vc.paid_premium || vc.production_credit || 0,
+   rate: vc.mma_rate || vc.commission_rate || 0,
+   actualCommission: vc.commission || 0,
+   productionCredit: vc.production_credit || 0,
+   split: vc.is_split ? 'pc' : 'full',
+   splitName: '', splitEmail: '',
+   status: 'paid',
+   submitted: dateInfo.submitted,
+   estPay: '',
+   paidDate: toYMD(new Date()),
+   paidIn: v.period_label || '',
+   notes: (vc.policy_type || 'New') + ' | ' + a.section + ' | Paid Premium: $'+(vc.paid_premium||0).toFixed(2)+' | Prod Credit: $'+(vc.production_credit||0).toFixed(2),
+   year: dateInfo.year,
+   created: new Date().toISOString()
+  });
+  newCount++;
+ });
+
+ if(newCount > 0 || updatedCount > 0) saveCases();
+ $1('#importPreviewModal').className = 'modal-overlay';
+ _pendingPreviewActions = null;
+ finishImport(newCount, updatedCount);
+}
+
 async function processUploads(){
  var apiKey = getApiKey();
  if(!apiKey){
@@ -2806,6 +3208,10 @@ async function processUploads(){
 
  var totalNewCases = 0, totalUpdatedCases = 0, periodsCreated = 0, duplicatesSkipped = 0;
 
+ // Collect proposed case actions (from Varicent imports) for the preview modal
+ // Each action: { varicentCase, vMeta:{period_label,month,_filename}, candidate, tier, varianceAmt, expectedCommission, section, chosenAction:'match'|'new'|'skip', markPartial:bool }
+ var pendingImportActions = [];
+
  // Auto-save each pay period
  // Try to pair Varicent + Workday by period label first, then month, otherwise create separate entries
  var usedWorkdays = {};
@@ -2876,62 +3282,28 @@ async function processUploads(){
   payPeriods.push(pe);
   periodsCreated++;
 
-  // Process cases from Section 4 (3MMA Transaction Details) into Book of Business
-  function importCaseList(caseList, section){
+  // Collect Varicent cases as proposed actions (for preview modal)
+  function collectImportActions(caseList, section){
    if(!caseList || caseList.length === 0) return;
    caseList.forEach(function(pc){
     if(!pc.client) return;
-    // Match by client + plan_code + paid_premium to allow same client with multiple policies
-    var pcAmt = Math.round((pc.paid_premium||0)*100);
-    var existing = cases.find(function(c){
-     return c.client.toLowerCase().trim() === pc.client.toLowerCase().trim()
-      && c.product && c.product.indexOf(pc.plan_code||'NOMATCH') !== -1
-      && Math.round((c.amount||0)*100) === pcAmt;
+    var match = findCaseMatchCandidates(pc);
+    var defaultAction = (match.tier === 'A' || match.tier === 'B' || match.tier === 'C') ? 'match' : 'new';
+    var defaultPartial = (match.tier === 'B' || match.tier === 'C') && Math.abs(match.varianceAmt) > 0.5;
+    pendingImportActions.push({
+     varicentCase: pc,
+     vMeta: { period_label: v.period_label, month: v.month, _filename: v._filename },
+     candidate: match.candidate,
+     tier: match.tier,
+     varianceAmt: match.varianceAmt,
+     section: section,
+     chosenAction: defaultAction,
+     markPartial: defaultPartial
     });
-    if(existing){
-     if(existing.status !== 'paid'){
-      existing.status = 'paid';
-      existing.paidDate = toYMD(new Date());
-      existing.paidIn = v.period_label || '';
-      if(pc.commission) existing.actualCommission = pc.commission;
-      if(pc.production_credit) existing.productionCredit = pc.production_credit;
-      if(pc.paid_premium) existing.amount = pc.paid_premium;
-      if(pc.mma_rate || pc.commission_rate) existing.rate = pc.mma_rate || pc.commission_rate;
-      if(pc.is_split) existing.split = 'split';
-      totalUpdatedCases++;
-     }
-    } else {
-     var prodLabel = pc.product || 'Unknown Product';
-     if(pc.plan_code) prodLabel += ' (' + pc.plan_code + ')';
-     var policyType = pc.policy_type || 'New';
-     cases.push({
-      id: nextCaseId++,
-      client: pc.client.trim(),
-      phone: '',
-      product: prodLabel,
-      policyType: policyType,
-      section: section,
-      amount: pc.paid_premium || pc.production_credit || 0,
-      rate: pc.mma_rate || pc.commission_rate || 0,
-      actualCommission: pc.commission || 0,
-      productionCredit: pc.production_credit || 0,
-      split: pc.is_split ? 'split' : 'full',
-      splitName: '', splitEmail: '',
-      status: 'paid',
-      submitted: getCaseDate(v.month, v.period_label).submitted,
-      estPay: '',
-      paidDate: toYMD(new Date()),
-      paidIn: v.period_label || '',
-      notes: policyType + ' | ' + section + ' | Paid Premium: $'+(pc.paid_premium||0).toFixed(2)+' | Prod Credit: $'+(pc.production_credit||0).toFixed(2),
-      year: getCaseDate(v.month, v.period_label).year,
-      created: new Date().toISOString()
-     });
-     totalNewCases++;
-    }
    });
   }
-  importCaseList(v.cases, '3MMA');
-  importCaseList(v.flat_cases, 'Flat/CD');
+  collectImportActions(v.cases, '3MMA');
+  collectImportActions(v.flat_cases, 'Flat/CD');
 
  });
 
@@ -3041,31 +3413,53 @@ async function processUploads(){
   periodsCreated++;
  });
 
- // Save everything
+ // Save pay periods immediately (no preview needed for those)
  if(periodsCreated > 0) savePayPeriods();
- if(totalNewCases > 0 || totalUpdatedCases > 0) saveCases();
+
+ // Stash import metadata for the confirmImport handler
+ window._importContext = {
+  errors: errors,
+  duplicatesSkipped: duplicatesSkipped,
+  periodsCreated: periodsCreated,
+  statusEl: statusEl,
+  getCaseDate: getCaseDate
+ };
+
+ // Clear file uploads UI now (preview modal will run independently)
+ uploadedFiles = [];
+ if($1('#upload_previews')) $1('#upload_previews').innerHTML = '';
+
+ if(pendingImportActions.length > 0){
+  showImportPreview(pendingImportActions);
+  return;
+ }
+
+ // No cases to review — just show summary for pay periods
+ finishImport(0, 0);
+}
+
+function finishImport(newCount, updatedCount){
+ var ctx = window._importContext || {};
 
  // Build summary message
  var msg = [];
- if(periodsCreated > 0) msg.push(periodsCreated + ' pay period'+(periodsCreated>1?'s':'')+' created');
- if(totalNewCases > 0) msg.push(totalNewCases + ' new case'+(totalNewCases>1?'s':'')+' added to Book of Business');
- if(totalUpdatedCases > 0) msg.push(totalUpdatedCases + ' case'+(totalUpdatedCases>1?'s':'')+' marked as Paid');
- if(duplicatesSkipped > 0) msg.push(duplicatesSkipped + ' duplicate'+(duplicatesSkipped>1?'s':'')+' skipped (already imported)');
- if(errors.length > 0) msg.push(errors.length + ' file'+(errors.length>1?'s':'')+' had errors');
+ if(ctx.periodsCreated > 0) msg.push(ctx.periodsCreated + ' pay period'+(ctx.periodsCreated>1?'s':'')+' created');
+ if(newCount > 0) msg.push(newCount + ' new case'+(newCount>1?'s':'')+' added to Book of Business');
+ if(updatedCount > 0) msg.push(updatedCount + ' case'+(updatedCount>1?'s':'')+' marked as Paid');
+ if(ctx.duplicatesSkipped > 0) msg.push(ctx.duplicatesSkipped + ' duplicate'+(ctx.duplicatesSkipped>1?'s':'')+' skipped (already imported)');
+ if(ctx.errors && ctx.errors.length > 0) msg.push(ctx.errors.length + ' file'+(ctx.errors.length>1?'s':'')+' had errors');
 
- var summaryIcon = duplicatesSkipped > 0 && periodsCreated === 0 && totalNewCases === 0 ? '\u26A0\uFE0F' : '\u2705';
- var summaryBg = duplicatesSkipped > 0 && periodsCreated === 0 && totalNewCases === 0 ? 'var(--atint,#fff8e1)' : 'var(--gtint)';
- var summaryColor = duplicatesSkipped > 0 && periodsCreated === 0 && totalNewCases === 0 ? 'var(--amb)' : 'var(--grn)';
+ var summaryIcon = msg.length === 0 ? '\u26A0\uFE0F' : '\u2705';
+ var summaryBg = msg.length === 0 ? 'var(--atint,#fff8e1)' : 'var(--gtint)';
+ var summaryColor = msg.length === 0 ? 'var(--amb)' : 'var(--grn)';
  var summaryHtml = '<div style="padding:12px;background:'+summaryBg+';border-radius:6px;color:'+summaryColor+';font-size:12px;font-weight:600">'+summaryIcon+' ' + (msg.length > 0 ? msg.join(' \u2022 ') : 'No new data to import') + '</div>';
- if(errors.length > 0){
-  summaryHtml += '<div style="padding:8px;background:var(--rtint);border-radius:6px;color:var(--red);font-size:11px;margin-top:6px">Errors: ' + errors.join(', ') + '</div>';
+ if(ctx.errors && ctx.errors.length > 0){
+  summaryHtml += '<div style="padding:8px;background:var(--rtint);border-radius:6px;color:var(--red);font-size:11px;margin-top:6px">Errors: ' + ctx.errors.join(', ') + '</div>';
  }
- statusEl.innerHTML = summaryHtml;
- showToast(msg.join('. '), 5000);
+ if(ctx.statusEl) ctx.statusEl.innerHTML = summaryHtml;
+ if(msg.length > 0) showToast(msg.join('. '), 5000);
 
- // Clear uploads and re-render
- uploadedFiles = [];
- $1('#upload_previews').innerHTML = '';
+ // Re-render
  payFormOpen = false;
  renderPayPeriods();
  renderBookOfBusiness();
@@ -3572,6 +3966,8 @@ document.addEventListener('click', function(e){
  if(e.target.id === 'fbReviewModal') closeFbReview();
  if(e.target.id === 'onboardModal') dismissOnboarding();
  if(e.target.id === 'fbModal') closeFeedbackModal();
+ if(e.target.id === 'importPreviewModal') cancelImportPreview();
+ if(e.target.id === 'dupScannerModal') closeDupScanner();
 });
 
 // Enter key on login
