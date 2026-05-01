@@ -2943,14 +2943,49 @@ function mergeIntoCase(keepId, groupKey){
 
  // Pull paid data from the most-advanced case
  if(bestStatus.id !== keep.id || statusRank(bestStatus.status) > statusRank(keep.status)){
+  // BEFORE overwriting, capture expected values from the kept case (the original estimate)
+  var expectedAmtPre = keep.amount || 0;
+  var expectedCommPre = (calcCase(keep).agentShare) || 0;
+
   if(bestStatus.actualCommission !== undefined) keep.actualCommission = bestStatus.actualCommission;
   if(bestStatus.productionCredit !== undefined) keep.productionCredit = bestStatus.productionCredit;
   if(bestStatus.paidIn) keep.paidIn = bestStatus.paidIn;
   if(bestStatus.paidDate) keep.paidDate = bestStatus.paidDate;
-  if(statusRank(bestStatus.status) > statusRank(keep.status)) keep.status = bestStatus.status;
-  // If kept case has no amount but the paid one does, use it
-  if(!keep.amount && bestStatus.amount) keep.amount = bestStatus.amount;
-  if(!keep.rate && bestStatus.rate) keep.rate = bestStatus.rate;
+  if(bestStatus.rate && !keep.rate) keep.rate = bestStatus.rate;
+
+  // Variance detection: if the merged paid case has a different premium than the kept case,
+  // record expected values and offer to mark as paid-partial
+  var paidAmt = (bestStatus.amount || 0);
+  var actualComm = (bestStatus.actualCommission || 0);
+  var amtDiffer = expectedAmtPre > 0 && paidAmt > 0 && Math.abs(expectedAmtPre - paidAmt) > 0.5;
+  var commDiffer = expectedCommPre > 0 && actualComm > 0 && Math.abs(expectedCommPre - actualComm) > 0.5;
+
+  if(amtDiffer || commDiffer){
+   keep.expectedAmount = expectedAmtPre;
+   keep.expectedCommission = expectedCommPre;
+   keep.paidVariance = actualComm - expectedCommPre;
+   // Default behavior: keep the kept case's original amount (so the variance is visible)
+   // and mark as paid-partial. Ask user to confirm.
+   var summary = 'Variance detected:\\n'
+    + 'Original amount: $' + expectedAmtPre.toFixed(2) + '\\n'
+    + 'Paid amount: $' + paidAmt.toFixed(2) + '\\n'
+    + 'Expected commission: $' + expectedCommPre.toFixed(2) + '\\n'
+    + 'Actual paid: $' + actualComm.toFixed(2) + '\\n'
+    + 'Variance: $' + (actualComm - expectedCommPre).toFixed(2) + '\\n\\n'
+    + 'Mark as Paid (Partial) and keep original amount as the expected estimate?';
+   if(confirm(summary)){
+    keep.status = 'paid-partial';
+    // amount stays at expectedAmtPre (original estimate)
+   } else {
+    // User declined — fall back to standard merge behavior
+    if(statusRank(bestStatus.status) > statusRank(keep.status)) keep.status = bestStatus.status;
+    if(!keep.amount && bestStatus.amount) keep.amount = bestStatus.amount;
+   }
+  } else {
+   // No meaningful variance — just mark with the best status
+   if(statusRank(bestStatus.status) > statusRank(keep.status)) keep.status = bestStatus.status;
+   if(!keep.amount && bestStatus.amount) keep.amount = bestStatus.amount;
+  }
  }
 
  // Fill in any missing fields from others (splitName, etc.)
