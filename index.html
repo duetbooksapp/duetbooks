@@ -405,6 +405,11 @@ tr:hover td{background:#FAFAFA}
  <div class="modal" id="dupScannerContent" style="max-width:900px;width:95%;max-height:90vh;overflow-y:auto"></div>
 </div>
 
+<!-- Audit Log Modal -->
+<div class="modal-overlay" id="auditLogModal">
+ <div class="modal" id="auditLogContent" style="max-width:900px;width:95%;max-height:90vh;overflow-y:auto"></div>
+</div>
+
 <!-- Chat Bot Widget -->
 <button class="chat-fab" onclick="toggleChat()" title="DuetBooks Help">💬</button>
 <div class="chat-panel" id="chatPanel">
@@ -717,6 +722,51 @@ function saveSettings(){
  fbSave('settings', settings);
 }
 
+// ── Audit Log ──
+// Per-agent audit log. Stored in Firebase at /duetbooks/{agentId}/auditLog/{entryId}
+// Each entry: { id, timestamp, agentId, action, targetIds[], summary, before, after, undone }
+var auditLog = []; // in-memory cache, loaded on enterApp
+
+function logAuditEntry(entry){
+ if(testMode) return; // Don't log audit entries during test mode
+ if(!currentAgent || !currentAgent.id) return;
+ var id = Date.now() + Math.floor(Math.random()*1000);
+ var fullEntry = Object.assign({
+  id: id,
+  timestamp: new Date().toISOString(),
+  agentId: currentAgent.id,
+  agentName: currentAgent.name || '',
+  undone: false
+ }, entry);
+ auditLog.push(fullEntry);
+ // Fire-and-forget Firebase write — don't block the operation if it fails
+ try {
+  var url = FIREBASE_URL + '/' + currentAgent.id + '/auditLog/' + id + '.json';
+  fetch(url, {method:'PUT', body: JSON.stringify(fullEntry)}).catch(function(){});
+ } catch(e){}
+ return fullEntry;
+}
+
+function loadAuditLog(){
+ if(!currentAgent || !currentAgent.id) return Promise.resolve([]);
+ var url = FIREBASE_URL + '/' + currentAgent.id + '/auditLog.json';
+ return fetch(url).then(function(r){return r.json();}).then(function(data){
+  if(!data) { auditLog = []; return []; }
+  var arr = Object.keys(data).map(function(k){ return data[k]; }).filter(function(e){ return e && e.id; });
+  arr.sort(function(a,b){ return (a.id||0) - (b.id||0); }); // chronological
+  auditLog = arr;
+  return arr;
+ }).catch(function(){ auditLog = []; return []; });
+}
+
+function deleteAuditEntry(entryId){
+ if(testMode) return;
+ auditLog = auditLog.filter(function(e){ return e.id !== entryId; });
+ try {
+  fetch(FIREBASE_URL + '/' + currentAgent.id + '/auditLog/' + entryId + '.json', {method:'DELETE'}).catch(function(){});
+ } catch(e){}
+}
+
 // ── Test Mode Functions ──
 function enterTestMode(){
  if(testMode) return;
@@ -999,6 +1049,7 @@ function enterApp(){
  var dmBtn = $1('#darkModeBtn');
  if(dmBtn) dmBtn.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
  loadFeedback().catch(function(e){ console.error('Feedback load error:', e); }).finally(function(){ renderAll(); checkChatLogs(); });
+ loadAuditLog().catch(function(e){ console.error('Audit log load error:', e); });
 }
 
 // ════════════════════════════════════════════
@@ -1621,19 +1672,42 @@ function advanceStatus(caseId){
  if(!c) return;
  var idx = statusIdx(c.status);
  if(idx < 4){
+  var prevStatus = c.status;
   c.status = statusOrder[idx+1];
   if(c.status === 'paid') c.paidDate = toYMD(new Date());
   c.updated = new Date().toISOString();
   saveCases();
+  // Log status change to/from paid (those affect financial totals)
+  if(c.status === 'paid' || prevStatus === 'paid' || c.status === 'paid-partial' || prevStatus === 'paid-partial'){
+   logAuditEntry({
+    action: 'status_change',
+    targetIds: [caseId],
+    client: c.client,
+    summary: c.client + ' status: ' + prevStatus + ' → ' + c.status,
+    before: { status: prevStatus, paidDate: c.paidDate ? '' : c.paidDate },
+    after: { status: c.status, paidDate: c.paidDate || '' }
+   });
+  }
   showToast(c.client + ' → ' + c.status.charAt(0).toUpperCase()+c.status.slice(1), 2000);
   renderAll();
  }
 }
 
 function deleteCase(caseId){
+ var c = cases.find(function(x){return x.id===caseId});
+ if(!c) return;
  if(!confirm('Delete this case?')) return;
- cases = cases.filter(function(c){return c.id!==caseId});
+ var snapshot = JSON.parse(JSON.stringify(c));
+ cases = cases.filter(function(x){return x.id!==caseId});
  saveCases();
+ logAuditEntry({
+  action: 'delete',
+  targetIds: [caseId],
+  client: c.client,
+  summary: 'Deleted case ID ' + caseId + ' — ' + c.client + ' ' + (c.product||'') + ' $' + (c.amount||0).toFixed(2),
+  before: { case: snapshot },
+  after: null
+ });
  showToast('Case deleted', 2000);
  renderAll();
 }
@@ -1689,6 +1763,8 @@ function editCase(caseId){
 function saveEditCase(caseId){
  var c = cases.find(function(x){return x.id===caseId});
  if(!c) return;
+ var prevStatus = c.status;
+ var prevAmount = c.amount;
  c.client = $1('#ec_client').value.trim();
  c.phone = ($1('#ec_phone').value||'').replace(/[^\d]/g,'');
  c.product = $1('#ec_product').value;
@@ -1703,6 +1779,17 @@ function saveEditCase(caseId){
  c.notes = $1('#ec_notes').value.trim();
  c.updated = new Date().toISOString();
  saveCases();
+ // Log if status changed to/from paid or paid-partial (affects totals)
+ if(prevStatus !== c.status && (prevStatus === 'paid' || prevStatus === 'paid-partial' || c.status === 'paid' || c.status === 'paid-partial')){
+  logAuditEntry({
+   action: 'status_change',
+   targetIds: [caseId],
+   client: c.client,
+   summary: c.client + ' (manual edit) status: ' + prevStatus + ' → ' + c.status,
+   before: { status: prevStatus, amount: prevAmount },
+   after: { status: c.status, amount: c.amount }
+  });
+ }
  closeEditModal();
  showToast('Case updated: ' + c.client, 2000);
  renderAll();
@@ -2384,6 +2471,15 @@ function renderSettings(){
  h += '<button class="btn btn-pri" onclick="showDuplicateScanner()">'+btnLabel+'</button>';
  h += '</div>';
 
+ // Audit Log
+ h += '<div class="card">';
+ h += '<h3>Audit Log</h3>';
+ h += '<div style="font-size:11px;color:var(--muted);margin-bottom:8px">View a history of merges, deletes, status changes, and Varicent imports. Recent merges and deletes can be undone within 7 days.</div>';
+ var auditCount = (auditLog || []).length;
+ var auditBtnLabel = auditCount > 0 ? '📜 View Audit Log ('+auditCount+' '+(auditCount===1?'entry':'entries')+')' : '📜 View Audit Log';
+ h += '<button class="btn btn-pri" onclick="showAuditLog()">'+auditBtnLabel+'</button>';
+ h += '</div>';
+
  h += '<div class="card">';
  h += '<h3>Data Management</h3>';
  h += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">';
@@ -2905,6 +3001,148 @@ function closeDupScanner(){
  $1('#dupScannerModal').className = 'modal-overlay';
 }
 
+// ════════════════════════════════════════════
+// AUDIT LOG VIEWER
+// ════════════════════════════════════════════
+var _auditFilter = { range: '30', action: '' };
+
+function showAuditLog(){
+ var entries = (auditLog || []).slice().sort(function(a,b){ return (b.id||0) - (a.id||0); });
+
+ // Apply filters
+ var now = Date.now();
+ var rangeDays = parseInt(_auditFilter.range, 10) || 0;
+ if(rangeDays > 0){
+  var cutoff = now - rangeDays * 24 * 60 * 60 * 1000;
+  entries = entries.filter(function(e){ return new Date(e.timestamp).getTime() >= cutoff; });
+ }
+ if(_auditFilter.action){
+  entries = entries.filter(function(e){ return e.action === _auditFilter.action; });
+ }
+
+ var h = '';
+ h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
+ h += '<div style="font-size:18px;font-weight:700;color:var(--pri)">📜 Audit Log ('+entries.length+')</div>';
+ h += '<button class="btn btn-outline btn-sm" onclick="closeAuditLog()">&times; Close</button>';
+ h += '</div>';
+
+ // Filters
+ h += '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">';
+ h += '<select onchange="_auditFilter.range=this.value;showAuditLog()" style="padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--bg);color:var(--txt)">';
+ [['7','Last 7 days'],['30','Last 30 days'],['90','Last 90 days'],['0','All time']].forEach(function(o){
+  h += '<option value="'+o[0]+'"'+(_auditFilter.range===o[0]?' selected':'')+'>'+o[1]+'</option>';
+ });
+ h += '</select>';
+ h += '<select onchange="_auditFilter.action=this.value;showAuditLog()" style="padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--bg);color:var(--txt)">';
+ [['','All actions'],['merge','Merges'],['delete','Deletions'],['status_change','Status changes'],['import_confirm','Imports']].forEach(function(o){
+  h += '<option value="'+o[0]+'"'+(_auditFilter.action===o[0]?' selected':'')+'>'+o[1]+'</option>';
+ });
+ h += '</select>';
+ h += '</div>';
+
+ if(entries.length === 0){
+  h += '<div style="padding:30px;text-align:center;color:var(--muted);font-size:13px">No audit entries match the current filter.</div>';
+ } else {
+  entries.forEach(function(e){
+   var d = new Date(e.timestamp);
+   var dateStr = d.toLocaleString();
+   var actColor = e.action === 'merge' ? 'var(--pri)' : e.action === 'delete' ? 'var(--red)' : e.action === 'import_confirm' ? 'var(--grn)' : 'var(--amb)';
+   var actBg = e.action === 'merge' ? 'var(--ptint)' : e.action === 'delete' ? 'var(--rtint)' : e.action === 'import_confirm' ? 'var(--gtint)' : 'var(--atint)';
+   var canUndo = !e.undone && (e.action === 'merge' || e.action === 'delete') && (now - new Date(e.timestamp).getTime() < 7*24*60*60*1000); // 7 day window
+   h += '<div style="border:1px solid var(--border);border-left:3px solid '+actColor+';background:'+actBg+';border-radius:4px;padding:10px 12px;margin-bottom:6px;font-size:12px">';
+   h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">';
+   h += '<div style="flex:1">';
+   h += '<div style="font-size:10px;color:var(--muted)">'+dateStr+' &middot; <b style="color:'+actColor+'">'+(e.action||"").replace(/_/g," ").toUpperCase()+'</b>'+(e.undone ? ' &middot; <span style="color:var(--red)">UNDONE</span>' : '')+'</div>';
+   h += '<div style="margin-top:2px">'+e.summary+'</div>';
+   h += '</div>';
+   h += '<div style="display:flex;gap:4px;flex-shrink:0">';
+   h += '<button class="btn btn-outline btn-sm" onclick="toggleAuditDetail('+e.id+')" style="font-size:10px">Details</button>';
+   if(canUndo) h += '<button class="btn btn-outline btn-sm" onclick="undoAuditEntry('+e.id+')" style="font-size:10px;color:var(--amb)">Undo</button>';
+   h += '</div>';
+   h += '</div>';
+   h += '<div id="audit_detail_'+e.id+'" style="display:none;margin-top:8px;padding:8px;background:var(--card);border-radius:4px;font-family:monospace;font-size:10px;overflow-x:auto;white-space:pre-wrap">'+JSON.stringify({before:e.before, after:e.after}, null, 2)+'</div>';
+   h += '</div>';
+  });
+ }
+
+ $1('#auditLogContent').innerHTML = h;
+ $1('#auditLogModal').className = 'modal-overlay show';
+}
+
+function closeAuditLog(){
+ $1('#auditLogModal').className = 'modal-overlay';
+}
+
+function toggleAuditDetail(id){
+ var el = $1('#audit_detail_'+id);
+ if(el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function undoAuditEntry(entryId){
+ var entry = auditLog.find(function(e){ return e.id === entryId; });
+ if(!entry || entry.undone){ showToast('Cannot undo this entry', 2000); return; }
+
+ if(entry.action === 'merge'){
+  if(!confirm('Undo merge for "'+(entry.client||'this entry')+'"? This will restore the deleted cases and revert the kept case to its pre-merge state.')) return;
+  // Restore the kept case to its before-merge state
+  if(entry.before && entry.before.keep){
+   var keepIdx = cases.findIndex(function(c){ return c && c.id === entry.before.keep.id; });
+   if(keepIdx !== -1) cases[keepIdx] = JSON.parse(JSON.stringify(entry.before.keep));
+   else cases.push(JSON.parse(JSON.stringify(entry.before.keep))); // fallback if it was deleted somehow
+  }
+  // Re-create the deleted cases
+  if(entry.before && entry.before.removed){
+   entry.before.removed.forEach(function(removedCase){
+    var exists = cases.find(function(c){ return c && c.id === removedCase.id; });
+    if(!exists) cases.push(JSON.parse(JSON.stringify(removedCase)));
+   });
+  }
+  entry.undone = true;
+  saveCases();
+  // Update the audit entry in Firebase
+  try {
+   fetch(FIREBASE_URL + '/' + currentAgent.id + '/auditLog/' + entry.id + '.json', {method:'PATCH', body: JSON.stringify({undone:true})}).catch(function(){});
+  } catch(e){}
+  // Log the undo action
+  logAuditEntry({
+   action: 'undo',
+   targetIds: entry.targetIds || [],
+   summary: 'Undid merge from audit entry #' + entry.id + ' — restored ' + (entry.before.removed||[]).length + ' deleted case(s)',
+   before: null,
+   after: { undidEntryId: entry.id }
+  });
+  showToast('Merge undone — cases restored', 3000);
+  showAuditLog();
+  return;
+ }
+
+ if(entry.action === 'delete'){
+  if(!confirm('Undo delete for "'+(entry.client||'this case')+'"? This will recreate the case.')) return;
+  if(entry.before && entry.before.case){
+   var existing = cases.find(function(c){ return c && c.id === entry.before.case.id; });
+   if(existing){ showToast('Case ID '+entry.before.case.id+' already exists', 2500); return; }
+   cases.push(JSON.parse(JSON.stringify(entry.before.case)));
+   entry.undone = true;
+   saveCases();
+   try {
+    fetch(FIREBASE_URL + '/' + currentAgent.id + '/auditLog/' + entry.id + '.json', {method:'PATCH', body: JSON.stringify({undone:true})}).catch(function(){});
+   } catch(e){}
+   logAuditEntry({
+    action: 'undo',
+    targetIds: [entry.before.case.id],
+    summary: 'Undid delete from audit entry #' + entry.id + ' — restored case ID ' + entry.before.case.id,
+    before: null,
+    after: { undidEntryId: entry.id }
+   });
+   showToast('Case restored', 3000);
+   showAuditLog();
+   return;
+  }
+ }
+
+ showToast('Undo not supported for this action type', 2500);
+}
+
 function markDupReviewed(groupKey){
  var n = 0;
  cases.forEach(function(c){
@@ -2926,6 +3164,10 @@ function mergeIntoCase(keepId, groupKey){
  var others = cases.filter(function(c){
   return c && normalizeClientName(c.client) === groupKey && c.id !== keepId;
  });
+
+ // Snapshot for audit log (full deep copy of all cases involved BEFORE merge)
+ var auditBeforeKeep = JSON.parse(JSON.stringify(keep));
+ var auditBeforeOthers = JSON.parse(JSON.stringify(others));
 
  // Pick the most "advanced" status: prefer paid > paid-partial > issued > approved > submitted > pending
  function statusRank(s){
@@ -3004,6 +3246,20 @@ function mergeIntoCase(keepId, groupKey){
  cases = cases.filter(function(c){ return !c || removeIds.indexOf(c.id) === -1; });
 
  saveCases();
+
+ // Audit log entry
+ var summaryText = 'Merged ' + others.length + ' case' + (others.length>1?'s':'') + ' for "' + keep.client + '" into ID ' + keepId
+  + ' (status: ' + keep.status + (keep.paidVariance ? ', variance: $' + keep.paidVariance.toFixed(2) : '') + ')';
+ logAuditEntry({
+  action: 'merge',
+  targetIds: [keepId].concat(others.map(function(o){return o.id;})),
+  keptId: keepId,
+  client: keep.client,
+  summary: summaryText,
+  before: { keep: auditBeforeKeep, removed: auditBeforeOthers },
+  after: { keep: JSON.parse(JSON.stringify(keep)) }
+ });
+
  showToast('Merged '+others.length+' case'+(others.length>1?'s':'')+' into ID '+keepId, 3000);
  showDuplicateScanner();
 }
@@ -3094,16 +3350,19 @@ function cancelImportPreview(){
 function confirmImport(){
  var actions = _pendingPreviewActions || [];
  var newCount = 0, updatedCount = 0;
+ var skippedCount = 0;
+ var matchedDetails = []; // for audit log
  var ctx = window._importContext || {};
  var getCaseDate = ctx.getCaseDate || function(m,p){ return {submitted: toYMD(new Date()), year: new Date().getFullYear()}; };
 
  actions.forEach(function(a){
   var vc = a.varicentCase;
   var v = a.vMeta;
-  if(a.chosenAction === 'skip') return;
+  if(a.chosenAction === 'skip'){ skippedCount++; return; }
 
   if(a.chosenAction === 'match' && a.candidate){
    var c = a.candidate;
+   var beforeSnap = JSON.parse(JSON.stringify(c));
    // Compute expected commission BEFORE we overwrite case fields
    var expected = calcCase(c).agentShare || 0;
    c.expectedCommission = expected;
@@ -3119,6 +3378,7 @@ function confirmImport(){
    c.paidIn = v.period_label || '';
    c.notes = (c.notes || '') + ' | Matched from Varicent ' + (v._filename||'');
    c.updated = new Date().toISOString();
+   matchedDetails.push({ caseId: c.id, client: c.client, before: beforeSnap });
    updatedCount++;
    return;
   }
@@ -3153,6 +3413,20 @@ function confirmImport(){
  });
 
  if(newCount > 0 || updatedCount > 0) saveCases();
+
+ // Audit log entry — Varicent import summary
+ if(actions.length > 0){
+  var periodLabel = (actions[0] && actions[0].vMeta && actions[0].vMeta.period_label) || 'Unknown period';
+  logAuditEntry({
+   action: 'import_confirm',
+   targetIds: matchedDetails.map(function(m){return m.caseId;}),
+   periodLabel: periodLabel,
+   summary: 'Varicent import (' + periodLabel + '): ' + updatedCount + ' matched, ' + newCount + ' new, ' + skippedCount + ' skipped',
+   before: { matchedDetails: matchedDetails }, // for potential undo of matched changes
+   after: { newCount: newCount, updatedCount: updatedCount, skippedCount: skippedCount }
+  });
+ }
+
  $1('#importPreviewModal').className = 'modal-overlay';
  _pendingPreviewActions = null;
  finishImport(newCount, updatedCount);
@@ -4003,6 +4277,7 @@ document.addEventListener('click', function(e){
  if(e.target.id === 'fbModal') closeFeedbackModal();
  if(e.target.id === 'importPreviewModal') cancelImportPreview();
  if(e.target.id === 'dupScannerModal') closeDupScanner();
+ if(e.target.id === 'auditLogModal') closeAuditLog();
 });
 
 // Enter key on login
