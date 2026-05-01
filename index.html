@@ -605,9 +605,12 @@ function findCaseMatchCandidates(vc){
   return false;
  }
 
+ // Helper: case is "open" if not in a terminal status (paid, paid-partial, declined)
+ function isOpen(c){ return c.status !== 'paid' && c.status !== 'paid-partial' && c.status !== 'declined'; }
+
  // Tier A: exact match
  var exact = sameName.find(function(c){
-  return caseProductMatchesPlan(c) && Math.round((c.amount||0)*100) === vcAmt && c.status !== 'paid' && c.status !== 'paid-partial';
+  return caseProductMatchesPlan(c) && Math.round((c.amount||0)*100) === vcAmt && isOpen(c);
  });
  if(exact){
   return {tier:'A', candidate:exact, varianceAmt:0};
@@ -615,7 +618,7 @@ function findCaseMatchCandidates(vc){
 
  // Tier B: same client + plan code match (any premium), not yet paid
  var strong = sameName.find(function(c){
-  return caseProductMatchesPlan(c) && c.status !== 'paid' && c.status !== 'paid-partial';
+  return caseProductMatchesPlan(c) && isOpen(c);
  });
  if(strong){
   // Compute variance: actual commission - what calcCase would estimate at Tier amount
@@ -1090,12 +1093,13 @@ function calcCase(c){
 
 var statusOrder = ['pending','submitted','approved','issued','paid'];
 function statusIdx(s){
- // 'paid-partial' counts as paid for ordering/progress
- if(s === 'paid-partial') return statusOrder.indexOf('paid');
+ // 'paid-partial' and 'declined' count as terminal (same rank as paid) — no Next button
+ if(s === 'paid-partial' || s === 'declined') return statusOrder.indexOf('paid');
  return statusOrder.indexOf((s||'').toLowerCase());
 }
 function statusBadge(s){
  if(s === 'paid-partial') return '<span class="badge badge-amb" title="Paid less than expected">Paid (Partial)</span>';
+ if(s === 'declined') return '<span class="badge" style="background:#777;color:#fff" title="Policy was declined">Declined</span>';
  var cls = s==='paid'?'badge-grn':s==='issued'?'badge-pri':s==='approved'?'badge-pri':s==='submitted'?'badge-amb':'badge-red';
  return '<span class="badge '+cls+'">'+s.charAt(0).toUpperCase()+s.slice(1)+'</span>';
 }
@@ -1200,7 +1204,7 @@ function calc3MMAForecast(){
  var pipelineByStatus = {pending:0, submitted:0, approved:0, issued:0};
  var pipelineTotal = 0;
  cases.forEach(function(c){
-  if(c.status === 'paid' || c.status === 'paid-partial') return;
+  if(c.status === 'paid' || c.status === 'paid-partial' || c.status === 'declined') return;
   // If case already has production credit from Varicent, use it
   var credits = 0;
   if(c.productionCredit && c.productionCredit > 0){
@@ -1274,7 +1278,8 @@ function renderDashboard(){
  yearCases.forEach(function(c){
   var calc = calcCase(c);
   totalProduction += calc.agentShare;
-  if(c.status !== 'paid' && c.status !== 'paid-partial') totalPending += calc.agentShare;
+  // Pending = not yet settled (excludes paid, paid-partial, declined)
+  if(c.status !== 'paid' && c.status !== 'paid-partial' && c.status !== 'declined') totalPending += calc.agentShare;
  });
 
  // YTD Paid = sum of varicent payouts from pay periods (authoritative Varicent number)
@@ -1456,6 +1461,7 @@ function renderBookOfBusiness(){
  h += '<select onchange="filterStatus=this.value;renderBookOfBusiness()"><option value="">All Statuses</option>';
  statusOrder.forEach(function(s){ h += '<option value="'+s+'"'+(filterStatus===s?' selected':'')+'>'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>'; });
  h += '<option value="paid-partial"'+(filterStatus==='paid-partial'?' selected':'')+'>Paid (Partial)</option>';
+ h += '<option value="declined"'+(filterStatus==='declined'?' selected':'')+'>Declined</option>';
  h += '</select>';
  h += '<select onchange="filterCarrier=this.value;renderBookOfBusiness()"><option value="">All Carriers</option><option value="AAA"'+(filterCarrier==='AAA'?' selected':'')+'>AAA</option><option value="MassMutual"'+(filterCarrier==='MassMutual'?' selected':'')+'>MassMutual</option><option value="Securian"'+(filterCarrier==='Securian'?' selected':'')+'>Securian</option></select>';
  h += '<select onchange="filterCat=this.value;renderBookOfBusiness()"><option value="">All Categories</option>';
@@ -1678,7 +1684,7 @@ function advanceStatus(caseId){
   c.updated = new Date().toISOString();
   saveCases();
   // Log status change to/from paid (those affect financial totals)
-  if(c.status === 'paid' || prevStatus === 'paid' || c.status === 'paid-partial' || prevStatus === 'paid-partial'){
+  if(c.status === 'paid' || prevStatus === 'paid' || c.status === 'paid-partial' || prevStatus === 'paid-partial' || c.status === 'declined' || prevStatus === 'declined'){
    logAuditEntry({
     action: 'status_change',
     targetIds: [caseId],
@@ -1742,6 +1748,7 @@ function editCase(caseId){
  h += '<div class="form-group"><label>Status</label><select id="ec_status">';
  statusOrder.forEach(function(s){ h += '<option value="'+s+'"'+(c.status===s?' selected':'')+'>'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>'; });
  h += '<option value="paid-partial"'+(c.status==='paid-partial'?' selected':'')+'>Paid (Partial)</option>';
+ h += '<option value="declined"'+(c.status==='declined'?' selected':'')+'>Declined</option>';
  h += '</select></div>';
  h += '</div>';
  h += '<div class="form-row">';
@@ -1780,7 +1787,7 @@ function saveEditCase(caseId){
  c.updated = new Date().toISOString();
  saveCases();
  // Log if status changed to/from paid or paid-partial (affects totals)
- if(prevStatus !== c.status && (prevStatus === 'paid' || prevStatus === 'paid-partial' || c.status === 'paid' || c.status === 'paid-partial')){
+ if(prevStatus !== c.status && (prevStatus === 'paid' || prevStatus === 'paid-partial' || prevStatus === 'declined' || c.status === 'paid' || c.status === 'paid-partial' || c.status === 'declined')){
   logAuditEntry({
    action: 'status_change',
    targetIds: [caseId],
@@ -1965,7 +1972,7 @@ function updatePayPreview(){
  if(varicent > 0){
   var matches = [];
   cases.forEach(function(c){
-   if(c.status === 'paid' || c.status === 'paid-partial') return;
+   if(c.status === 'paid' || c.status === 'paid-partial' || c.status === 'declined') return;
    var calc = calcCase(c);
    if(calc.agentShare <= 0) return;
    var pctDiff = Math.abs(calc.agentShare - varicent) / calc.agentShare;
@@ -2118,6 +2125,8 @@ function renderCashFlow(){
  var d90 = new Date(now); d90.setDate(d90.getDate()+90); var day90 = toYMD(d90);
 
  cases.forEach(function(c){
+  // Declined cases don't pay and aren't pending — skip entirely
+  if(c.status === 'declined') return;
   var calc = calcCase(c);
   if(c.status === 'paid' || c.status === 'paid-partial'){
    paid += calc.agentShare;
@@ -3173,6 +3182,7 @@ function mergeIntoCase(keepId, groupKey){
  function statusRank(s){
   if(s === 'paid') return 100;
   if(s === 'paid-partial') return 95;
+  if(s === 'declined') return 90; // terminal but no commission
   if(s === 'issued') return 80;
   if(s === 'approved') return 70;
   if(s === 'submitted') return 60;
