@@ -442,8 +442,8 @@ tr:hover td{background:#FAFAFA}
 // DUET BOOKS — Standalone Compensation Tracker
 // ════════════════════════════════════════════
 
-var APP_VERSION = 'v1.2.0';
-var APP_BUILD_DATE = '2026-05-07';
+var APP_VERSION = 'v1.1.0';
+var APP_BUILD_DATE = '2026-04-03';
 var FIREBASE_URL = 'https://duet-crm-default-rtdb.firebaseio.com/duetbooks';
 
 // ── State ──
@@ -605,12 +605,9 @@ function findCaseMatchCandidates(vc){
   return false;
  }
 
- // Helper: case is "open" if not in a terminal status (paid, paid-partial, declined)
- function isOpen(c){ return c.status !== 'paid' && c.status !== 'paid-partial' && c.status !== 'declined'; }
-
  // Tier A: exact match
  var exact = sameName.find(function(c){
-  return caseProductMatchesPlan(c) && Math.round((c.amount||0)*100) === vcAmt && isOpen(c);
+  return caseProductMatchesPlan(c) && Math.round((c.amount||0)*100) === vcAmt && c.status !== 'paid' && c.status !== 'paid-partial';
  });
  if(exact){
   return {tier:'A', candidate:exact, varianceAmt:0};
@@ -618,7 +615,7 @@ function findCaseMatchCandidates(vc){
 
  // Tier B: same client + plan code match (any premium), not yet paid
  var strong = sameName.find(function(c){
-  return caseProductMatchesPlan(c) && isOpen(c);
+  return caseProductMatchesPlan(c) && c.status !== 'paid' && c.status !== 'paid-partial';
  });
  if(strong){
   // Compute variance: actual commission - what calcCase would estimate at Tier amount
@@ -1093,13 +1090,12 @@ function calcCase(c){
 
 var statusOrder = ['pending','submitted','approved','issued','paid'];
 function statusIdx(s){
- // 'paid-partial' and 'declined' count as terminal (same rank as paid) — no Next button
- if(s === 'paid-partial' || s === 'declined') return statusOrder.indexOf('paid');
+ // 'paid-partial' counts as paid for ordering/progress
+ if(s === 'paid-partial') return statusOrder.indexOf('paid');
  return statusOrder.indexOf((s||'').toLowerCase());
 }
 function statusBadge(s){
  if(s === 'paid-partial') return '<span class="badge badge-amb" title="Paid less than expected">Paid (Partial)</span>';
- if(s === 'declined') return '<span class="badge" style="background:#777;color:#fff" title="Policy was declined">Declined</span>';
  var cls = s==='paid'?'badge-grn':s==='issued'?'badge-pri':s==='approved'?'badge-pri':s==='submitted'?'badge-amb':'badge-red';
  return '<span class="badge '+cls+'">'+s.charAt(0).toUpperCase()+s.slice(1)+'</span>';
 }
@@ -1204,7 +1200,7 @@ function calc3MMAForecast(){
  var pipelineByStatus = {pending:0, submitted:0, approved:0, issued:0};
  var pipelineTotal = 0;
  cases.forEach(function(c){
-  if(c.status === 'paid' || c.status === 'paid-partial' || c.status === 'declined') return;
+  if(c.status === 'paid' || c.status === 'paid-partial') return;
   // If case already has production credit from Varicent, use it
   var credits = 0;
   if(c.productionCredit && c.productionCredit > 0){
@@ -1265,209 +1261,6 @@ function renderAll(){
  renderSettings();
 }
 
-// ═══════════════════════════════════════════════════════════════
-// CRM-PENDING WATCHER — Pulls Won/App-Submitted leads from DuetCRM
-// that don't have a matching DuetBooks case. Shows a Dashboard
-// banner with an "Import" modal for review-then-import. Match rule:
-// fuzzy client name (lowercase + strip non-alphanumeric) AND phone
-// last-10-digits when both sides have a phone (otherwise name-only).
-// ═══════════════════════════════════════════════════════════════
-var CRM_LEADS_URL = 'https://duet-crm-default-rtdb.firebaseio.com/leads.json';
-var _crmPendingLeads = null;
-var _crmPendingLoading = false;
-
-// Mirror of CRM-side product mapping (CRM display name → DuetBooks canonical name)
-var CRM_TO_BOOKS_PRODUCT = {
- 'AAA Accumulator IUL': 'AAA Accumulator - Target Premium',
- 'AAA LifeTime UL (age 79 and under)': 'AAA LifeTime UL - Target (age 79-)',
- 'AAA LifeTime UL (age 80+)': 'AAA LifeTime UL - Target (age 80+)',
- 'Securian Eclipse UL (brokered)': 'Securian Eclipse UL (target/planned)',
- 'MM GIA External Funds (ages 0-79)': 'GIA External Funds (ages 0-79)',
- 'MM GIA Internal Funds (ages 0-79)': 'GIA Internal Funds (ages 0-79)',
- 'MM American Legend 7 External (ages 0-75)': 'American Legend 7 External (ages 0-75)',
- 'MM Safe Return External (ages 0-75)': 'Safe Return External (ages 0-75)',
- 'MM Landmark 3 External (ages 0-75)': 'Landmark 3 External (ages 0-75)',
- 'MM Landmark 5 External (ages 0-75)': 'Landmark 5 External (ages 0-75)',
- 'MM Premier Bonus External (ages 0-75)': 'Premier Bonus External (ages 0-75)',
- 'MM Premier Income Bonus External (ages 0-75)': 'Premier Income Bonus External (ages 0-75)',
- 'Platinum Bonus 5 (AAA Life)': 'Platinum Annuity 5 External (ages 0-79)'
-};
-
-function _esc(s){ return ((s||'')+'').replace(/[&<>"']/g, function(ch){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]; }); }
-function _normCRMName(s){ return ((s||'')+'').toLowerCase().replace(/[^a-z0-9]/g,''); }
-function _normCRMPhone(s){ var d = ((s||'')+'').replace(/\D/g,''); return d.length > 10 ? d.slice(-10) : d; }
-
-function _crmMatchesBooksCase(lead, bcase){
- if(!bcase || !lead) return false;
- if(_normCRMName(lead.name) !== _normCRMName(bcase.client)) return false;
- var lp = _normCRMPhone(lead.phone), bp = _normCRMPhone(bcase.phone);
- if(lp && bp && lp !== bp) return false;
- return true;
-}
-
-function loadCRMPending(callback){
- if(_crmPendingLoading) return;
- _crmPendingLoading = true;
- fetch(CRM_LEADS_URL).then(function(r){ return r.json(); }).then(function(data){
-  var allLeads = (data && data.data) ? data.data : [];
-  var closed = allLeads.filter(function(l){
-   return l && (l.stage === 'won' || l.stage === 'app_submitted');
-  });
-  var pending = closed.filter(function(l){
-   return !cases.some(function(c){ return _crmMatchesBooksCase(l, c); });
-  });
-  _crmPendingLeads = pending;
-  _crmPendingLoading = false;
-  if(callback) callback(pending);
- }).catch(function(err){
-  console.error('CRM pending load failed:', err);
-  _crmPendingLeads = [];
-  _crmPendingLoading = false;
- });
-}
-
-function renderCRMPendingBanner(){
- if(!_crmPendingLeads){
-  loadCRMPending(function(){ renderDashboard(); });
-  return '';
- }
- var n = _crmPendingLeads.length;
- if(n === 0) return '';
- var h = '<div style="background:rgba(243,156,18,0.12);border:1px solid var(--amb);border-radius:8px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">';
- h += '<div style="font-size:18px">⚠️</div>';
- h += '<div style="flex:1;min-width:200px">';
- h += '<b>'+n+' Won lead'+(n>1?'s':'')+' in DuetCRM not yet in DuetBooks</b>';
- h += '<div style="font-size:11px;color:var(--muted);margin-top:2px">Marked Won/App Submitted in CRM but the auto-push didn\'t complete. Review & import to keep them in sync.</div>';
- h += '</div>';
- h += '<button class="btn btn-amb" onclick="showCRMImportModal()" style="font-weight:700">Review &amp; Import</button>';
- h += '<button class="btn btn-outline" onclick="_crmPendingLeads=null;renderDashboard()" style="font-size:11px;padding:6px 10px" title="Re-fetch from CRM">🔄</button>';
- h += '</div>';
- return h;
-}
-
-function showCRMImportModal(){
- if(!_crmPendingLeads || _crmPendingLeads.length === 0){ showToast('No pending leads', 3000); return; }
- var pending = _crmPendingLeads;
-
- var overlay = document.createElement('div');
- overlay.id = 'crmImportOverlay';
- overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px';
-
- var h = '<div style="background:var(--bg);max-width:780px;width:100%;max-height:90vh;border-radius:12px;padding:22px;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.4)">';
- h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap">';
- h += '<h3 style="margin:0">📥 Import from DuetCRM ('+pending.length+')</h3>';
- h += '<button onclick="closeCRMImportModal()" style="margin-left:auto;background:transparent;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1" title="Close">×</button>';
- h += '</div>';
- h += '<div style="font-size:11px;color:var(--muted);margin-bottom:12px">Match rule: fuzzy client name + phone (when both have one). Review each row and click Import to create the DuetBooks case.</div>';
-
- pending.forEach(function(l){
-  var prodCRM = (l.selectedProduct || '').trim();
-  var prodMapped = CRM_TO_BOOKS_PRODUCT[prodCRM] || prodCRM;
-  var prodFound = prodMapped ? products.find(function(p){return p.name === prodMapped}) : null;
-  var amt = parseFloat(l.estPremium) || 0;
-  var canImport = (l.name && amt > 0 && prodFound);
-  var stage = l.stage === 'app_submitted' ? 'App Submitted' : 'Won';
-
-  h += '<div style="border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--card)">';
-  h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">';
-  h += '<b style="font-size:14px">'+_esc(l.name)+'</b>';
-  h += '<span style="font-size:10px;background:var(--amb);color:#fff;padding:1px 6px;border-radius:4px">'+stage+'</span>';
-  if(l.phone) h += '<span style="font-size:11px;color:var(--muted)">📞 '+_esc(l.phone)+'</span>';
-  h += '</div>';
-  h += '<div style="font-size:11px;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap;margin-bottom:6px">';
-  h += '<span>Premium: <b style="color:var(--txt)">'+(amt>0?'$'+amt.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'<span style="color:var(--red)">— missing</span>')+'</b></span>';
-  h += '<span>Product: <b style="color:var(--txt)">'+(prodCRM?_esc(prodCRM):'<span style="color:var(--red)">— missing</span>')+'</b>'+(prodCRM && !prodFound?' <span style="color:var(--red)">(no DuetBooks match for "'+_esc(prodMapped)+'")</span>':'')+'</span>';
-  if(l.agent) h += '<span>Agent: <b style="color:var(--txt)">'+_esc(l.agent)+'</b></span>';
-  if(l.source) h += '<span>Source: '+_esc(l.source)+'</span>';
-  h += '</div>';
-  if(l.notes){ var n0 = (l.notes+'').substring(0,140); h += '<div style="font-size:11px;color:var(--muted);margin-top:2px">Notes: '+_esc(n0)+(l.notes.length>140?'…':'')+'</div>'; }
-  if(l.historyNotes && l.historyNotes.length > 0){
-   var firstHN = l.historyNotes[0];
-   h += '<div style="font-size:11px;color:var(--muted);margin-top:2px">CRM history: '+_esc(((firstHN.text||'')+'').substring(0,140))+'</div>';
-  }
-  if(l.wonReason) h += '<div style="font-size:11px;color:var(--muted);margin-top:2px">Won reason: <b>'+_esc(l.wonReason)+'</b></div>';
-  h += '<div style="margin-top:8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">';
-  if(canImport){
-   h += '<button class="btn btn-grn" onclick="importCRMLead('+l.id+')" style="font-weight:700;font-size:12px;padding:6px 14px">📥 Import</button>';
-  } else {
-   var reasons = [];
-   if(amt <= 0) reasons.push('missing premium');
-   if(!prodCRM) reasons.push('missing product');
-   else if(!prodFound) reasons.push('product not in DuetBooks list');
-   h += '<span style="font-size:11px;color:var(--red)">⚠ Cannot import — '+reasons.join(', ')+'. Edit in CRM first.</span>';
-  }
-  h += '<span style="font-size:10px;color:var(--muted);margin-left:auto">CRM lead #'+l.id+'</span>';
-  h += '</div>';
-  h += '</div>';
- });
-
- h += '<div style="display:flex;justify-content:flex-end;margin-top:12px"><button onclick="closeCRMImportModal()" class="btn btn-outline">Close</button></div>';
- h += '</div>';
- overlay.innerHTML = h;
- document.body.appendChild(overlay);
-}
-
-function closeCRMImportModal(){
- var o = document.getElementById('crmImportOverlay');
- if(o) o.remove();
-}
-
-function importCRMLead(leadId){
- if(!_crmPendingLeads) return;
- var lead = _crmPendingLeads.find(function(l){ return l.id === leadId; });
- if(!lead){ showToast('Lead not found', 3000); return; }
- var prodCRM = (lead.selectedProduct || '').trim();
- var prodMapped = CRM_TO_BOOKS_PRODUCT[prodCRM] || prodCRM;
- var prodFound = products.find(function(p){return p.name === prodMapped});
- if(!prodFound){ showToast('Product not recognized: '+prodCRM, 4000); return; }
- var amt = parseFloat(lead.estPremium) || 0;
- if(amt <= 0){ showToast('Missing premium amount', 3000); return; }
-
- var splitType = 'full';
- if(lead.agent){
-  var cat = (prodFound.cat || '').toLowerCase();
-  splitType = (cat.indexOf('life') >= 0 || cat.indexOf('iul') >= 0 || cat.indexOf('universal') >= 0) ? 'life' : 'pc';
- }
-
- var noteParts = ['Imported from CRM lead #'+lead.id];
- if(lead.wonReason) noteParts.push('Won reason: '+lead.wonReason);
- if(lead.historyNotes){
-  lead.historyNotes.forEach(function(n){
-   if(n && n.text) noteParts.push('CRM note ('+(n.date||'').substring(0,10)+'): '+n.text);
-  });
- }
- if(lead.notes) noteParts.push('CRM: '+lead.notes);
-
- var c = {
-  id: nextCaseId++,
-  client: lead.name,
-  phone: (lead.phone || '').replace(/\D/g,''),
-  product: prodMapped,
-  amount: amt,
-  rate: prodFound.rate || 0,
-  split: splitType,
-  splitName: lead.agent || '',
-  splitEmail: '',
-  status: 'pending',
-  submitted: ((lead.stageEnteredDate || lead.created || new Date().toISOString())+'').substring(0,10),
-  estPay: '',
-  paidDate: '',
-  notes: noteParts.join(' · '),
-  year: new Date().getFullYear(),
-  created: new Date().toISOString()
- };
- cases.push(c);
- saveCases();
-
- _crmPendingLeads = _crmPendingLeads.filter(function(l){ return l.id !== leadId; });
- showToast('✅ Imported: '+lead.name+' — '+prodMapped, 4000);
-
- // Refresh the modal in place so the user can keep going
- closeCRMImportModal();
- if(_crmPendingLeads.length > 0) showCRMImportModal();
- renderAll();
-}
-
 // ════════════════════════════════════════════
 // TAB 0: DASHBOARD
 // ════════════════════════════════════════════
@@ -1481,8 +1274,7 @@ function renderDashboard(){
  yearCases.forEach(function(c){
   var calc = calcCase(c);
   totalProduction += calc.agentShare;
-  // Pending = not yet settled (excludes paid, paid-partial, declined)
-  if(c.status !== 'paid' && c.status !== 'paid-partial' && c.status !== 'declined') totalPending += calc.agentShare;
+  if(c.status !== 'paid' && c.status !== 'paid-partial') totalPending += calc.agentShare;
  });
 
  // YTD Paid = sum of varicent payouts from pay periods (authoritative Varicent number)
@@ -1522,7 +1314,7 @@ function renderDashboard(){
  });
  var takeHomeRate = totalPaid > 0 ? (ytdNet / totalPaid * 100).toFixed(0) : '—';
 
- var h = renderCRMPendingBanner();
+ var h = '';
 
  // ── YTD Summary (matching Pay History format) ──
  // Gross Pay hero
@@ -1664,7 +1456,6 @@ function renderBookOfBusiness(){
  h += '<select onchange="filterStatus=this.value;renderBookOfBusiness()"><option value="">All Statuses</option>';
  statusOrder.forEach(function(s){ h += '<option value="'+s+'"'+(filterStatus===s?' selected':'')+'>'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>'; });
  h += '<option value="paid-partial"'+(filterStatus==='paid-partial'?' selected':'')+'>Paid (Partial)</option>';
- h += '<option value="declined"'+(filterStatus==='declined'?' selected':'')+'>Declined</option>';
  h += '</select>';
  h += '<select onchange="filterCarrier=this.value;renderBookOfBusiness()"><option value="">All Carriers</option><option value="AAA"'+(filterCarrier==='AAA'?' selected':'')+'>AAA</option><option value="MassMutual"'+(filterCarrier==='MassMutual'?' selected':'')+'>MassMutual</option><option value="Securian"'+(filterCarrier==='Securian'?' selected':'')+'>Securian</option></select>';
  h += '<select onchange="filterCat=this.value;renderBookOfBusiness()"><option value="">All Categories</option>';
@@ -1887,7 +1678,7 @@ function advanceStatus(caseId){
   c.updated = new Date().toISOString();
   saveCases();
   // Log status change to/from paid (those affect financial totals)
-  if(c.status === 'paid' || prevStatus === 'paid' || c.status === 'paid-partial' || prevStatus === 'paid-partial' || c.status === 'declined' || prevStatus === 'declined'){
+  if(c.status === 'paid' || prevStatus === 'paid' || c.status === 'paid-partial' || prevStatus === 'paid-partial'){
    logAuditEntry({
     action: 'status_change',
     targetIds: [caseId],
@@ -1951,7 +1742,6 @@ function editCase(caseId){
  h += '<div class="form-group"><label>Status</label><select id="ec_status">';
  statusOrder.forEach(function(s){ h += '<option value="'+s+'"'+(c.status===s?' selected':'')+'>'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>'; });
  h += '<option value="paid-partial"'+(c.status==='paid-partial'?' selected':'')+'>Paid (Partial)</option>';
- h += '<option value="declined"'+(c.status==='declined'?' selected':'')+'>Declined</option>';
  h += '</select></div>';
  h += '</div>';
  h += '<div class="form-row">';
@@ -1990,7 +1780,7 @@ function saveEditCase(caseId){
  c.updated = new Date().toISOString();
  saveCases();
  // Log if status changed to/from paid or paid-partial (affects totals)
- if(prevStatus !== c.status && (prevStatus === 'paid' || prevStatus === 'paid-partial' || prevStatus === 'declined' || c.status === 'paid' || c.status === 'paid-partial' || c.status === 'declined')){
+ if(prevStatus !== c.status && (prevStatus === 'paid' || prevStatus === 'paid-partial' || c.status === 'paid' || c.status === 'paid-partial')){
   logAuditEntry({
    action: 'status_change',
    targetIds: [caseId],
@@ -2175,7 +1965,7 @@ function updatePayPreview(){
  if(varicent > 0){
   var matches = [];
   cases.forEach(function(c){
-   if(c.status === 'paid' || c.status === 'paid-partial' || c.status === 'declined') return;
+   if(c.status === 'paid' || c.status === 'paid-partial') return;
    var calc = calcCase(c);
    if(calc.agentShare <= 0) return;
    var pctDiff = Math.abs(calc.agentShare - varicent) / calc.agentShare;
@@ -2328,8 +2118,6 @@ function renderCashFlow(){
  var d90 = new Date(now); d90.setDate(d90.getDate()+90); var day90 = toYMD(d90);
 
  cases.forEach(function(c){
-  // Declined cases don't pay and aren't pending — skip entirely
-  if(c.status === 'declined') return;
   var calc = calcCase(c);
   if(c.status === 'paid' || c.status === 'paid-partial'){
    paid += calc.agentShare;
@@ -3385,7 +3173,6 @@ function mergeIntoCase(keepId, groupKey){
  function statusRank(s){
   if(s === 'paid') return 100;
   if(s === 'paid-partial') return 95;
-  if(s === 'declined') return 90; // terminal but no commission
   if(s === 'issued') return 80;
   if(s === 'approved') return 70;
   if(s === 'submitted') return 60;

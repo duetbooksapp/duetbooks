@@ -1,0 +1,3 @@
+- [Architecture & Systems](architecture.md) — Production Credit, 3MMA, tiers, product categories, phone numbers
+- [Version History](version_history.md) — What was built, bugs fixed, and current state
+- [Deployment & GitHub](deployment.md) — How to push changes, GitHub Pages, Firebase structure

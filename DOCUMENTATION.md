@@ -255,3 +255,9 @@ https://duet-crm-default-rtdb.firebaseio.com/duetbooks.json?shallow=true
 | v1.0.0 | 2026-04-03 | Initial build — login, dashboard, book of business, pay periods, cash flow, settings |
 | v1.1.0 | 2026-04-03 | Retroactive matching, duplicate protection, year filters, unmatched alerts, CD handling |
 | v2.0.0 | 2026-04-03 | 4-tier system with Production Credit, tier forecast, help system, onboarding flow, seed data removed, deployed to GitHub Pages |
+
+---
+
+## Pending / Future Work
+
+- **Install Superpowers plugin** — Evaluate obra/superpowers agentic skills framework for structured dev workflow (planning, TDD, systematic debugging, verification). Already cloned to `~/.claude/plugins/superpowers/` — needs SessionStart hook activation via `/clear` or new session. See: github.com/obra/superpowers

@@ -3,23 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DuetBooks — AAA Life Specialist Compensation Tracker</title>
+<title>Duet Books — AAA Life Specialist Compensation Tracker</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--pri:#534AB7;--grn:#1D9E75;--amb:#EF9F27;--red:#D94545;--dgrn:#0F6E56;--bg:#f5f5f3;--card:#fff;--ptint:#EEEDFE;--gtint:#F0FBF7;--atint:#FFFCF5;--rtint:#FEF2F2;--txt:#222;--muted:#666;--border:#ddd;--radius:8px;--shadow:0 1px 3px rgba(0,0,0,.08)}
-body.dark{--bg:#1a1a2e;--card:#252540;--txt:#e0e0e0;--muted:#999;--border:#3a3a50;--shadow:0 1px 3px rgba(0,0,0,.3);--ptint:#2e2a50;--gtint:#1a3028;--atint:#302a1a;--rtint:#301a1a}
-body.dark .login-card{background:#252540;color:var(--txt)}
-body.dark .login-card h1{color:#8B80E0}
-body.dark .login-card input,body.dark .login-card select{background:#1a1a2e;color:var(--txt);border-color:var(--border)}
-body.dark input,body.dark select,body.dark textarea{background:#1a1a2e;color:var(--txt);border-color:var(--border)}
-body.dark th{background:var(--ptint);color:#B0A8E8}
-body.dark th:hover{background:#3a3460}
-body.dark tr:hover td{background:#2a2a40}
-body.dark .toast{background:#333350;color:#e0e0e0}
-body.dark .modal{background:#252540;color:var(--txt)}
-body.dark .fb-modal-box{background:#252540;color:var(--txt)}
-body.dark .upload-zone{border-color:var(--border);background:var(--ptint)}
-body.dark .needs-card{background:var(--atint);border-color:#4a4030}
 html{font-size:13px}
 body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--txt);line-height:1.5}
 
@@ -229,38 +216,6 @@ tr:hover td{background:#FAFAFA}
 .fb-comment{background:#f9f9f7;border-radius:6px;padding:10px 12px;margin-top:8px;font-size:12px;border-left:3px solid var(--border)}
 .fb-comment .fb-comment-meta{font-size:10px;color:var(--muted);margin-bottom:4px}
 
-/* ── Test Mode Banner ── */
-.test-mode-banner{position:sticky;top:0;z-index:100;background:linear-gradient(90deg,#F59E0B,#EF4444);color:#fff;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.2);font-weight:600}
-.test-mode-banner .tm-label{display:flex;align-items:center;gap:8px;font-size:13px}
-.test-mode-banner .tm-actions{display:flex;gap:8px}
-.test-mode-banner button{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;padding:4px 12px;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer}
-.test-mode-banner button:hover{background:rgba(255,255,255,.3)}
-
-/* ── Chat Bot Widget ── */
-.chat-fab{position:fixed;bottom:24px;right:24px;width:50px;height:50px;border-radius:50%;background:var(--pri);color:#fff;border:none;font-size:22px;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.25);z-index:9000;transition:transform .2s;padding:0;display:flex;align-items:center;justify-content:center}
-.chat-fab:hover{transform:scale(1.08)}
-.chat-panel{position:fixed;bottom:84px;right:24px;width:360px;height:480px;background:var(--card);border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.25);z-index:9001;display:none;flex-direction:column;overflow:hidden;border:1px solid var(--border)}
-.chat-panel.show{display:flex}
-.chat-header{background:var(--pri);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:14px}
-.chat-header button{background:none;border:none;color:#fff;font-size:18px;cursor:pointer}
-.chat-messages{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
-.chat-msg{max-width:85%;padding:8px 12px;border-radius:10px;font-size:12px;line-height:1.5;word-wrap:break-word}
-.chat-msg-bot{background:var(--ptint);color:var(--txt);align-self:flex-start;border-bottom-left-radius:2px}
-.chat-msg-user{background:var(--pri);color:#fff;align-self:flex-end;border-bottom-right-radius:2px}
-.chat-typing{align-self:flex-start;padding:8px 12px;background:var(--ptint);border-radius:10px;font-size:12px;color:var(--muted);font-style:italic}
-.chat-input-bar{display:flex;gap:6px;padding:10px;border-top:1px solid var(--border);background:var(--card)}
-.chat-input-bar input{flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:20px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--txt)}
-.chat-input-bar button{background:var(--pri);color:#fff;border:none;border-radius:50%;width:34px;height:34px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
-@media(max-width:768px){.chat-fab{bottom:70px}.chat-panel{width:calc(100% - 20px);right:10px;bottom:130px;height:60vh}}
-
-/* ── Floating Feedback Button ── */
-.fb-fab{position:fixed;bottom:24px;left:24px;width:50px;height:50px;border-radius:50%;background:var(--dgrn);color:#fff;border:none;font-size:22px;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.25);z-index:9000;transition:transform .2s;padding:0;display:flex;align-items:center;justify-content:center}
-.fb-fab:hover{transform:scale(1.08)}
-.fb-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);z-index:9001;display:none;justify-content:center;align-items:center}
-.fb-modal-overlay.show{display:flex}
-.fb-modal-box{background:#fff;border-radius:12px;padding:24px;max-width:440px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.2);max-height:85vh;overflow-y:auto}
-@media(max-width:768px){.fb-fab{bottom:70px}}
-
 /* ── Version ── */
 .version{text-align:center;font-size:10px;color:var(--muted);padding:20px;opacity:.5}
 
@@ -293,7 +248,7 @@ tr:hover td{background:#FAFAFA}
 <!-- ═══ LOGIN SCREEN ═══ -->
 <div id="loginScreen" class="login-screen">
  <div class="login-card">
-  <h1>DuetBooks</h1>
+  <h1>Duet Books</h1>
   <div class="subtitle">Your Book of Business. One Place. Total Clarity.</div>
 
   <!-- Sign In Mode -->
@@ -313,11 +268,6 @@ tr:hover td{background:#FAFAFA}
    <input id="reg_name" type="text" placeholder="First Last" autocomplete="name">
    <label>Branch</label>
    <input id="reg_branch" type="text" placeholder="e.g. Z012, Palm Harbor, etc.">
-   <label>Agent Type</label>
-   <select id="reg_type">
-    <option value="PC">PC Agent (80/20 split)</option>
-    <option value="Life">Life Agent (50/50 split)</option>
-   </select>
    <label>Create a PIN (4-6 digits)</label>
    <input id="reg_pin" type="password" placeholder="PIN" maxlength="6" inputmode="numeric">
    <label>Confirm PIN</label>
@@ -335,22 +285,12 @@ tr:hover td{background:#FAFAFA}
  <!-- Top Bar -->
  <div class="topbar">
   <div>
-   <div class="brand">DuetBooks</div>
+   <div class="brand">Duet Books</div>
    <div class="agent-info" id="topAgentInfo"></div>
   </div>
   <div class="topbar-right">
    <span style="font-size:11px;opacity:.7"><span class="sync-dot" id="syncDot"></span><span id="syncLabel">Synced</span></span>
-   <button class="logout-btn" onclick="toggleDarkMode()" id="darkModeBtn" title="Toggle dark mode" style="font-size:14px">🌙</button>
    <button class="logout-btn" onclick="doLogout()">Sign Out</button>
-  </div>
- </div>
-
- <!-- Test Mode Banner -->
- <div class="test-mode-banner" id="testModeBanner" style="display:none">
-  <div class="tm-label">🧪 <span>TEST MODE — Sandbox active. Changes will NOT be saved.</span></div>
-  <div class="tm-actions">
-   <button onclick="resetTestMode()" title="Reset to starting state">Reset Sandbox</button>
-   <button onclick="exitTestMode()" title="Exit and restore your real data">Exit Test Mode</button>
   </div>
  </div>
 
@@ -362,6 +302,7 @@ tr:hover td{background:#FAFAFA}
   <div class="tab" onclick="showTab(3)">Forecasting</div>
   <div class="tab" onclick="showTab(4)">Rate Table</div>
   <div class="tab" onclick="showTab(5)">Settings</div>
+  <div class="tab" onclick="showTab(6)">Feedback</div>
  </div>
 
  <!-- ═══ TAB 0: DASHBOARD ═══ -->
@@ -382,6 +323,8 @@ tr:hover td{background:#FAFAFA}
  <!-- ═══ TAB 5: SETTINGS ═══ -->
  <div class="panel" id="p5"></div>
 
+ <!-- ═══ TAB 6: FEEDBACK ═══ -->
+ <div class="panel" id="p6"></div>
 
 </div>
 
@@ -395,42 +338,6 @@ tr:hover td{background:#FAFAFA}
  <div class="modal fb-review-modal" id="fbReviewContent"></div>
 </div>
 
-<!-- Import Preview Modal -->
-<div class="modal-overlay" id="importPreviewModal">
- <div class="modal" id="importPreviewContent" style="max-width:900px;width:95%;max-height:90vh;overflow-y:auto"></div>
-</div>
-
-<!-- Duplicate Scanner Modal -->
-<div class="modal-overlay" id="dupScannerModal">
- <div class="modal" id="dupScannerContent" style="max-width:900px;width:95%;max-height:90vh;overflow-y:auto"></div>
-</div>
-
-<!-- Audit Log Modal -->
-<div class="modal-overlay" id="auditLogModal">
- <div class="modal" id="auditLogContent" style="max-width:900px;width:95%;max-height:90vh;overflow-y:auto"></div>
-</div>
-
-<!-- Chat Bot Widget -->
-<button class="chat-fab" onclick="toggleChat()" title="DuetBooks Help">💬</button>
-<div class="chat-panel" id="chatPanel">
- <div class="chat-header"><span>DuetBooks Help</span><button onclick="toggleChat()">&times;</button></div>
- <div class="chat-messages" id="chatMessages"></div>
- <div class="chat-input-bar"><input id="chatInput" placeholder="Ask a question..." onkeydown="if(event.key==='Enter')sendChat()"><button onclick="sendChat()">➤</button></div>
-</div>
-
-<!-- Floating Feedback Button -->
-<button class="fb-fab" onclick="openFeedbackModal()" title="Submit Feedback">💡</button>
-
-<!-- Feedback Modal -->
-<div class="fb-modal-overlay" id="fbModal">
- <div class="fb-modal-box" id="fbModalContent"></div>
-</div>
-
-<!-- Onboarding Modal -->
-<div class="modal-overlay" id="onboardModal">
- <div class="modal" style="max-width:520px;padding:30px" id="onboardContent"></div>
-</div>
-
 <!-- Toast Container -->
 <div class="toast-container" id="toastContainer"></div>
 
@@ -442,8 +349,8 @@ tr:hover td{background:#FAFAFA}
 // DUET BOOKS — Standalone Compensation Tracker
 // ════════════════════════════════════════════
 
-var APP_VERSION = 'v1.2.0';
-var APP_BUILD_DATE = '2026-05-07';
+var APP_VERSION = 'v1.1.0';
+var APP_BUILD_DATE = '2026-04-03';
 var FIREBASE_URL = 'https://duet-crm-default-rtdb.firebaseio.com/duetbooks';
 
 // ── State ──
@@ -461,29 +368,11 @@ var filterCarrier = '';
 var filterCat = '';
 var searchQuery = '';
 var editingCaseId = null;
-
-// ── Dark Mode ──
-function toggleDarkMode(){
- var isDark = document.body.classList.toggle('dark');
- localStorage.setItem('db_darkmode', isDark ? '1' : '0');
- var btn = $1('#darkModeBtn');
- if(btn) btn.textContent = isDark ? '☀️' : '🌙';
-}
-// Apply on load
-if(localStorage.getItem('db_darkmode') === '1'){
- document.body.classList.add('dark');
-}
 var showAddForm = false;
 
-// ── Test Mode (sandbox) ──
-var testMode = false;
-var testModeBackup = null; // { cases, payPeriods, settings }
-
 var defaultSettings = {
- lifeShare: 50,
- lifePartnerShare: 50,
- pcShare: 80,
- pcPartnerShare: 20,
+ yourShare: 80,
+ partnerShare: 20,
  yearlyGoal: 100000
 };
 
@@ -551,110 +440,17 @@ var products = [
  {name:'Securian Eclipse UL (target/planned)',carrier:'Securian',cat:'IUL / Universal Life',rate:70,t1:35,t2:50,t3:60,basis:'target/planned prem',pct:true,prodCredit:100,codes:'000330'},
  {name:'Securian Eclipse UL (excess)',carrier:'Securian',cat:'IUL / Universal Life',rate:1.85,t1:1.15,t2:1.45,t3:1.65,basis:'excess premium',pct:true,prodCredit:6,codes:'00033X'},
  // ── Banking / CD / Other ──
- {name:'Certificate of Deposit (CD)',carrier:'AAA',cat:'Banking / CD / Other',rate:0.05,t1:0.05,t2:0.05,t3:0.05,basis:'deposit',pct:true,hardwired:true,prodCredit:0,codes:'401'},
- {name:'Credit Card',carrier:'AAA',cat:'Banking / CD / Other',rate:0,t1:0,t2:0,t3:0,basis:'flat fee',pct:false,flat:true,prodCredit:0},
- {name:'AAA Membership',carrier:'AAA',cat:'Banking / CD / Other',rate:0,t1:0,t2:0,t3:0,basis:'flat fee',pct:false,flat:true,prodCredit:0}
+ {name:'Certificate of Deposit (CD)',carrier:'AAA',cat:'Banking / CD / Other',rate:0.05,t1:0.05,t2:0.05,t3:0.05,basis:'deposit',pct:true,hardwired:true,codes:'401'},
+ {name:'Credit Card',carrier:'AAA',cat:'Banking / CD / Other',rate:0,t1:0,t2:0,t3:0,basis:'flat fee',pct:false,flat:true},
+ {name:'AAA Membership',carrier:'AAA',cat:'Banking / CD / Other',rate:0,t1:0,t2:0,t3:0,basis:'flat fee',pct:false,flat:true}
 ];
 
 function findProd(n){ return products.find(function(p){return p.name===n}) || products[0]; }
-
-// Normalize client name for matching: lowercase, trim, collapse internal whitespace
-function normalizeClientName(s){
- return (s||'').toLowerCase().trim().replace(/\s+/g,' ');
-}
-
-// Find product by plan code (any product whose codes string contains the given plan code)
-function findProdByPlanCode(planCode){
- if(!planCode) return null;
- var pc = planCode.toUpperCase().trim();
- return products.find(function(p){
-  if(!p.codes) return false;
-  // codes is a comma-separated string like "G22AR, G22ARN" or "W21GN, RWL21, TAR20E"
-  return p.codes.toUpperCase().split(/[,\s]+/).indexOf(pc) !== -1;
- }) || null;
-}
-
-// Find candidate matches for a Varicent case in the existing pipeline.
-// Returns { tier: 'A'|'B'|'C'|'D', candidate: caseObj|null, varianceAmt: number }
-// Tier A: exact match (client + plan code in product OR product matches plan_code's product, premium to penny)
-// Tier B: same client + plan code matches product (any premium)
-// Tier C: same client name only, status is open (not paid)
-// Tier D: no match
-function findCaseMatchCandidates(vc){
- var vcName = normalizeClientName(vc.client);
- if(!vcName) return {tier:'D', candidate:null, varianceAmt:0};
- var vcAmt = Math.round((vc.paid_premium||0)*100);
- var vcPlan = (vc.plan_code||'').toUpperCase().trim();
- var planProd = findProdByPlanCode(vc.plan_code); // resolved product object for the plan code
-
- var sameName = cases.filter(function(c){
-  return c && normalizeClientName(c.client) === vcName;
- });
- if(sameName.length === 0) return {tier:'D', candidate:null, varianceAmt:0};
-
- // Helper: does this case's product match the Varicent plan code?
- function caseProductMatchesPlan(c){
-  if(!vcPlan) return false;
-  var prod = c.product || '';
-  if(prod.toUpperCase().indexOf(vcPlan) !== -1) return true;
-  // Also check: does the case's product look up to a product whose codes include this plan
-  var cp = findProd(c.product);
-  if(cp && cp.codes && cp.codes.toUpperCase().split(/[,\s]+/).indexOf(vcPlan) !== -1) return true;
-  // Or: did the user enter a product that maps to the same product object as the plan code?
-  if(planProd && cp && planProd.name === cp.name) return true;
-  return false;
- }
-
- // Helper: case is "open" if not in a terminal status (paid, paid-partial, declined)
- function isOpen(c){ return c.status !== 'paid' && c.status !== 'paid-partial' && c.status !== 'declined'; }
-
- // Tier A: exact match
- var exact = sameName.find(function(c){
-  return caseProductMatchesPlan(c) && Math.round((c.amount||0)*100) === vcAmt && isOpen(c);
- });
- if(exact){
-  return {tier:'A', candidate:exact, varianceAmt:0};
- }
-
- // Tier B: same client + plan code match (any premium), not yet paid
- var strong = sameName.find(function(c){
-  return caseProductMatchesPlan(c) && isOpen(c);
- });
- if(strong){
-  // Compute variance: actual commission - what calcCase would estimate at Tier amount
-  var expected = calcCase(strong).agentShare || 0;
-  var actual = vc.commission || 0;
-  return {tier:'B', candidate:strong, varianceAmt: actual - expected};
- }
-
- // Tier C: same client name only, open status
- var openStatuses = ['pending','submitted','approved','issued'];
- var possible = sameName.find(function(c){
-  return openStatuses.indexOf(c.status) !== -1;
- });
- if(possible){
-  var expected2 = calcCase(possible).agentShare || 0;
-  var actual2 = vc.commission || 0;
-  return {tier:'C', candidate:possible, varianceAmt: actual2 - expected2};
- }
-
- return {tier:'D', candidate:null, varianceAmt:0};
-}
 
 // ── Utilities ──
 function $(sel){ return document.querySelectorAll(sel); }
 function $1(sel){ return document.querySelector(sel); }
 function fmt(n){ return '$' + (n||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
-
-// Sum a pay period field including any extraDeposits
-function sumPeriodWithExtras(p, field){
- if(!p) return 0;
- var total = p[field] || 0;
- if(p.extraDeposits && p.extraDeposits.length > 0){
-  p.extraDeposits.forEach(function(ed){ total += ed[field] || 0; });
- }
- return total;
-}
 function toYMD(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 
 function showToast(msg, dur){
@@ -708,113 +504,22 @@ function fbLoad(key){
 }
 
 function saveCases(){
- if(testMode) return; // Test Mode: changes are in-memory only
  localStorage.setItem('db_cases_' + currentAgent.id, JSON.stringify(cases));
  fbSave('cases', cases);
 }
 
 function savePayPeriods(){
- if(testMode) return; // Test Mode: changes are in-memory only
  localStorage.setItem('db_payperiods_' + currentAgent.id, JSON.stringify(payPeriods));
  fbSave('payperiods', payPeriods);
 }
 
 function saveSettings(){
- if(testMode) return; // Test Mode: changes are in-memory only
  localStorage.setItem('db_settings_' + currentAgent.id, JSON.stringify(settings));
  fbSave('settings', settings);
 }
 
-// ── Audit Log ──
-// Per-agent audit log. Stored in Firebase at /duetbooks/{agentId}/auditLog/{entryId}
-// Each entry: { id, timestamp, agentId, action, targetIds[], summary, before, after, undone }
-var auditLog = []; // in-memory cache, loaded on enterApp
-
-function logAuditEntry(entry){
- if(testMode) return; // Don't log audit entries during test mode
- if(!currentAgent || !currentAgent.id) return;
- var id = Date.now() + Math.floor(Math.random()*1000);
- var fullEntry = Object.assign({
-  id: id,
-  timestamp: new Date().toISOString(),
-  agentId: currentAgent.id,
-  agentName: currentAgent.name || '',
-  undone: false
- }, entry);
- auditLog.push(fullEntry);
- // Fire-and-forget Firebase write — don't block the operation if it fails
- try {
-  var url = FIREBASE_URL + '/' + currentAgent.id + '/auditLog/' + id + '.json';
-  fetch(url, {method:'PUT', body: JSON.stringify(fullEntry)}).catch(function(){});
- } catch(e){}
- return fullEntry;
-}
-
-function loadAuditLog(){
- if(!currentAgent || !currentAgent.id) return Promise.resolve([]);
- var url = FIREBASE_URL + '/' + currentAgent.id + '/auditLog.json';
- return fetch(url).then(function(r){return r.json();}).then(function(data){
-  if(!data) { auditLog = []; return []; }
-  var arr = Object.keys(data).map(function(k){ return data[k]; }).filter(function(e){ return e && e.id; });
-  arr.sort(function(a,b){ return (a.id||0) - (b.id||0); }); // chronological
-  auditLog = arr;
-  return arr;
- }).catch(function(){ auditLog = []; return []; });
-}
-
-function deleteAuditEntry(entryId){
- if(testMode) return;
- auditLog = auditLog.filter(function(e){ return e.id !== entryId; });
- try {
-  fetch(FIREBASE_URL + '/' + currentAgent.id + '/auditLog/' + entryId + '.json', {method:'DELETE'}).catch(function(){});
- } catch(e){}
-}
-
-// ── Test Mode Functions ──
-function enterTestMode(){
- if(testMode) return;
- testModeBackup = {
-  cases: JSON.parse(JSON.stringify(cases)),
-  payPeriods: JSON.parse(JSON.stringify(payPeriods)),
-  settings: JSON.parse(JSON.stringify(settings))
- };
- testMode = true;
- updateTestModeBanner();
- showToast('Test Mode active — changes will not be saved', 4000);
- renderAll();
-}
-
-function exitTestMode(){
- if(!testMode) return;
- if(!confirm('Exit Test Mode? All changes will be discarded and your original data restored.')) return;
- cases = testModeBackup.cases;
- payPeriods = testModeBackup.payPeriods;
- settings = testModeBackup.settings;
- testModeBackup = null;
- testMode = false;
- updateTestModeBanner();
- showToast('Test Mode exited — original data restored', 3000);
- renderAll();
-}
-
-function resetTestMode(){
- if(!testMode || !testModeBackup) return;
- if(!confirm('Reset sandbox to starting state? All test changes will be wiped.')) return;
- cases = JSON.parse(JSON.stringify(testModeBackup.cases));
- payPeriods = JSON.parse(JSON.stringify(testModeBackup.payPeriods));
- settings = JSON.parse(JSON.stringify(testModeBackup.settings));
- showToast('Test Mode reset — back to starting state', 2000);
- renderAll();
-}
-
-function updateTestModeBanner(){
- var banner = $1('#testModeBanner');
- if(!banner) return;
- banner.style.display = testMode ? 'flex' : 'none';
-}
-
 // ── Feedback System ──
-var ADMIN_IDS = ['steve_maximuk','steve_maxim'];
+var ADMIN_IDS = ['steve_maximuk'];
 var feedbackItems = [];
 var nextFbId = 1;
 var fbFilterType = '';
@@ -908,7 +613,6 @@ function toggleLoginMode(){
 async function doRegister(){
  var name = $1('#reg_name').value.trim();
  var branch = $1('#reg_branch').value.trim();
- var agentType = ($1('#reg_type') && $1('#reg_type').value) || 'PC';
  var pin = $1('#reg_pin').value.trim();
  var pin2 = $1('#reg_pin2').value.trim();
  var errEl = $1('#regError');
@@ -930,11 +634,11 @@ async function doRegister(){
  } catch(e){}
 
  var pinHash = await sha256(pin);
- var profile = { name: name, branch: branch, agentType: agentType, pin: pinHash, created: new Date().toISOString() };
+ var profile = { name: name, branch: branch, pin: pinHash, created: new Date().toISOString() };
 
  await fetch(FIREBASE_URL + '/' + agentId + '/profile.json', {method:'PUT', body: JSON.stringify(profile)});
 
- currentAgent = { id: agentId, name: name, branch: branch, agentType: agentType };
+ currentAgent = { id: agentId, name: name, branch: branch };
  sessionStorage.setItem('db_agent', JSON.stringify(currentAgent));
 
  // Save to remembered agents list
@@ -944,17 +648,15 @@ async function doRegister(){
   localStorage.setItem('db_remembered_agents', JSON.stringify(remembered));
  }
 
- // Set initial split based on agent type
- var typeDefaults = agentType === 'Life' ? {yourShare:50, partnerShare:50} : {yourShare:80, partnerShare:20};
- settings = Object.assign({}, defaultSettings, typeDefaults);
+ settings = Object.assign({}, defaultSettings);
  saveSettings();
  cases = [];
  saveCases();
  payPeriods = [];
  savePayPeriods();
 
+ showToast('Welcome to Duet Books, ' + name.split(' ')[0] + '!', 4000);
  enterApp();
- showOnboarding();
 }
 
 async function doLogin(){
@@ -981,7 +683,7 @@ async function doLogin(){
    return;
   }
 
-  currentAgent = { id: agentId, name: profile.name, branch: profile.branch, agentType: profile.agentType || 'PC' };
+  currentAgent = { id: agentId, name: profile.name, branch: profile.branch };
   sessionStorage.setItem('db_agent', JSON.stringify(currentAgent));
 
   // Save to remembered
@@ -1015,14 +717,6 @@ async function loadAgentData(){
   payPeriods = JSON.parse(localStorage.getItem('db_payperiods_' + currentAgent.id) || '[]').filter(function(p){ return p !== null; });
   settings = Object.assign({}, defaultSettings, JSON.parse(localStorage.getItem('db_settings_' + currentAgent.id) || '{}'));
  }
- // Backward compatibility: map old yourShare/partnerShare to PC split
- if(settings.yourShare !== undefined && settings.pcShare === undefined){
-  settings.pcShare = settings.yourShare;
-  settings.pcPartnerShare = settings.partnerShare;
- }
- // Ensure all split fields exist
- if(settings.lifeShare === undefined){ settings.lifeShare = 50; settings.lifePartnerShare = 50; }
- if(settings.pcShare === undefined){ settings.pcShare = 80; settings.pcPartnerShare = 20; }
  // Cache locally
  localStorage.setItem('db_cases_' + currentAgent.id, JSON.stringify(cases));
  localStorage.setItem('db_payperiods_' + currentAgent.id, JSON.stringify(payPeriods));
@@ -1047,12 +741,8 @@ function enterApp(){
  $1('#appShell').style.display = 'block';
  $1('#topAgentInfo').textContent = currentAgent.name + ' | ' + currentAgent.branch;
  $1('#versionLine').style.display = 'block';
- $1('#versionLine').textContent = 'DuetBooks ' + APP_VERSION + ' | Built ' + APP_BUILD_DATE;
- // Set dark mode button icon
- var dmBtn = $1('#darkModeBtn');
- if(dmBtn) dmBtn.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
- loadFeedback().catch(function(e){ console.error('Feedback load error:', e); }).finally(function(){ renderAll(); checkChatLogs(); });
- loadAuditLog().catch(function(e){ console.error('Audit log load error:', e); });
+ $1('#versionLine').textContent = 'Duet Books ' + APP_VERSION + ' | Built ' + APP_BUILD_DATE;
+ loadFeedback().catch(function(e){ console.error('Feedback load error:', e); }).finally(function(){ renderAll(); });
 }
 
 // ════════════════════════════════════════════
@@ -1072,34 +762,33 @@ function calcCase(c){
  }
 
  // Manual entry — calculate from amount × rate, then split
- fullComm = p.flat ? c.amount : c.amount * (c.rate / 100);
- origGross = fullComm;
-
- // Determine split percentages based on case split type
- // 'life' uses lifeShare, 'pc' or legacy 'split' uses pcShare, 'full' or anything else = no split
- var yourPct = 100, partnerPct = 0;
- if(c.split === 'life'){
-  yourPct = settings.lifeShare || 50;
-  partnerPct = settings.lifePartnerShare || 50;
- } else if(c.split === 'pc' || c.split === 'split'){
-  yourPct = settings.pcShare || 80;
-  partnerPct = settings.pcPartnerShare || 20;
+ if(p.flat){
+  fullComm = c.amount;
+  if(c.split === 'split'){
+   agentShare = fullComm * (settings.yourShare/100);
+   partnerGets = fullComm * (settings.partnerShare/100);
+  } else {
+   agentShare = fullComm;
+   partnerGets = 0;
+  }
+  origGross = fullComm;
+ } else {
+  fullComm = c.amount * (c.rate / 100);
+  origGross = fullComm;
+  if(c.split === 'split'){
+   agentShare = fullComm * (settings.yourShare/100);
+   partnerGets = fullComm * (settings.partnerShare/100);
+  } else {
+   agentShare = fullComm;
+   partnerGets = 0;
+  }
  }
- agentShare = fullComm * (yourPct/100);
- partnerGets = fullComm * (partnerPct/100);
-
  return {origGross:origGross, agentShare:agentShare, partnerGets:partnerGets, fullComm:fullComm};
 }
 
 var statusOrder = ['pending','submitted','approved','issued','paid'];
-function statusIdx(s){
- // 'paid-partial' and 'declined' count as terminal (same rank as paid) — no Next button
- if(s === 'paid-partial' || s === 'declined') return statusOrder.indexOf('paid');
- return statusOrder.indexOf((s||'').toLowerCase());
-}
+function statusIdx(s){ return statusOrder.indexOf((s||'').toLowerCase()); }
 function statusBadge(s){
- if(s === 'paid-partial') return '<span class="badge badge-amb" title="Paid less than expected">Paid (Partial)</span>';
- if(s === 'declined') return '<span class="badge" style="background:#777;color:#fff" title="Policy was declined">Declined</span>';
  var cls = s==='paid'?'badge-grn':s==='issued'?'badge-pri':s==='approved'?'badge-pri':s==='submitted'?'badge-amb':'badge-red';
  return '<span class="badge '+cls+'">'+s.charAt(0).toUpperCase()+s.slice(1)+'</span>';
 }
@@ -1200,21 +889,12 @@ function calc3MMAForecast(){
  var needT4 = Math.max(0, (6667 * 3) - carry1.credits - carry2.credits - (openMonth ? openMonth.credits : 0));
  var needT3 = Math.max(0, (5000 * 3) - carry1.credits - carry2.credits - (openMonth ? openMonth.credits : 0));
 
- // Pipeline — group by status, estimate production credits from product catalog
+ // Pipeline — group by status
  var pipelineByStatus = {pending:0, submitted:0, approved:0, issued:0};
  var pipelineTotal = 0;
  cases.forEach(function(c){
-  if(c.status === 'paid' || c.status === 'paid-partial' || c.status === 'declined') return;
-  // If case already has production credit from Varicent, use it
-  var credits = 0;
-  if(c.productionCredit && c.productionCredit > 0){
-   credits = c.productionCredit;
-  } else {
-   // Estimate from product catalog: amount * prodCredit%
-   var prod = findProd(c.product);
-   var pcPct = prod && prod.prodCredit !== undefined ? prod.prodCredit : 100;
-   credits = (c.amount || 0) * pcPct / 100;
-  }
+  if(c.status === 'paid') return;
+  var credits = c.productionCredit || c.amount || 0;
   pipelineTotal += credits;
   if(pipelineByStatus[c.status] !== undefined) pipelineByStatus[c.status] += credits;
  });
@@ -1263,209 +943,7 @@ function renderAll(){
  renderCashFlow();
  renderRateTable();
  renderSettings();
-}
-
-// ═══════════════════════════════════════════════════════════════
-// CRM-PENDING WATCHER — Pulls Won/App-Submitted leads from DuetCRM
-// that don't have a matching DuetBooks case. Shows a Dashboard
-// banner with an "Import" modal for review-then-import. Match rule:
-// fuzzy client name (lowercase + strip non-alphanumeric) AND phone
-// last-10-digits when both sides have a phone (otherwise name-only).
-// ═══════════════════════════════════════════════════════════════
-var CRM_LEADS_URL = 'https://duet-crm-default-rtdb.firebaseio.com/leads.json';
-var _crmPendingLeads = null;
-var _crmPendingLoading = false;
-
-// Mirror of CRM-side product mapping (CRM display name → DuetBooks canonical name)
-var CRM_TO_BOOKS_PRODUCT = {
- 'AAA Accumulator IUL': 'AAA Accumulator - Target Premium',
- 'AAA LifeTime UL (age 79 and under)': 'AAA LifeTime UL - Target (age 79-)',
- 'AAA LifeTime UL (age 80+)': 'AAA LifeTime UL - Target (age 80+)',
- 'Securian Eclipse UL (brokered)': 'Securian Eclipse UL (target/planned)',
- 'MM GIA External Funds (ages 0-79)': 'GIA External Funds (ages 0-79)',
- 'MM GIA Internal Funds (ages 0-79)': 'GIA Internal Funds (ages 0-79)',
- 'MM American Legend 7 External (ages 0-75)': 'American Legend 7 External (ages 0-75)',
- 'MM Safe Return External (ages 0-75)': 'Safe Return External (ages 0-75)',
- 'MM Landmark 3 External (ages 0-75)': 'Landmark 3 External (ages 0-75)',
- 'MM Landmark 5 External (ages 0-75)': 'Landmark 5 External (ages 0-75)',
- 'MM Premier Bonus External (ages 0-75)': 'Premier Bonus External (ages 0-75)',
- 'MM Premier Income Bonus External (ages 0-75)': 'Premier Income Bonus External (ages 0-75)',
- 'Platinum Bonus 5 (AAA Life)': 'Platinum Annuity 5 External (ages 0-79)'
-};
-
-function _esc(s){ return ((s||'')+'').replace(/[&<>"']/g, function(ch){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]; }); }
-function _normCRMName(s){ return ((s||'')+'').toLowerCase().replace(/[^a-z0-9]/g,''); }
-function _normCRMPhone(s){ var d = ((s||'')+'').replace(/\D/g,''); return d.length > 10 ? d.slice(-10) : d; }
-
-function _crmMatchesBooksCase(lead, bcase){
- if(!bcase || !lead) return false;
- if(_normCRMName(lead.name) !== _normCRMName(bcase.client)) return false;
- var lp = _normCRMPhone(lead.phone), bp = _normCRMPhone(bcase.phone);
- if(lp && bp && lp !== bp) return false;
- return true;
-}
-
-function loadCRMPending(callback){
- if(_crmPendingLoading) return;
- _crmPendingLoading = true;
- fetch(CRM_LEADS_URL).then(function(r){ return r.json(); }).then(function(data){
-  var allLeads = (data && data.data) ? data.data : [];
-  var closed = allLeads.filter(function(l){
-   return l && (l.stage === 'won' || l.stage === 'app_submitted');
-  });
-  var pending = closed.filter(function(l){
-   return !cases.some(function(c){ return _crmMatchesBooksCase(l, c); });
-  });
-  _crmPendingLeads = pending;
-  _crmPendingLoading = false;
-  if(callback) callback(pending);
- }).catch(function(err){
-  console.error('CRM pending load failed:', err);
-  _crmPendingLeads = [];
-  _crmPendingLoading = false;
- });
-}
-
-function renderCRMPendingBanner(){
- if(!_crmPendingLeads){
-  loadCRMPending(function(){ renderDashboard(); });
-  return '';
- }
- var n = _crmPendingLeads.length;
- if(n === 0) return '';
- var h = '<div style="background:rgba(243,156,18,0.12);border:1px solid var(--amb);border-radius:8px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">';
- h += '<div style="font-size:18px">⚠️</div>';
- h += '<div style="flex:1;min-width:200px">';
- h += '<b>'+n+' Won lead'+(n>1?'s':'')+' in DuetCRM not yet in DuetBooks</b>';
- h += '<div style="font-size:11px;color:var(--muted);margin-top:2px">Marked Won/App Submitted in CRM but the auto-push didn\'t complete. Review & import to keep them in sync.</div>';
- h += '</div>';
- h += '<button class="btn btn-amb" onclick="showCRMImportModal()" style="font-weight:700">Review &amp; Import</button>';
- h += '<button class="btn btn-outline" onclick="_crmPendingLeads=null;renderDashboard()" style="font-size:11px;padding:6px 10px" title="Re-fetch from CRM">🔄</button>';
- h += '</div>';
- return h;
-}
-
-function showCRMImportModal(){
- if(!_crmPendingLeads || _crmPendingLeads.length === 0){ showToast('No pending leads', 3000); return; }
- var pending = _crmPendingLeads;
-
- var overlay = document.createElement('div');
- overlay.id = 'crmImportOverlay';
- overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px';
-
- var h = '<div style="background:var(--bg);max-width:780px;width:100%;max-height:90vh;border-radius:12px;padding:22px;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.4)">';
- h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap">';
- h += '<h3 style="margin:0">📥 Import from DuetCRM ('+pending.length+')</h3>';
- h += '<button onclick="closeCRMImportModal()" style="margin-left:auto;background:transparent;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1" title="Close">×</button>';
- h += '</div>';
- h += '<div style="font-size:11px;color:var(--muted);margin-bottom:12px">Match rule: fuzzy client name + phone (when both have one). Review each row and click Import to create the DuetBooks case.</div>';
-
- pending.forEach(function(l){
-  var prodCRM = (l.selectedProduct || '').trim();
-  var prodMapped = CRM_TO_BOOKS_PRODUCT[prodCRM] || prodCRM;
-  var prodFound = prodMapped ? products.find(function(p){return p.name === prodMapped}) : null;
-  var amt = parseFloat(l.estPremium) || 0;
-  var canImport = (l.name && amt > 0 && prodFound);
-  var stage = l.stage === 'app_submitted' ? 'App Submitted' : 'Won';
-
-  h += '<div style="border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--card)">';
-  h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">';
-  h += '<b style="font-size:14px">'+_esc(l.name)+'</b>';
-  h += '<span style="font-size:10px;background:var(--amb);color:#fff;padding:1px 6px;border-radius:4px">'+stage+'</span>';
-  if(l.phone) h += '<span style="font-size:11px;color:var(--muted)">📞 '+_esc(l.phone)+'</span>';
-  h += '</div>';
-  h += '<div style="font-size:11px;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap;margin-bottom:6px">';
-  h += '<span>Premium: <b style="color:var(--txt)">'+(amt>0?'$'+amt.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'<span style="color:var(--red)">— missing</span>')+'</b></span>';
-  h += '<span>Product: <b style="color:var(--txt)">'+(prodCRM?_esc(prodCRM):'<span style="color:var(--red)">— missing</span>')+'</b>'+(prodCRM && !prodFound?' <span style="color:var(--red)">(no DuetBooks match for "'+_esc(prodMapped)+'")</span>':'')+'</span>';
-  if(l.agent) h += '<span>Agent: <b style="color:var(--txt)">'+_esc(l.agent)+'</b></span>';
-  if(l.source) h += '<span>Source: '+_esc(l.source)+'</span>';
-  h += '</div>';
-  if(l.notes){ var n0 = (l.notes+'').substring(0,140); h += '<div style="font-size:11px;color:var(--muted);margin-top:2px">Notes: '+_esc(n0)+(l.notes.length>140?'…':'')+'</div>'; }
-  if(l.historyNotes && l.historyNotes.length > 0){
-   var firstHN = l.historyNotes[0];
-   h += '<div style="font-size:11px;color:var(--muted);margin-top:2px">CRM history: '+_esc(((firstHN.text||'')+'').substring(0,140))+'</div>';
-  }
-  if(l.wonReason) h += '<div style="font-size:11px;color:var(--muted);margin-top:2px">Won reason: <b>'+_esc(l.wonReason)+'</b></div>';
-  h += '<div style="margin-top:8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">';
-  if(canImport){
-   h += '<button class="btn btn-grn" onclick="importCRMLead('+l.id+')" style="font-weight:700;font-size:12px;padding:6px 14px">📥 Import</button>';
-  } else {
-   var reasons = [];
-   if(amt <= 0) reasons.push('missing premium');
-   if(!prodCRM) reasons.push('missing product');
-   else if(!prodFound) reasons.push('product not in DuetBooks list');
-   h += '<span style="font-size:11px;color:var(--red)">⚠ Cannot import — '+reasons.join(', ')+'. Edit in CRM first.</span>';
-  }
-  h += '<span style="font-size:10px;color:var(--muted);margin-left:auto">CRM lead #'+l.id+'</span>';
-  h += '</div>';
-  h += '</div>';
- });
-
- h += '<div style="display:flex;justify-content:flex-end;margin-top:12px"><button onclick="closeCRMImportModal()" class="btn btn-outline">Close</button></div>';
- h += '</div>';
- overlay.innerHTML = h;
- document.body.appendChild(overlay);
-}
-
-function closeCRMImportModal(){
- var o = document.getElementById('crmImportOverlay');
- if(o) o.remove();
-}
-
-function importCRMLead(leadId){
- if(!_crmPendingLeads) return;
- var lead = _crmPendingLeads.find(function(l){ return l.id === leadId; });
- if(!lead){ showToast('Lead not found', 3000); return; }
- var prodCRM = (lead.selectedProduct || '').trim();
- var prodMapped = CRM_TO_BOOKS_PRODUCT[prodCRM] || prodCRM;
- var prodFound = products.find(function(p){return p.name === prodMapped});
- if(!prodFound){ showToast('Product not recognized: '+prodCRM, 4000); return; }
- var amt = parseFloat(lead.estPremium) || 0;
- if(amt <= 0){ showToast('Missing premium amount', 3000); return; }
-
- var splitType = 'full';
- if(lead.agent){
-  var cat = (prodFound.cat || '').toLowerCase();
-  splitType = (cat.indexOf('life') >= 0 || cat.indexOf('iul') >= 0 || cat.indexOf('universal') >= 0) ? 'life' : 'pc';
- }
-
- var noteParts = ['Imported from CRM lead #'+lead.id];
- if(lead.wonReason) noteParts.push('Won reason: '+lead.wonReason);
- if(lead.historyNotes){
-  lead.historyNotes.forEach(function(n){
-   if(n && n.text) noteParts.push('CRM note ('+(n.date||'').substring(0,10)+'): '+n.text);
-  });
- }
- if(lead.notes) noteParts.push('CRM: '+lead.notes);
-
- var c = {
-  id: nextCaseId++,
-  client: lead.name,
-  phone: (lead.phone || '').replace(/\D/g,''),
-  product: prodMapped,
-  amount: amt,
-  rate: prodFound.rate || 0,
-  split: splitType,
-  splitName: lead.agent || '',
-  splitEmail: '',
-  status: 'pending',
-  submitted: ((lead.stageEnteredDate || lead.created || new Date().toISOString())+'').substring(0,10),
-  estPay: '',
-  paidDate: '',
-  notes: noteParts.join(' · '),
-  year: new Date().getFullYear(),
-  created: new Date().toISOString()
- };
- cases.push(c);
- saveCases();
-
- _crmPendingLeads = _crmPendingLeads.filter(function(l){ return l.id !== leadId; });
- showToast('✅ Imported: '+lead.name+' — '+prodMapped, 4000);
-
- // Refresh the modal in place so the user can keep going
- closeCRMImportModal();
- if(_crmPendingLeads.length > 0) showCRMImportModal();
- renderAll();
+ renderFeedback();
 }
 
 // ════════════════════════════════════════════
@@ -1481,8 +959,7 @@ function renderDashboard(){
  yearCases.forEach(function(c){
   var calc = calcCase(c);
   totalProduction += calc.agentShare;
-  // Pending = not yet settled (excludes paid, paid-partial, declined)
-  if(c.status !== 'paid' && c.status !== 'paid-partial' && c.status !== 'declined') totalPending += calc.agentShare;
+  if(c.status !== 'paid') totalPending += calc.agentShare;
  });
 
  // YTD Paid = sum of varicent payouts from pay periods (authoritative Varicent number)
@@ -1513,36 +990,36 @@ function renderDashboard(){
  var maxMonth = Math.max.apply(null, Object.values(monthlyProd).concat([1]));
 
  // YTD from pay periods for take-home
- var ytdNet = 0, ytdGross = 0, ytdTaxes = 0, ytdDeductions = 0;
+ var ytdNet = 0, ytdTaxes = 0, ytdDeductions = 0;
  payPeriods.forEach(function(p){
-  ytdNet += sumPeriodWithExtras(p, 'net');
-  ytdGross += sumPeriodWithExtras(p, 'gross');
-  ytdTaxes += sumPeriodWithExtras(p, 'taxes');
-  ytdDeductions += sumPeriodWithExtras(p, 'preTax') + sumPeriodWithExtras(p, 'postTax');
+  ytdNet += p.net || 0;
+  ytdTaxes += p.taxes || 0;
+  ytdDeductions += (p.preTax||0) + (p.postTax||0);
  });
  var takeHomeRate = totalPaid > 0 ? (ytdNet / totalPaid * 100).toFixed(0) : '—';
 
- var h = renderCRMPendingBanner();
+ var h = '';
 
- // ── YTD Summary (matching Pay History format) ──
- // Gross Pay hero
- h += '<div class="card" style="text-align:center;border-top:4px solid var(--pri);margin-bottom:12px">';
- h += '<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">YTD Gross Pay</div>';
- h += '<div style="font-size:36px;font-weight:800;color:var(--pri)">'+fmt(ytdGross)+'</div>';
- // Tier badge inline
+ // ── Take-Home Summary (hero) ──
+ h += '<div class="card" style="border-top:4px solid var(--grn)">';
+ h += '<div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">';
+ h += '<div style="flex:1;min-width:200px;text-align:center">';
+ h += '<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">YTD Net Deposited</div>';
+ h += '<div style="font-size:36px;font-weight:800;color:var(--grn)">'+fmt(ytdNet)+'</div>';
+ h += '<div style="font-size:12px;color:var(--muted)">'+takeHomeRate+'% take-home rate</div>';
+ h += '</div>';
+ h += '<div style="display:flex;gap:16px;flex-wrap:wrap">';
+ h += '<div style="text-align:center;min-width:100px"><div style="font-size:10px;color:var(--muted)">Gross Commission</div><div style="font-size:20px;font-weight:700;color:var(--pri)">'+fmt(totalPaid)+'</div></div>';
+ h += '<div style="text-align:center;min-width:80px"><div style="font-size:10px;color:var(--muted)">Taxes</div><div style="font-size:20px;font-weight:700;color:var(--red)">'+fmt(ytdTaxes)+'</div></div>';
+ h += '<div style="text-align:center;min-width:80px"><div style="font-size:10px;color:var(--muted)">Deductions</div><div style="font-size:20px;font-weight:700;color:var(--amb)">'+fmt(ytdDeductions)+'</div></div>';
+ h += '</div>';
+ h += '</div>';
+ // Current tier badge inline
  var tierColor = tier === 'T4' ? 'var(--grn)' : tier === 'T3' ? 'var(--amb)' : 'var(--red)';
- h += '<div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:8px">';
- h += '<span style="font-size:20px;font-weight:800;color:'+tierColor+'">'+tier+'</span>';
- h += '<span style="font-size:12px;color:var(--muted)">Current Tier &middot; 3MMA: '+fmt(mma)+' &middot; '+totalCases+' cases &middot; '+statusCounts['paid']+' paid &middot; '+(totalCases-statusCounts['paid'])+' in pipeline</span>';
+ h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">';
+ h += '<div style="display:flex;align-items:center;gap:10px"><span style="font-size:24px;font-weight:800;color:'+tierColor+'">'+tier+'</span><span style="font-size:12px;color:var(--muted)">Current Tier &middot; 3MMA: '+fmt(mma)+'</span></div>';
+ h += '<div style="font-size:12px;color:var(--muted)">'+totalCases+' cases &middot; '+statusCounts['paid']+' paid &middot; '+(totalCases-statusCounts['paid'])+' in pipeline</div>';
  h += '</div>';
- h += '</div>';
-
- // 4 stat boxes
- h += '<div class="stat-grid" style="margin-bottom:16px">';
- h += '<div class="stat-card green"><div class="stat-label">YTD Commission (Varicent)</div><div class="stat-value" style="color:var(--grn)">'+fmt(totalPaid)+'</div></div>';
- h += '<div class="stat-card red"><div class="stat-label">YTD Taxes</div><div class="stat-value" style="color:var(--red)">'+fmt(ytdTaxes)+'</div></div>';
- h += '<div class="stat-card amber"><div class="stat-label">YTD Deductions</div><div class="stat-value" style="color:var(--amb)">'+fmt(ytdDeductions)+'</div></div>';
- h += '<div class="stat-card green"><div class="stat-label">YTD Net Pay (Deposited)</div><div class="stat-value" style="color:var(--grn)">'+fmt(ytdNet)+'</div></div>';
  h += '</div>';
 
  // ── Stat cards ──
@@ -1635,13 +1112,9 @@ function renderBookOfBusiness(){
   h += '</div>';
 
   h += '<div class="form-row">';
-  var defSplit = (currentAgent && currentAgent.agentType === 'Life') ? 'life' : 'pc';
-  h += '<div class="form-group"><label>Split Type</label><select id="nc_split" onchange="ncCalcPreview();updateSplitAgentDropdown()">';
-  h += '<option value="full"'+(defSplit==='full'?' selected':'')+'>Full (no split)</option>';
-  h += '<option value="life"'+(defSplit==='life'?' selected':'')+'>Life Split ('+settings.lifeShare+'/'+settings.lifePartnerShare+')</option>';
-  h += '<option value="pc"'+(defSplit==='pc'?' selected':'')+'>PC Split ('+settings.pcShare+'/'+settings.pcPartnerShare+')</option>';
-  h += '</select></div>';
-  h += '<div class="form-group" id="nc_splitagent_wrap"><label>Split Agent</label><select id="nc_splitname_sel" onchange="onSplitAgentChange(\'nc_splitname_sel\',\'nc_splitname_custom\')" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--txt)">'+getSplitAgentOptions(defSplit,'')+'</select><input id="nc_splitname_custom" type="text" placeholder="Type partner name..." style="display:none;width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;margin-top:4px;background:var(--bg);color:var(--txt)"></div>';
+  h += '<div class="form-group"><label>Split Type</label><select id="nc_split" onchange="ncCalcPreview()"><option value="full">Full (no split)</option><option value="split">Split (partner gets their %)</option></select></div>';
+  h += '<div class="form-group"><label>Split Agent Name</label><input id="nc_splitname" type="text" placeholder="Partner name"></div>';
+  h += '<div class="form-group"><label>Split Agent Email</label><input id="nc_splitemail" type="text" placeholder="partner@acg.aaa.com"></div>';
   h += '<div class="form-group"><label>Submitted Date</label><input id="nc_submitted" type="date" value="'+toYMD(new Date())+'"></div>';
   h += '</div>';
 
@@ -1663,15 +1136,13 @@ function renderBookOfBusiness(){
  h += '<div class="filter-bar">';
  h += '<select onchange="filterStatus=this.value;renderBookOfBusiness()"><option value="">All Statuses</option>';
  statusOrder.forEach(function(s){ h += '<option value="'+s+'"'+(filterStatus===s?' selected':'')+'>'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>'; });
- h += '<option value="paid-partial"'+(filterStatus==='paid-partial'?' selected':'')+'>Paid (Partial)</option>';
- h += '<option value="declined"'+(filterStatus==='declined'?' selected':'')+'>Declined</option>';
  h += '</select>';
  h += '<select onchange="filterCarrier=this.value;renderBookOfBusiness()"><option value="">All Carriers</option><option value="AAA"'+(filterCarrier==='AAA'?' selected':'')+'>AAA</option><option value="MassMutual"'+(filterCarrier==='MassMutual'?' selected':'')+'>MassMutual</option><option value="Securian"'+(filterCarrier==='Securian'?' selected':'')+'>Securian</option></select>';
  h += '<select onchange="filterCat=this.value;renderBookOfBusiness()"><option value="">All Categories</option>';
  var cats = ['IUL / Universal Life','Annuities','Life (Whole / Term)','Banking / CD / Other'];
  cats.forEach(function(c){ h += '<option value="'+c+'"'+(filterCat===c?' selected':'')+'>'+c+'</option>'; });
  h += '</select>';
- h += '<input id="bobSearch" type="text" placeholder="Search client..." value="'+searchQuery+'" oninput="searchQuery=this.value;renderBookOfBusiness()" style="min-width:160px">';
+ h += '<input type="text" placeholder="Search client..." value="'+searchQuery+'" oninput="searchQuery=this.value;renderBookOfBusiness()" style="min-width:160px">';
 
  // Count
  var filtered = getFilteredCases();
@@ -1683,13 +1154,16 @@ function renderBookOfBusiness(){
  h += '<thead><tr>';
  var cols = [
   {key:'client',label:'Client'},
+  {key:'carrier',label:'Carrier'},
   {key:'product',label:'Product'},
   {key:'amount',label:'Amount'},
-  {key:'commission',label:'Commission'},
+  {key:'commission',label:'Your Commission'},
   {key:'split',label:'Split'},
   {key:'status',label:'Status'},
   {key:'submitted',label:'Submitted'},
+  {key:'estPay',label:'Est. Pay'},
   {key:'paidIn',label:'Paid In'},
+  {key:'notes',label:'Notes'},
   {key:'actions',label:''}
  ];
  cols.forEach(function(col){
@@ -1703,7 +1177,7 @@ function renderBookOfBusiness(){
  h += '</tr></thead><tbody>';
 
  if(filtered.length === 0){
-  h += '<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--muted)">No cases yet. Click "+ Add New Case" to get started.</td></tr>';
+  h += '<tr><td colspan="12" style="text-align:center;padding:40px;color:var(--muted)">No cases yet. Click "+ Add New Case" to get started.</td></tr>';
  }
 
  filtered.forEach(function(c){
@@ -1711,28 +1185,22 @@ function renderBookOfBusiness(){
   var prod = findProd(c.product);
   h += '<tr>';
   h += '<td><b>'+c.client+'</b>'+(c.phone?'<br><a href="tel:'+c.phone+'" style="font-size:11px;color:var(--pri)">'+c.phone+'</a>':'')+'</td>';
-  h += '<td style="font-size:11px">'+carrierBadge(prod.carrier || 'AAA')+' '+c.product+'</td>';
+  h += '<td>'+carrierBadge(prod.carrier || 'AAA')+'</td>';
+  h += '<td style="font-size:11px">'+c.product+'</td>';
   h += '<td>'+fmt(c.amount)+'</td>';
   h += '<td><b>'+fmt(calc.agentShare)+'</b></td>';
-  var splitDisplay = '—';
-  if(c.split === 'life') splitDisplay = '<span style="font-size:10px"><span class="badge badge-pri" style="font-size:8px">Life</span> '+(c.splitName||'')+'</span>';
-  else if(c.split === 'pc' || c.split === 'split') splitDisplay = '<span style="font-size:10px"><span class="badge badge-grn" style="font-size:8px">PC</span> '+(c.splitName||'')+'</span>';
-  h += '<td>'+splitDisplay+'</td>';
-  var statusCell = statusBadge(c.status);
-  if(c.status === 'paid-partial' && c.paidVariance){
-   var vAmt = c.paidVariance;
-   var vSign = vAmt < 0 ? '−' : '+';
-   statusCell += '<div style="font-size:9px;color:var(--amb);margin-top:2px" title="Expected: '+fmt(c.expectedCommission||0)+' / Paid: '+fmt(c.actualCommission||0)+'">var '+vSign+fmt(Math.abs(vAmt))+'</div>';
-  }
-  h += '<td>'+statusCell+'</td>';
+  h += '<td>'+(c.split==='split'?'<span style="font-size:10px;color:var(--muted)">'+c.splitName+'</span>':'—')+'</td>';
+  h += '<td>'+statusBadge(c.status)+statusBar(c.status)+'</td>';
   h += '<td style="font-size:11px">'+c.submitted+'</td>';
+  h += '<td style="font-size:11px">'+(c.estPay||'—')+'</td>';
   h += '<td style="font-size:11px">'+(c.paidIn||'—')+'</td>';
-  h += '<td style="white-space:nowrap">';
+  h += '<td style="font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(c.notes||'—')+'</td>';
+  h += '<td>';
   if(statusIdx(c.status) < 4){
-   h += '<button class="btn-next" onclick="advanceStatus('+c.id+')">Next</button> ';
+   h += '<button class="btn-next" onclick="advanceStatus('+c.id+')">Next</button>';
   }
-  h += '<button class="btn-del" onclick="editCase('+c.id+')" style="color:var(--pri)">edit</button> ';
-  h += '<button class="btn-del" onclick="deleteCase('+c.id+')">del</button>';
+  h += '<br><button class="btn-del" onclick="editCase('+c.id+')" style="color:var(--pri);margin-top:4px">edit</button>';
+  h += '<br><button class="btn-del" onclick="deleteCase('+c.id+')">del</button>';
   h += '</td>';
   h += '</tr>';
  });
@@ -1740,16 +1208,6 @@ function renderBookOfBusiness(){
  h += '</tbody></table></div>';
 
  $1('#p1').innerHTML = h;
-
- // Restore focus to search input if it was active (preserves typing experience)
- if(searchQuery){
-  var sb = $1('#bobSearch');
-  if(sb){
-   sb.focus();
-   var len = sb.value.length;
-   sb.setSelectionRange(len, len);
-  }
- }
 }
 
 function getFilteredCases(){
@@ -1826,22 +1284,16 @@ function ncCalcPreview(){
  }
  var p = findProd(prodName);
  var fullComm = p.flat ? amount : amount * (rate/100);
- var yourPct = 100, partnerPct = 0, splitLabel = 'Full';
- if(split === 'life'){
-  yourPct = settings.lifeShare || 50;
-  partnerPct = settings.lifePartnerShare || 50;
-  splitLabel = 'Life';
- } else if(split === 'pc' || split === 'split'){
-  yourPct = settings.pcShare || 80;
-  partnerPct = settings.pcPartnerShare || 20;
-  splitLabel = 'PC';
+ var agentShare = fullComm;
+ var partnerGets = 0;
+ if(split === 'split'){
+  agentShare = fullComm * (settings.yourShare/100);
+  partnerGets = fullComm * (settings.partnerShare/100);
  }
- var agentShare = fullComm * (yourPct/100);
- var partnerGets = fullComm * (partnerPct/100);
  el.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center">'
   + (partnerGets > 0 ? '<div><div style="font-size:11px;color:var(--muted)">Total Commission</div><div style="font-size:16px;font-weight:600">'+fmt(fullComm)+'</div></div>' : '')
-  + '<div><div style="font-size:11px;color:var(--muted)">Your Commission ('+splitLabel+' '+yourPct+'%)</div><div class="big">'+fmt(agentShare)+'</div></div>'
-  + (partnerGets > 0 ? '<div style="text-align:right"><div style="font-size:11px;color:var(--muted)">Partner Gets ('+partnerPct+'%)</div><div style="font-size:16px;font-weight:600">'+fmt(partnerGets)+'</div></div>' : '')
+  + '<div><div style="font-size:11px;color:var(--muted)">Your Commission ('+(partnerGets>0?settings.yourShare+'%':'100%')+')</div><div class="big">'+fmt(agentShare)+'</div></div>'
+  + (partnerGets > 0 ? '<div style="text-align:right"><div style="font-size:11px;color:var(--muted)">Partner Gets ('+settings.partnerShare+'%)</div><div style="font-size:16px;font-weight:600">'+fmt(partnerGets)+'</div></div>' : '')
   + '</div>';
 }
 
@@ -1858,8 +1310,8 @@ function addCase(){
   amount: parseFloat($1('#nc_amount').value) || 0,
   rate: parseFloat($1('#nc_rate').value) || findProd(product).rate || 0,
   split: $1('#nc_split').value || 'full',
-  splitName: (function(){ var sel=$1('#nc_splitname_sel'); var cust=$1('#nc_splitname_custom'); if(sel && sel.value==='__other__') return (cust?cust.value:'').trim(); return sel?sel.value:''; })(),
-  splitEmail: (function(){ var sel=$1('#nc_splitname_sel'); if(!sel || sel.value==='__other__' || !sel.value) return ''; var a=getSplitAgents().find(function(x){return x.name===sel.value}); return a?a.email:''; })(),
+  splitName: ($1('#nc_splitname').value||'').trim(),
+  splitEmail: ($1('#nc_splitemail').value||'').trim(),
   status: 'pending',
   submitted: $1('#nc_submitted').value || toYMD(new Date()),
   estPay: $1('#nc_estpay').value || '',
@@ -1881,42 +1333,19 @@ function advanceStatus(caseId){
  if(!c) return;
  var idx = statusIdx(c.status);
  if(idx < 4){
-  var prevStatus = c.status;
   c.status = statusOrder[idx+1];
   if(c.status === 'paid') c.paidDate = toYMD(new Date());
   c.updated = new Date().toISOString();
   saveCases();
-  // Log status change to/from paid (those affect financial totals)
-  if(c.status === 'paid' || prevStatus === 'paid' || c.status === 'paid-partial' || prevStatus === 'paid-partial' || c.status === 'declined' || prevStatus === 'declined'){
-   logAuditEntry({
-    action: 'status_change',
-    targetIds: [caseId],
-    client: c.client,
-    summary: c.client + ' status: ' + prevStatus + ' → ' + c.status,
-    before: { status: prevStatus, paidDate: c.paidDate ? '' : c.paidDate },
-    after: { status: c.status, paidDate: c.paidDate || '' }
-   });
-  }
   showToast(c.client + ' → ' + c.status.charAt(0).toUpperCase()+c.status.slice(1), 2000);
   renderAll();
  }
 }
 
 function deleteCase(caseId){
- var c = cases.find(function(x){return x.id===caseId});
- if(!c) return;
  if(!confirm('Delete this case?')) return;
- var snapshot = JSON.parse(JSON.stringify(c));
- cases = cases.filter(function(x){return x.id!==caseId});
+ cases = cases.filter(function(c){return c.id!==caseId});
  saveCases();
- logAuditEntry({
-  action: 'delete',
-  targetIds: [caseId],
-  client: c.client,
-  summary: 'Deleted case ID ' + caseId + ' — ' + c.client + ' ' + (c.product||'') + ' $' + (c.amount||0).toFixed(2),
-  before: { case: snapshot },
-  after: null
- });
  showToast('Case deleted', 2000);
  renderAll();
 }
@@ -1939,19 +1368,10 @@ function editCase(caseId){
  h += '<div class="form-group"><label>Rate (%)</label><input id="ec_rate" type="number" step="0.01" value="'+c.rate+'"></div>';
  h += '</div>';
  h += '<div class="form-row">';
- // Map legacy 'split' value to 'pc' for display
- var curSplit = c.split === 'split' ? 'pc' : (c.split || 'full');
- h += '<div class="form-group"><label>Split</label><select id="ec_split">';
- h += '<option value="full"'+(curSplit==='full'?' selected':'')+'>Full (no split)</option>';
- h += '<option value="life"'+(curSplit==='life'?' selected':'')+'>Life Split ('+settings.lifeShare+'/'+settings.lifePartnerShare+')</option>';
- h += '<option value="pc"'+(curSplit==='pc'?' selected':'')+'>PC Split ('+settings.pcShare+'/'+settings.pcPartnerShare+')</option>';
- h += '</select></div>';
- var ecSplitType = curSplit === 'life' ? 'life' : 'pc';
- h += '<div class="form-group"><label>Split Agent</label><select id="ec_splitname_sel" onchange="onSplitAgentChange(\'ec_splitname_sel\',\'ec_splitname_custom\')" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--txt)">'+getSplitAgentOptions(ecSplitType, c.splitName||'')+'</select><input id="ec_splitname_custom" type="text" placeholder="Type partner name..." style="display:none;width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;margin-top:4px;background:var(--bg);color:var(--txt)"></div>';
+ h += '<div class="form-group"><label>Split</label><select id="ec_split"><option value="full"'+(c.split==='full'?' selected':'')+'>Full</option><option value="split"'+(c.split==='split'?' selected':'')+'>Split</option></select></div>';
+ h += '<div class="form-group"><label>Split Agent</label><input id="ec_splitname" type="text" value="'+(c.splitName||'')+'"></div>';
  h += '<div class="form-group"><label>Status</label><select id="ec_status">';
  statusOrder.forEach(function(s){ h += '<option value="'+s+'"'+(c.status===s?' selected':'')+'>'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>'; });
- h += '<option value="paid-partial"'+(c.status==='paid-partial'?' selected':'')+'>Paid (Partial)</option>';
- h += '<option value="declined"'+(c.status==='declined'?' selected':'')+'>Declined</option>';
  h += '</select></div>';
  h += '</div>';
  h += '<div class="form-row">';
@@ -1973,15 +1393,13 @@ function editCase(caseId){
 function saveEditCase(caseId){
  var c = cases.find(function(x){return x.id===caseId});
  if(!c) return;
- var prevStatus = c.status;
- var prevAmount = c.amount;
  c.client = $1('#ec_client').value.trim();
  c.phone = ($1('#ec_phone').value||'').replace(/[^\d]/g,'');
  c.product = $1('#ec_product').value;
  c.amount = parseFloat($1('#ec_amount').value) || 0;
  c.rate = parseFloat($1('#ec_rate').value) || 0;
  c.split = $1('#ec_split').value;
- c.splitName = (function(){ var sel=$1('#ec_splitname_sel'); var cust=$1('#ec_splitname_custom'); if(sel && sel.value==='__other__') return (cust?cust.value:'').trim(); return sel?sel.value:''; })();
+ c.splitName = $1('#ec_splitname').value.trim();
  c.status = $1('#ec_status').value;
  c.submitted = $1('#ec_submitted').value;
  c.estPay = $1('#ec_estpay').value;
@@ -1989,17 +1407,6 @@ function saveEditCase(caseId){
  c.notes = $1('#ec_notes').value.trim();
  c.updated = new Date().toISOString();
  saveCases();
- // Log if status changed to/from paid or paid-partial (affects totals)
- if(prevStatus !== c.status && (prevStatus === 'paid' || prevStatus === 'paid-partial' || prevStatus === 'declined' || c.status === 'paid' || c.status === 'paid-partial' || c.status === 'declined')){
-  logAuditEntry({
-   action: 'status_change',
-   targetIds: [caseId],
-   client: c.client,
-   summary: c.client + ' (manual edit) status: ' + prevStatus + ' → ' + c.status,
-   before: { status: prevStatus, amount: prevAmount },
-   after: { status: c.status, amount: c.amount }
-  });
- }
  closeEditModal();
  showToast('Case updated: ' + c.client, 2000);
  renderAll();
@@ -2035,7 +1442,38 @@ function renderPayPeriods(){
  h += '<div id="upload_status"></div>';
  h += '</div>';
 
+ // Panel 1 — Varicent
+ h += '<div class="pay-panel pay-panel-v"><h4 style="color:var(--pri)">Varicent Commission Statement</h4>';
+ h += '<div class="form-row"><div class="form-group"><label>Period Label</label><input id="pp_label" placeholder="e.g. Apr P1"></div>';
+ h += '<div class="form-group"><label>Month</label><select id="pp_month">';
+ months.forEach(function(m,i){ var sel = i===new Date().getMonth()?' selected':''; h += '<option value="'+m+'"'+sel+'>'+m+'</option>'; });
+ h += '</select></div></div>';
+ h += '<div class="form-row"><div class="form-group"><label>3MMA Credit Amount ($)</label><input id="pp_mma" type="number" step="0.01" oninput="updatePayPreview()"></div>';
+ h += '<div class="form-group"><label>Your Commission — Varicent Paid ($)</label><input id="pp_varicent" type="number" step="0.01" oninput="updatePayPreview()"></div></div>';
+ h += '<div class="form-group"><label>Notes</label><textarea id="pp_notes" rows="2" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px"></textarea></div>';
+ h += '</div>';
+
+ // Panel 2 — Workday Payslip
+ h += '<div class="pay-panel pay-panel-w"><h4 style="color:var(--grn)">Workday Payslip</h4>';
+ h += '<div class="form-row"><div class="form-group"><label>Base Pay ($)</label><input id="pp_basepay" type="number" step="0.01" oninput="updatePayPreview()"></div>';
+ h += '<div class="form-group"><label>Gross Pay ($)</label><input id="pp_gross" type="number" step="0.01" oninput="updatePayPreview()"></div></div>';
+ h += '<div class="form-row"><div class="form-group"><label>Banking Incentive ($)</label><input id="pp_banking" type="number" step="0.01" oninput="updatePayPreview()"></div>';
+ h += '<div class="form-row"><div class="form-group"><label>Other Bonuses ($)</label><input id="pp_bonuses" type="number" step="0.01" value="0" oninput="updatePayPreview()"></div>';
+ h += '<div class="form-group"><label>Pre-Tax Deductions ($)</label><input id="pp_pretax" type="number" step="0.01" oninput="updatePayPreview()"></div></div>';
+ h += '<div class="form-row"><div class="form-group"><label>Employee Taxes ($)</label><input id="pp_taxes" type="number" step="0.01" oninput="updatePayPreview()"></div>';
+ h += '<div class="form-group"><label>Post-Tax Deductions ($)</label><input id="pp_posttax" type="number" step="0.01" oninput="updatePayPreview()"></div></div>';
+ h += '<div class="form-group"><label>Net Pay ($) — actual deposited</label><input id="pp_net" type="number" step="0.01" oninput="updatePayPreview()"></div>';
+ h += '</div>';
+
  h += '</div>'; // end pay-grid
+
+ // Live preview
+ h += '<div class="preview-box" id="payPreview"><h4>Live Calculation Preview</h4><p style="color:var(--muted)">Enter values above to see calculations...</p></div>';
+
+ // Match suggestions
+ h += '<div id="matchSuggestions"></div>';
+
+ h += '<div style="margin-top:12px"><button class="btn btn-grn" onclick="savePeriod()">Save Pay Period</button></div>';
  h += '</div>'; // end payFormWrap
  h += '</div>'; // end card
 
@@ -2046,85 +1484,57 @@ function renderPayPeriods(){
  if(payPeriods.length === 0){
   h += '<div class="card" style="text-align:center;color:var(--muted);padding:40px">No pay periods recorded yet. Add your first pay period above.</div>';
  } else {
-  // YTD summary — includes extraDeposits on each period
-  var ytdGross = 0, ytdNet = 0, ytdVaricent = 0, ytdTaxes = 0, ytdDeductions = 0;
+  // YTD summary
+  var ytdGross = 0, ytdNet = 0, ytdVaricent = 0, ytdTaxes = 0;
   payPeriods.forEach(function(p){
    ytdVaricent += p.varicent || 0;
-   ytdGross += sumPeriodWithExtras(p, 'gross');
-   ytdNet += sumPeriodWithExtras(p, 'net');
-   ytdTaxes += sumPeriodWithExtras(p, 'taxes');
-   ytdDeductions += sumPeriodWithExtras(p, 'preTax') + sumPeriodWithExtras(p, 'postTax');
+   ytdGross += p.gross || 0;
+   ytdNet += p.net || 0;
+   ytdTaxes += p.taxes || 0;
   });
 
-  // Gross Pay at top (full width)
-  h += '<div class="card" style="text-align:center;border-top:4px solid var(--pri);margin-bottom:12px">';
-  h += '<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">YTD Gross Pay</div>';
-  h += '<div style="font-size:36px;font-weight:800;color:var(--pri)">'+fmt(ytdGross)+'</div>';
-  h += '</div>';
-
-  // 4 boxes below
   h += '<div class="stat-grid" style="margin-bottom:16px">';
   h += '<div class="stat-card green"><div class="stat-label">YTD Commission (Varicent)</div><div class="stat-value" style="color:var(--grn)">'+fmt(ytdVaricent)+'</div></div>';
+  h += '<div class="stat-card"><div class="stat-label">YTD Gross Pay</div><div class="stat-value">'+fmt(ytdGross)+'</div></div>';
   h += '<div class="stat-card red"><div class="stat-label">YTD Taxes</div><div class="stat-value" style="color:var(--red)">'+fmt(ytdTaxes)+'</div></div>';
-  h += '<div class="stat-card amber"><div class="stat-label">YTD Deductions</div><div class="stat-value" style="color:var(--amb)">'+fmt(ytdDeductions)+'</div></div>';
   h += '<div class="stat-card green"><div class="stat-label">YTD Net Pay (Deposited)</div><div class="stat-value" style="color:var(--grn)">'+fmt(ytdNet)+'</div></div>';
   h += '</div>';
 
-  // Individual periods — compact cards, sorted newest first
-  // Sort: handle Dec from prior year correctly (Dec < Jan in calendar order for current year)
-  var monthOrder = ['Dec','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov'];
+  // Individual periods (newest first, sorted chronologically by month + P1/P2)
+  var monthOrder = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   var sorted = payPeriods.slice().sort(function(a,b){
    var ma = monthOrder.indexOf(a.month || '');
    var mb = monthOrder.indexOf(b.month || '');
-   if(ma !== mb) return mb - ma;
+   if(ma !== mb) return mb - ma; // newest month first
+   // Same month: P2 before P1 (newest first)
    var pa = (a.label||'').indexOf('P2') !== -1 ? 2 : 1;
    var pb = (b.label||'').indexOf('P2') !== -1 ? 2 : 1;
    return pb - pa;
   });
-
-  h += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px">';
   sorted.forEach(function(p){
    var pTier = p.mmaTier ? p.mmaTier.replace('TIER','T') : '';
    var pTierColor = p.mmaTier==='TIER4'?'var(--grn)':p.mmaTier==='TIER3'?'var(--amb)':'var(--muted)';
    var pCredits = (p.newProdCredits||0) + (p.renewalProdCredits||0);
-   var extras = p.extraDeposits || [];
-   var extrasNet = 0; extras.forEach(function(ed){ extrasNet += ed.net || 0; });
-   var totalNet = (p.net||0) + extrasNet;
-   h += '<div style="background:var(--card);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow);border-left:4px solid var(--pri)">';
-   // Header row
-   h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
-   h += '<div style="font-weight:700;font-size:14px">'+p.label;
+   h += '<div class="pay-history-card">';
+   h += '<div>';
+   h += '<div class="ph-label">'+p.label+' <span style="font-size:11px;color:var(--muted)">'+p.month+'</span>';
    if(pTier) h += ' <span style="font-size:10px;font-weight:700;color:'+pTierColor+'">'+pTier+'</span>';
    h += '</div>';
-   h += '<button onclick="addManualDeposit('+p.id+')" title="Add deposit manually" style="background:none;border:1px solid var(--border);color:var(--muted);width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:12px;line-height:1">+</button>';
+   h += '<div class="ph-meta">Commission: '+fmt(p.varicent)+' | Prod Credits: '+fmt(pCredits)+'</div>';
+   if(p.net > 0) h += '<div class="ph-meta">Gross: '+fmt(p.gross)+' | Taxes: '+fmt(p.taxes)+' | Deductions: '+fmt((p.preTax||0)+(p.postTax||0))+'</div>';
+   if(p.notes) h += '<div class="ph-meta" style="font-style:italic">'+p.notes+'</div>';
    h += '</div>';
-   // Commission + Net
-   h += '<div style="display:flex;justify-content:space-between;align-items:baseline">';
-   h += '<div><div style="font-size:18px;font-weight:700;color:var(--pri)">'+fmt(p.varicent)+'</div><div style="font-size:9px;color:var(--muted)">commission</div></div>';
-   if(totalNet > 0){
-    h += '<div style="text-align:right"><div style="font-size:16px;font-weight:700;color:var(--grn)">'+fmt(totalNet)+'</div><div style="font-size:9px;color:var(--muted)">net deposited'+(extras.length>0?' (incl. '+extras.length+' extra)':'')+'</div></div>';
+   h += '<div style="text-align:right">';
+   h += '<div class="ph-amount">'+fmt(p.varicent)+'</div>';
+   h += '<div class="ph-meta">commission</div>';
+   if(p.net > 0){
+    h += '<div style="font-size:14px;font-weight:600;color:var(--grn);margin-top:4px">'+fmt(p.net)+'</div>';
+    h += '<div class="ph-meta">net deposited</div>';
    }
+   h += '<button class="btn-del" onclick="deletePayPeriod('+p.id+')" style="margin-top:4px">delete</button>';
    h += '</div>';
-   // Details line
-   h += '<div style="font-size:10px;color:var(--muted);margin-top:6px;border-top:1px solid var(--border);padding-top:4px">';
-   h += 'Credits: '+fmt(pCredits);
-   if(p.net > 0) h += ' | Gross: '+fmt(p.gross)+' | Tax: '+fmt(p.taxes);
-   h += '</div>';
-   // Extra deposits list
-   if(extras.length > 0){
-    h += '<div style="margin-top:6px;border-top:1px dashed var(--border);padding-top:6px">';
-    extras.forEach(function(ed){
-     h += '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:10px">';
-     h += '<div style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+(ed.description||'').replace(/"/g,'&quot;')+'">+ '+(ed.description||'Deposit')+'</div>';
-     h += '<div style="color:var(--grn);font-weight:600;margin-left:8px">'+fmt(ed.net)+'</div>';
-     h += '<button onclick="deleteExtraDeposit('+p.id+','+ed.id+')" title="Remove" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:12px;margin-left:4px">&times;</button>';
-     h += '</div>';
-    });
-    h += '</div>';
-   }
    h += '</div>';
   });
-  h += '</div>';
  }
  h += '</div>';
 
@@ -2175,7 +1585,7 @@ function updatePayPreview(){
  if(varicent > 0){
   var matches = [];
   cases.forEach(function(c){
-   if(c.status === 'paid' || c.status === 'paid-partial' || c.status === 'declined') return;
+   if(c.status === 'paid') return;
    var calc = calcCase(c);
    if(calc.agentShare <= 0) return;
    var pctDiff = Math.abs(calc.agentShare - varicent) / calc.agentShare;
@@ -2251,67 +1661,6 @@ function deletePayPeriod(id){
  renderCashFlow();
 }
 
-// ── Extra Deposits (bonuses, additional paychecks) ──
-function addManualDeposit(periodId){
- var p = payPeriods.find(function(x){return x.id===periodId});
- if(!p) return;
- var h = '';
- h += '<h3 style="margin-bottom:12px;color:var(--pri)">Add Deposit to '+p.label+'</h3>';
- h += '<div class="form-group" style="margin-bottom:10px"><label>Description</label><input id="md_desc" placeholder="e.g. Q1 Bonus, Contest Payout" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit"></div>';
- h += '<div class="form-group" style="margin-bottom:10px"><label>Date</label><input id="md_date" type="date" value="'+toYMD(new Date())+'" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit"></div>';
- h += '<div class="form-row">';
- h += '<div class="form-group"><label>Gross ($)</label><input id="md_gross" type="number" step="0.01" placeholder="0.00" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit"></div>';
- h += '<div class="form-group"><label>Taxes ($)</label><input id="md_taxes" type="number" step="0.01" placeholder="0.00" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit"></div>';
- h += '</div>';
- h += '<div class="form-group" style="margin-bottom:14px"><label>Net Deposited ($) — required</label><input id="md_net" type="number" step="0.01" placeholder="0.00" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit"></div>';
- h += '<div style="display:flex;gap:8px">';
- h += '<button class="btn btn-outline" onclick="closeEditModal()">Cancel</button>';
- h += '<button class="btn btn-pri" onclick="saveManualDeposit('+periodId+')">Save Deposit</button>';
- h += '</div>';
- $1('#editModalContent').innerHTML = h;
- $1('#editModal').className = 'modal-overlay show';
-}
-
-function saveManualDeposit(periodId){
- var p = payPeriods.find(function(x){return x.id===periodId});
- if(!p) return;
- var net = parseFloat($1('#md_net').value) || 0;
- if(net <= 0){ showToast('Net amount is required', 2000); return; }
- if(!p.extraDeposits) p.extraDeposits = [];
- var edId = 1;
- p.extraDeposits.forEach(function(ed){ if(ed.id >= edId) edId = ed.id + 1; });
- p.extraDeposits.push({
-  id: edId,
-  date: $1('#md_date').value || toYMD(new Date()),
-  description: ($1('#md_desc').value||'Manual Deposit').trim(),
-  gross: parseFloat($1('#md_gross').value) || 0,
-  taxes: parseFloat($1('#md_taxes').value) || 0,
-  preTax: 0,
-  postTax: 0,
-  net: net,
-  bonuses: 0,
-  source: 'manual'
- });
- savePayPeriods();
- closeEditModal();
- showToast('Deposit added to ' + p.label, 2000);
- renderPayPeriods();
- renderDashboard();
- renderCashFlow();
-}
-
-function deleteExtraDeposit(periodId, depositId){
- var p = payPeriods.find(function(x){return x.id===periodId});
- if(!p || !p.extraDeposits) return;
- if(!confirm('Remove this deposit?')) return;
- p.extraDeposits = p.extraDeposits.filter(function(ed){return ed.id!==depositId});
- savePayPeriods();
- showToast('Deposit removed', 2000);
- renderPayPeriods();
- renderDashboard();
- renderCashFlow();
-}
-
 // ════════════════════════════════════════════
 // TAB 3: CASH FLOW
 // ════════════════════════════════════════════
@@ -2328,10 +1677,8 @@ function renderCashFlow(){
  var d90 = new Date(now); d90.setDate(d90.getDate()+90); var day90 = toYMD(d90);
 
  cases.forEach(function(c){
-  // Declined cases don't pay and aren't pending — skip entirely
-  if(c.status === 'declined') return;
   var calc = calcCase(c);
-  if(c.status === 'paid' || c.status === 'paid-partial'){
+  if(c.status === 'paid'){
    paid += calc.agentShare;
   } else {
    pendingTotal += calc.agentShare;
@@ -2357,8 +1704,7 @@ function renderCashFlow(){
  var tierColor = fc.settledTier === 'T4' ? 'var(--grn)' : fc.settledTier === 'T3' ? 'var(--amb)' : 'var(--red)';
 
  h += '<div class="card">';
- var curPayMonth = fc.openMonth ? fc.openMonth.name : (fc.settled3[2].name || '');
- h += '<h3>Current Pay Tier — '+curPayMonth+'</h3>';
+ h += '<h3>Current Pay Tier</h3>';
  h += '<div style="display:flex;gap:16px;margin:12px 0;align-items:center;flex-wrap:wrap">';
 
  // 3 settled months
@@ -2374,7 +1720,7 @@ function renderCashFlow(){
  // Tier badge
  h += '<div style="text-align:center;padding:12px 20px;background:var(--card);border:3px solid '+tierColor+';border-radius:10px">';
  h += '<div style="font-size:32px;font-weight:800;color:'+tierColor+'">'+fc.settledTier+'</div>';
- h += '<div style="font-size:11px;color:var(--muted)">All cases paid in '+curPayMonth+' at '+fc.settledTier+' rates</div>';
+ h += '<div style="font-size:11px;color:var(--muted)">All cases paid at '+fc.settledTier+' rates</div>';
  h += '</div>';
  h += '</div></div>';
 
@@ -2409,9 +1755,6 @@ function renderCashFlow(){
  // Show the forecast math
  var forecastTier = tierText(fc.forecast3MMA);
  var forecastColor = fc.forecast3MMA >= 6667 ? 'var(--grn)' : fc.forecast3MMA >= 5000 ? 'var(--amb)' : 'var(--red)';
- var fMonthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
- var fmi = fMonthNames.indexOf(forecastMonth);
- var nextPayMonth = fmi >= 0 ? fMonthNames[(fmi+1)%12] : 'next month';
  h += '<div style="display:flex;gap:12px;margin:12px 0;flex-wrap:wrap;align-items:center">';
  h += '<div style="text-align:center;min-width:90px;padding:8px;background:var(--ptint);border-radius:6px"><div style="font-size:9px;color:var(--muted)">'+fc.carry1.name+'</div><div style="font-size:16px;font-weight:700">'+fmt(fc.carry1.credits)+'</div></div>';
  h += '<span style="font-size:18px;color:var(--muted)">+</span>';
@@ -2419,7 +1762,7 @@ function renderCashFlow(){
  h += '<span style="font-size:18px;color:var(--muted)">+</span>';
  h += '<div style="text-align:center;min-width:90px;padding:8px;background:var(--atint);border-radius:6px;border:1px solid var(--amb)"><div style="font-size:9px;color:var(--muted)">'+forecastMonth+'</div><div style="font-size:16px;font-weight:700;color:var(--amb)">'+fmt(fc.openMonth ? fc.openMonth.credits : 0)+'</div></div>';
  h += '<span style="font-size:18px;color:var(--muted)">=</span>';
- h += '<div style="text-align:center;min-width:140px;padding:8px;background:var(--card);border:2px solid '+forecastColor+';border-radius:6px"><div style="font-size:9px;color:var(--muted)">Potential '+nextPayMonth+' Tier</div><div style="font-size:18px;font-weight:700;color:'+forecastColor+'">'+fmt(fc.forecast3MMA)+'</div><div style="font-size:10px;font-weight:700;color:'+forecastColor+'">'+forecastTier+'</div></div>';
+ h += '<div style="text-align:center;min-width:120px;padding:8px;background:var(--card);border:2px solid '+forecastColor+';border-radius:6px"><div style="font-size:9px;color:var(--muted)">New 3MMA</div><div style="font-size:18px;font-weight:700;color:'+forecastColor+'">'+fmt(fc.forecast3MMA)+'</div><div style="font-size:10px;font-weight:700;color:'+forecastColor+'">'+forecastTier+'</div></div>';
  h += '</div>';
 
  // Tier targets
@@ -2510,22 +1853,8 @@ function renderCashFlow(){
 function renderRateTable(){
  var mma = calc3MMA();
  var curTier = mma >= 6667 ? 4 : mma >= 5000 ? 3 : mma >= 3334 ? 2 : 1;
- // Determine current month from latest pay period data
- var rtMonthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
- var rtFC = calc3MMAForecast();
- var rtMonth = rtFC.openMonth ? rtFC.openMonth.name : (rtFC.settled3[2].name || rtMonthNames[new Date().getMonth()]);
- var tierColor = curTier === 4 ? 'var(--grn)' : curTier === 3 ? 'var(--amb)' : 'var(--red)';
-
  var h = '<h2 style="margin-bottom:8px;color:var(--amb)">Product Rate Table</h2>';
- h += '<div style="font-size:12px;color:var(--muted);margin-bottom:12px">2026 Variable Incentive Plan &middot; Your current tier for '+rtMonth+': <b style="color:'+tierColor+'">T'+curTier+'</b> (3MMA: '+fmt(mma)+')</div>';
-
- // Tier reference badges
- h += '<div style="display:flex;gap:0;font-size:14px;font-weight:700;border-radius:8px;overflow:hidden;border:1px solid var(--border);margin-bottom:16px;max-width:500px">';
- h += '<div style="padding:10px 18px;text-align:center;flex:1;background:'+(curTier===1?'var(--red);color:#fff':'var(--rtint);color:var(--red)')+'">T1<div style="font-weight:400;font-size:11px">0-3,333</div></div>';
- h += '<div style="padding:10px 18px;text-align:center;flex:1;background:'+(curTier===2?'var(--amb);color:#fff':'var(--atint);color:var(--amb)')+'">T2<div style="font-weight:400;font-size:11px">3,334-4,999</div></div>';
- h += '<div style="padding:10px 18px;text-align:center;flex:1;background:'+(curTier===3?'var(--pri);color:#fff':'var(--ptint);color:var(--pri)')+'">T3<div style="font-weight:400;font-size:11px">5,000-6,666</div></div>';
- h += '<div style="padding:10px 18px;text-align:center;flex:1;background:'+(curTier===4?'var(--grn);color:#fff':'var(--gtint);color:var(--grn)')+'">T4<div style="font-weight:400;font-size:11px">6,667+</div></div>';
- h += '</div>';
+ h += '<div style="font-size:12px;color:var(--muted);margin-bottom:16px">2026 Variable Incentive Plan &middot; Your current tier: <b style="color:var(--grn)">T'+curTier+'</b> (3MMA: '+fmt(mma)+')</div>';
  var carriers = ['AAA','MassMutual','Securian'];
 
  carriers.forEach(function(carrier){
@@ -2589,107 +1918,17 @@ function renderSettings(){
  h += '<h3>AI Document Reader</h3>';
  h += '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">To auto-read your Varicent and Workday documents, enter your Anthropic API key. This stays in your browser only \u2014 never sent to the cloud.</div>';
  h += '<div class="form-group"><label>Anthropic API Key</label><input id="s_apikey" type="password" value="'+(getApiKey()||'')+'" placeholder="sk-ant-..."></div>';
- h += '<div style="display:flex;gap:8px;margin-top:8px">';
- h += '<button class="btn btn-pri" onclick="saveApiKey()">Save API Key</button>';
- h += '<button class="btn btn-outline" onclick="testApiKey()" id="testApiBtn">Test Key</button>';
- h += '</div>';
- h += '<div id="apiTestResult"></div>';
+ h += '<button class="btn btn-pri" onclick="saveApiKey()" style="margin-top:8px">Save API Key</button>';
  h += '<div style="font-size:10px;color:var(--muted);margin-top:6px">Get your key at <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--pri)">console.anthropic.com</a> \u2014 each document read costs ~$0.01-0.02</div>';
- h += '<div style="margin-top:8px;padding:8px 12px;background:var(--atint);border-radius:6px;border:1px solid var(--amb);font-size:11px;color:var(--amb)"><b>Important:</b> Make sure you have credits loaded on your Anthropic account before uploading files. Go to <a href="https://console.anthropic.com/settings/billing" target="_blank" style="color:var(--pri)">console.anthropic.com/billing</a> to add credits. Without credits, document uploads will fail.</div>';
  h += '</div>';
 
  h += '<div class="card">';
- h += '<h3>Commission Splits</h3>';
- h += '<div style="font-size:11px;color:var(--muted);margin-bottom:12px">Set your two split scenarios. Each case you add can use Life, PC, or Full (no split) \u2014 pick per case.</div>';
-
- // Life Split
- h += '<div style="padding:10px;background:var(--ptint);border-radius:6px;margin-bottom:10px">';
- h += '<div style="font-weight:600;font-size:12px;margin-bottom:6px;color:var(--pri)">Life Split</div>';
+ h += '<h3>Commission Split</h3>';
  h += '<div class="form-row">';
- h += '<div class="form-group"><label>Your Share (%)</label><input id="s_lifeshare" type="number" value="'+settings.lifeShare+'" min="0" max="100"></div>';
- h += '<div class="form-group"><label>Partner Share (%)</label><input id="s_lifepartner" type="number" value="'+settings.lifePartnerShare+'" min="0" max="100"></div>';
+ h += '<div class="form-group"><label>Your Share (%)</label><input id="s_yourshare" type="number" value="'+settings.yourShare+'" min="0" max="100"></div>';
+ h += '<div class="form-group"><label>Partner Share (%)</label><input id="s_partnershare" type="number" value="'+settings.partnerShare+'" min="0" max="100"></div>';
  h += '</div>';
- h += '</div>';
-
- // PC Split
- h += '<div style="padding:10px;background:var(--gtint);border-radius:6px;margin-bottom:10px">';
- h += '<div style="font-weight:600;font-size:12px;margin-bottom:6px;color:var(--grn)">PC Split</div>';
- h += '<div class="form-row">';
- h += '<div class="form-group"><label>Your Share (%)</label><input id="s_pcshare" type="number" value="'+settings.pcShare+'" min="0" max="100"></div>';
- h += '<div class="form-group"><label>Partner Share (%)</label><input id="s_pcpartner" type="number" value="'+settings.pcPartnerShare+'" min="0" max="100"></div>';
- h += '</div>';
- h += '</div>';
-
- // Default split type (preference for new cases)
- var curType = (currentAgent && currentAgent.agentType) || 'PC';
- h += '<div class="form-row">';
- h += '<div class="form-group"><label>Default Split Type for New Cases</label>';
- h += '<select id="s_agenttype">';
- h += '<option value="PC"'+(curType==='PC'?' selected':'')+'>PC Split</option>';
- h += '<option value="Life"'+(curType==='Life'?' selected':'')+'>Life Split</option>';
- h += '</select></div>';
- h += '</div>';
-
  h += '<button class="btn btn-pri" onclick="saveSettingsForm()" style="margin-top:8px">Save Settings</button>';
- h += '</div>';
-
- // Split Partners Directory
- h += '<div class="card">';
- h += '<h3>Split Partners</h3>';
- h += '<div style="font-size:11px;color:var(--muted);margin-bottom:10px">Set up your split partners once. When adding cases, pick from the list instead of typing names.</div>';
-
- var agents = getSplitAgents();
- if(agents.length > 0){
-  h += '<div class="tbl-wrap" style="margin-bottom:12px"><table>';
-  h += '<thead><tr><th>Name</th><th>Email</th><th>Type</th><th>Active</th><th></th></tr></thead><tbody>';
-  agents.forEach(function(a){
-   var typeBadges = '';
-   if(a.types && a.types.indexOf('life')!==-1) typeBadges += '<span class="badge badge-pri" style="font-size:9px;margin-right:2px">Life</span>';
-   if(a.types && a.types.indexOf('pc')!==-1) typeBadges += '<span class="badge badge-grn" style="font-size:9px">PC</span>';
-   h += '<tr style="opacity:'+(a.active?'1':'0.5')+'">';
-   h += '<td><b>'+a.name+'</b></td>';
-   h += '<td style="font-size:11px">'+(a.email||'—')+'</td>';
-   h += '<td>'+typeBadges+'</td>';
-   h += '<td><button class="btn btn-sm btn-outline" onclick="toggleSplitAgent('+a.id+')">'+(a.active?'Active':'Inactive')+'</button></td>';
-   h += '<td><button class="btn-del" onclick="editSplitAgent('+a.id+')" style="color:var(--pri)">edit</button> <button class="btn-del" onclick="deleteSplitAgent('+a.id+')">remove</button></td>';
-   h += '</tr>';
-  });
-  h += '</tbody></table></div>';
- } else {
-  h += '<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px">No split partners yet. Add your first partner below.</div>';
- }
-
- // Add partner form
- h += '<div style="padding:12px;background:var(--ptint);border-radius:6px;margin-top:8px">';
- h += '<div style="font-weight:600;font-size:12px;margin-bottom:8px;color:var(--pri)">+ Add Split Partner</div>';
- h += '<div class="form-row">';
- h += '<div class="form-group"><label>Name</label><input id="sa_name" placeholder="Partner name" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;font-family:inherit;background:var(--bg);color:var(--txt)"></div>';
- h += '<div class="form-group"><label>Email</label><input id="sa_email" placeholder="partner@email.com" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;font-family:inherit;background:var(--bg);color:var(--txt)"></div>';
- h += '</div>';
- h += '<div style="display:flex;gap:16px;align-items:center;margin:8px 0">';
- h += '<label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="checkbox" id="sa_type_life"> Life Partner</label>';
- h += '<label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="checkbox" id="sa_type_pc"> PC Partner</label>';
- h += '</div>';
- h += '<button class="btn btn-pri btn-sm" onclick="addSplitAgent()">Add Partner</button>';
- h += '</div>';
- h += '</div>';
-
- // Duplicate Audit
- h += '<div class="card">';
- h += '<h3>Duplicate Audit</h3>';
- h += '<div style="font-size:11px;color:var(--muted);margin-bottom:8px">Scan your Book of Business for cases with the same client name. Useful for cleaning up after Varicent imports created duplicates.</div>';
- var dupCount = findDuplicates().length;
- var btnLabel = dupCount > 0 ? '🔎 Scan for Duplicates ('+dupCount+' group'+(dupCount>1?'s':'')+' found)' : '🔎 Scan for Duplicates';
- h += '<button class="btn btn-pri" onclick="showDuplicateScanner()">'+btnLabel+'</button>';
- h += '</div>';
-
- // Audit Log
- h += '<div class="card">';
- h += '<h3>Audit Log</h3>';
- h += '<div style="font-size:11px;color:var(--muted);margin-bottom:8px">View a history of merges, deletes, status changes, and Varicent imports. Recent merges and deletes can be undone within 7 days.</div>';
- var auditCount = (auditLog || []).length;
- var auditBtnLabel = auditCount > 0 ? '📜 View Audit Log ('+auditCount+' '+(auditCount===1?'entry':'entries')+')' : '📜 View Audit Log';
- h += '<button class="btn btn-pri" onclick="showAuditLog()">'+auditBtnLabel+'</button>';
  h += '</div>';
 
  h += '<div class="card">';
@@ -2718,207 +1957,15 @@ function renderSettings(){
  h += '<button class="btn btn-red" onclick="resetAllData()">Reset All Data</button>';
  h += '</div>';
 
- // Admin: Chat Logs
- if(isAdmin()){
-  h += '<div class="card">';
-  h += '<h3>Agent Chat Logs</h3>';
-  h += '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">View help chat sessions from agents to identify common issues.</div>';
-  h += '<button class="btn btn-pri" onclick="viewChatLogs()">View Chat Logs</button>';
-  h += '</div>';
-
-  // Admin: Test Mode (Sandbox)
-  h += '<div class="card" style="border:2px dashed var(--amb);background:var(--atint)">';
-  h += '<h3 style="color:var(--amb)">🧪 Test Mode (Sandbox)</h3>';
-  h += '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Enter Test Mode to experiment with feedback suggestions or new ideas using your real data as a starting point. Changes are in-memory only and will NOT save to Firebase or localStorage. Exit to restore your original data.</div>';
-  if(!testMode){
-   h += '<button class="btn btn-amb" onclick="enterTestMode()">Enter Test Mode</button>';
-  } else {
-   h += '<div style="font-size:12px;color:var(--amb);font-weight:600;margin-bottom:6px">🧪 Test Mode is ACTIVE</div>';
-   h += '<div style="display:flex;gap:8px">';
-   h += '<button class="btn btn-outline" onclick="resetTestMode()">Reset Sandbox</button>';
-   h += '<button class="btn btn-red" onclick="exitTestMode()">Exit Test Mode</button>';
-   h += '</div>';
-  }
-  h += '</div>';
- }
-
  $1('#p5').innerHTML = h;
 }
 
 function saveSettingsForm(){
- settings.lifeShare = parseInt($1('#s_lifeshare').value) || 50;
- settings.lifePartnerShare = parseInt($1('#s_lifepartner').value) || 50;
- settings.pcShare = parseInt($1('#s_pcshare').value) || 80;
- settings.pcPartnerShare = parseInt($1('#s_pcpartner').value) || 20;
+ settings.yourShare = parseInt($1('#s_yourshare').value) || 80;
+ settings.partnerShare = parseInt($1('#s_partnershare').value) || 20;
  saveSettings();
-
- // Save default split type preference if changed
- var newType = ($1('#s_agenttype') && $1('#s_agenttype').value) || 'PC';
- if(currentAgent && currentAgent.agentType !== newType){
-  currentAgent.agentType = newType;
-  sessionStorage.setItem('db_agent', JSON.stringify(currentAgent));
-  // Update profile in Firebase
-  fetch(FIREBASE_URL + '/' + currentAgent.id + '/profile.json').then(function(r){return r.json();}).then(function(profile){
-   if(profile){
-    profile.agentType = newType;
-    fetch(FIREBASE_URL + '/' + currentAgent.id + '/profile.json', {method:'PUT', body: JSON.stringify(profile)});
-   }
-  });
- }
-
  showToast('Settings saved', 2000);
  renderAll();
-}
-
-// ── Split Agent Directory ──
-function getSplitAgents(){ return settings.splitAgents || []; }
-
-function getSplitAgentOptions(splitType, selectedName){
- var agents = getSplitAgents().filter(function(a){
-  return a.active && a.types && a.types.indexOf(splitType) !== -1;
- });
- var h = '<option value="">Select partner...</option>';
- var foundSelected = false;
- agents.forEach(function(a){
-  var sel = a.name === selectedName ? ' selected' : '';
-  if(a.name === selectedName) foundSelected = true;
-  h += '<option value="'+a.name+'"'+sel+'>'+a.name+'</option>';
- });
- // If legacy name not in directory, show it as custom option
- if(selectedName && !foundSelected){
-  h += '<option value="'+selectedName+'" selected>'+selectedName+' (custom)</option>';
- }
- h += '<option value="__other__">Other (type name)...</option>';
- return h;
-}
-
-function onSplitAgentChange(selectId, textId){
- var sel = $1('#'+selectId);
- var txt = $1('#'+textId);
- if(!sel || !txt) return;
- if(sel.value === '__other__'){
-  txt.style.display = 'block';
-  txt.value = '';
-  txt.focus();
- } else {
-  txt.style.display = 'none';
-  txt.value = sel.value;
- }
-}
-
-function updateSplitAgentDropdown(){
- var splitType = ($1('#nc_split')||{}).value || 'full';
- var wrap = $1('#nc_splitagent_wrap');
- var sel = $1('#nc_splitname_sel');
- if(!wrap) return;
- if(splitType === 'full'){
-  wrap.style.display = 'none';
- } else {
-  wrap.style.display = '';
-  if(sel) sel.innerHTML = getSplitAgentOptions(splitType, '');
- }
-}
-
-function addSplitAgent(){
- var nameEl = $1('#sa_name');
- var emailEl = $1('#sa_email');
- var name = (nameEl ? nameEl.value : '').trim();
- if(!name){ showToast('Partner name is required', 2000); return; }
- var email = (emailEl ? emailEl.value : '').trim();
- var lifeEl = $1('#sa_type_life');
- var pcEl = $1('#sa_type_pc');
- var isLife = lifeEl && lifeEl.checked;
- var isPC = pcEl && pcEl.checked;
- if(!isLife && !isPC){ showToast('Please check at least one: Life Partner or PC Partner', 3000); return; }
- var types = [];
- if(isLife) types.push('life');
- if(isPC) types.push('pc');
- if(!settings.splitAgents) settings.splitAgents = [];
- var maxId = 0;
- settings.splitAgents.forEach(function(a){ if(a.id > maxId) maxId = a.id; });
- settings.splitAgents.push({ id: maxId+1, name:name, email:email, phone:'', types:types, active:true });
- saveSettings();
- // Clear form inputs
- if(nameEl) nameEl.value = '';
- if(emailEl) emailEl.value = '';
- if(lifeEl) lifeEl.checked = false;
- if(pcEl) pcEl.checked = false;
- // Re-render just the partner table instead of entire Settings (preserves scroll)
- showToast('✅ Split partner added: ' + name + ' (' + types.join(' & ') + ')', 3000);
- renderSettings();
- // Scroll to the split partners section after render
- setTimeout(function(){
-  var card = document.querySelector('#p5 .tbl-wrap');
-  if(card) card.scrollIntoView({behavior:'smooth', block:'center'});
- }, 100);
-}
-
-function editSplitAgent(id){
- var a = getSplitAgents().find(function(x){return x.id===id});
- if(!a) return;
- var h = '';
- h += '<h3 style="margin-bottom:12px;color:var(--pri)">Edit Split Partner</h3>';
- h += '<div class="form-group" style="margin-bottom:10px"><label>Name</label><input id="sae_name" value="'+(a.name||'')+'" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--txt)"></div>';
- h += '<div class="form-group" style="margin-bottom:10px"><label>Email</label><input id="sae_email" value="'+(a.email||'')+'" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--txt)"></div>';
- h += '<div class="form-group" style="margin-bottom:10px"><label>Phone</label><input id="sae_phone" value="'+(a.phone||'')+'" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--txt)"></div>';
- h += '<div style="display:flex;gap:16px;align-items:center;margin:10px 0">';
- h += '<label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="checkbox" id="sae_type_life"'+(a.types && a.types.indexOf('life')!==-1?' checked':'')+'>Life Partner</label>';
- h += '<label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="checkbox" id="sae_type_pc"'+(a.types && a.types.indexOf('pc')!==-1?' checked':'')+'>PC Partner</label>';
- h += '</div>';
- h += '<div style="display:flex;gap:8px;margin-top:12px">';
- h += '<button class="btn btn-outline" onclick="closeEditModal()">Cancel</button>';
- h += '<button class="btn btn-pri" onclick="saveSplitAgentEdit('+id+')">Save Changes</button>';
- h += '</div>';
- $1('#editModalContent').innerHTML = h;
- $1('#editModal').className = 'modal-overlay show';
-}
-
-function saveSplitAgentEdit(id){
- var a = getSplitAgents().find(function(x){return x.id===id});
- if(!a) return;
- var name = ($1('#sae_name').value||'').trim();
- if(!name){ showToast('Name is required', 2000); return; }
- var isLife = $1('#sae_type_life') && $1('#sae_type_life').checked;
- var isPC = $1('#sae_type_pc') && $1('#sae_type_pc').checked;
- if(!isLife && !isPC){ showToast('Select at least one type', 2000); return; }
-
- // Update existing cases that reference the old name
- var oldName = a.name;
- a.name = name;
- a.email = ($1('#sae_email').value||'').trim();
- a.phone = ($1('#sae_phone').value||'').trim();
- a.types = [];
- if(isLife) a.types.push('life');
- if(isPC) a.types.push('pc');
-
- // Update splitName on any cases that used the old name
- if(oldName !== name){
-  cases.forEach(function(c){
-   if(c.splitName === oldName) c.splitName = name;
-  });
-  saveCases();
- }
-
- saveSettings();
- closeEditModal();
- showToast('✅ Partner updated: ' + name, 2000);
- renderSettings();
-}
-
-function toggleSplitAgent(id){
- var agents = getSplitAgents();
- var a = agents.find(function(x){return x.id===id});
- if(a) a.active = !a.active;
- saveSettings();
- renderSettings();
-}
-
-function deleteSplitAgent(id){
- if(!confirm('Remove this split partner?')) return;
- settings.splitAgents = getSplitAgents().filter(function(a){return a.id!==id});
- saveSettings();
- showToast('Split partner removed', 2000);
- renderSettings();
 }
 
 async function changePin(){
@@ -3004,55 +2051,6 @@ function saveApiKey(){
  if(key) localStorage.setItem('db_anthropic_key', key);
  else localStorage.removeItem('db_anthropic_key');
  showToast(key ? 'API key saved (stored locally only)' : 'API key removed', 2000);
-}
-
-async function testApiKey(){
- var key = getApiKey();
- if(!key){
-  showToast('Please save an API key first', 2000);
-  return;
- }
- var btn = $1('#testApiBtn');
- var result = $1('#apiTestResult');
- if(btn) btn.textContent = 'Testing...';
- if(btn) btn.disabled = true;
-
- try {
-  var resp = await fetch('https://api.anthropic.com/v1/messages', {
-   method: 'POST',
-   headers: {
-    'Content-Type': 'application/json',
-    'x-api-key': key,
-    'anthropic-version': '2023-06-01',
-    'anthropic-dangerous-direct-browser-access': 'true'
-   },
-   body: JSON.stringify({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 10,
-    messages: [{role:'user', content:'Say OK'}]
-   })
-  });
-
-  if(resp.ok){
-   if(result) result.innerHTML = '<div style="margin-top:8px;padding:8px 12px;background:var(--gtint);border-radius:6px;font-size:12px;color:var(--grn);font-weight:600">✅ API key is working! You\'re all set to upload documents.</div>';
-   showToast('API key test passed!', 3000);
-  } else {
-   var errData = await resp.json().catch(function(){ return {}; });
-   var errMsg = errData.error ? errData.error.message : 'HTTP ' + resp.status;
-   if(resp.status === 401){
-    errMsg = 'Invalid API key. Please check and re-enter it.';
-   } else if(resp.status === 403){
-    errMsg = 'API key does not have permission. Check your Anthropic account.';
-   } else if(resp.status === 429){
-    errMsg = 'Rate limited or no credits. Please add credits at console.anthropic.com/billing.';
-   }
-   if(result) result.innerHTML = '<div style="margin-top:8px;padding:8px 12px;background:var(--rtint);border-radius:6px;font-size:12px;color:var(--red);font-weight:600">❌ '+errMsg+'</div>';
-  }
- } catch(e){
-  if(result) result.innerHTML = '<div style="margin-top:8px;padding:8px 12px;background:var(--rtint);border-radius:6px;font-size:12px;color:var(--red);font-weight:600">❌ Connection error: '+e.message+'</div>';
- }
-
- if(btn){ btn.textContent = 'Test Key'; btn.disabled = false; }
 }
 
 var uploadedFiles = []; // [{name, base64, mediaType}]
@@ -3141,510 +2139,6 @@ document.addEventListener('paste', function(e){
  }
 });
 
-// ════════════════════════════════════════════
-// DUPLICATE SCANNER
-// ════════════════════════════════════════════
-function findDuplicates(){
- // Group cases by normalized client name; return groups with 2+ cases that aren't already marked dupReviewed
- var groups = {};
- (cases || []).forEach(function(c){
-  if(!c || !c.client) return;
-  var key = normalizeClientName(c.client);
-  if(!key) return;
-  if(!groups[key]) groups[key] = [];
-  groups[key].push(c);
- });
- var dupGroups = [];
- Object.keys(groups).forEach(function(k){
-  if(groups[k].length < 2) return;
-  // Skip groups where all members have been marked dupReviewed:true
-  var allReviewed = groups[k].every(function(c){ return c.dupReviewed === true; });
-  if(allReviewed) return;
-  dupGroups.push({ key: k, name: groups[k][0].client, cases: groups[k] });
- });
- return dupGroups;
-}
-
-function showDuplicateScanner(){
- var groups = findDuplicates();
- var h = '';
- h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">';
- h += '<div style="font-size:18px;font-weight:700;color:var(--pri)">🔎 Duplicate Audit</div>';
- h += '<button class="btn btn-outline btn-sm" onclick="closeDupScanner()">&times; Close</button>';
- h += '</div>';
-
- if(groups.length === 0){
-  h += '<div style="padding:30px;text-align:center;color:var(--muted)">✅ No duplicates found. Your Book of Business is clean.</div>';
- } else {
-  h += '<div style="font-size:11px;color:var(--muted);margin-bottom:12px">Found '+groups.length+' client name'+(groups.length>1?'s':'')+' with 2+ cases. Review each pair and choose to merge or keep both.</div>';
-
-  groups.forEach(function(g){
-   h += '<div style="border:1px solid var(--border);border-radius:6px;padding:12px;margin-bottom:10px">';
-   h += '<div style="font-weight:700;font-size:13px;margin-bottom:8px">'+g.name+' — '+g.cases.length+' cases</div>';
-   h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">';
-   g.cases.forEach(function(c){
-    h += '<div style="padding:8px;background:var(--bg);border-radius:4px;font-size:11px">';
-    h += '<div style="font-size:10px;color:var(--muted)">ID: '+c.id+'</div>';
-    h += '<div style="font-weight:600">'+(c.product||'?')+'</div>';
-    h += '<div>Premium: '+fmt(c.amount||0)+'</div>';
-    h += '<div>Comm: '+fmt(c.actualCommission||calcCase(c).agentShare||0)+'</div>';
-    h += '<div>Status: '+statusBadge(c.status)+'</div>';
-    if(c.paidIn) h += '<div>Paid In: '+c.paidIn+'</div>';
-    if(c.splitName) h += '<div>Partner: '+c.splitName+'</div>';
-    h += '</div>';
-   });
-   h += '</div>';
-   // Merge controls
-   h += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">';
-   h += '<button class="btn btn-outline btn-sm" onclick="markDupReviewed(\''+g.key+'\')">Keep all (separate cases)</button>';
-   g.cases.forEach(function(c){
-    h += '<button class="btn btn-pri btn-sm" onclick="mergeIntoCase('+c.id+',\''+g.key+'\')">Merge into ID '+c.id+'</button>';
-   });
-   h += '</div>';
-   h += '</div>';
-  });
- }
-
- $1('#dupScannerContent').innerHTML = h;
- $1('#dupScannerModal').className = 'modal-overlay show';
-}
-
-function closeDupScanner(){
- $1('#dupScannerModal').className = 'modal-overlay';
-}
-
-// ════════════════════════════════════════════
-// AUDIT LOG VIEWER
-// ════════════════════════════════════════════
-var _auditFilter = { range: '30', action: '' };
-
-function showAuditLog(){
- var entries = (auditLog || []).slice().sort(function(a,b){ return (b.id||0) - (a.id||0); });
-
- // Apply filters
- var now = Date.now();
- var rangeDays = parseInt(_auditFilter.range, 10) || 0;
- if(rangeDays > 0){
-  var cutoff = now - rangeDays * 24 * 60 * 60 * 1000;
-  entries = entries.filter(function(e){ return new Date(e.timestamp).getTime() >= cutoff; });
- }
- if(_auditFilter.action){
-  entries = entries.filter(function(e){ return e.action === _auditFilter.action; });
- }
-
- var h = '';
- h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
- h += '<div style="font-size:18px;font-weight:700;color:var(--pri)">📜 Audit Log ('+entries.length+')</div>';
- h += '<button class="btn btn-outline btn-sm" onclick="closeAuditLog()">&times; Close</button>';
- h += '</div>';
-
- // Filters
- h += '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">';
- h += '<select onchange="_auditFilter.range=this.value;showAuditLog()" style="padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--bg);color:var(--txt)">';
- [['7','Last 7 days'],['30','Last 30 days'],['90','Last 90 days'],['0','All time']].forEach(function(o){
-  h += '<option value="'+o[0]+'"'+(_auditFilter.range===o[0]?' selected':'')+'>'+o[1]+'</option>';
- });
- h += '</select>';
- h += '<select onchange="_auditFilter.action=this.value;showAuditLog()" style="padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--bg);color:var(--txt)">';
- [['','All actions'],['merge','Merges'],['delete','Deletions'],['status_change','Status changes'],['import_confirm','Imports']].forEach(function(o){
-  h += '<option value="'+o[0]+'"'+(_auditFilter.action===o[0]?' selected':'')+'>'+o[1]+'</option>';
- });
- h += '</select>';
- h += '</div>';
-
- if(entries.length === 0){
-  h += '<div style="padding:30px;text-align:center;color:var(--muted);font-size:13px">No audit entries match the current filter.</div>';
- } else {
-  entries.forEach(function(e){
-   var d = new Date(e.timestamp);
-   var dateStr = d.toLocaleString();
-   var actColor = e.action === 'merge' ? 'var(--pri)' : e.action === 'delete' ? 'var(--red)' : e.action === 'import_confirm' ? 'var(--grn)' : 'var(--amb)';
-   var actBg = e.action === 'merge' ? 'var(--ptint)' : e.action === 'delete' ? 'var(--rtint)' : e.action === 'import_confirm' ? 'var(--gtint)' : 'var(--atint)';
-   var canUndo = !e.undone && (e.action === 'merge' || e.action === 'delete') && (now - new Date(e.timestamp).getTime() < 7*24*60*60*1000); // 7 day window
-   h += '<div style="border:1px solid var(--border);border-left:3px solid '+actColor+';background:'+actBg+';border-radius:4px;padding:10px 12px;margin-bottom:6px;font-size:12px">';
-   h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">';
-   h += '<div style="flex:1">';
-   h += '<div style="font-size:10px;color:var(--muted)">'+dateStr+' &middot; <b style="color:'+actColor+'">'+(e.action||"").replace(/_/g," ").toUpperCase()+'</b>'+(e.undone ? ' &middot; <span style="color:var(--red)">UNDONE</span>' : '')+'</div>';
-   h += '<div style="margin-top:2px">'+e.summary+'</div>';
-   h += '</div>';
-   h += '<div style="display:flex;gap:4px;flex-shrink:0">';
-   h += '<button class="btn btn-outline btn-sm" onclick="toggleAuditDetail('+e.id+')" style="font-size:10px">Details</button>';
-   if(canUndo) h += '<button class="btn btn-outline btn-sm" onclick="undoAuditEntry('+e.id+')" style="font-size:10px;color:var(--amb)">Undo</button>';
-   h += '</div>';
-   h += '</div>';
-   h += '<div id="audit_detail_'+e.id+'" style="display:none;margin-top:8px;padding:8px;background:var(--card);border-radius:4px;font-family:monospace;font-size:10px;overflow-x:auto;white-space:pre-wrap">'+JSON.stringify({before:e.before, after:e.after}, null, 2)+'</div>';
-   h += '</div>';
-  });
- }
-
- $1('#auditLogContent').innerHTML = h;
- $1('#auditLogModal').className = 'modal-overlay show';
-}
-
-function closeAuditLog(){
- $1('#auditLogModal').className = 'modal-overlay';
-}
-
-function toggleAuditDetail(id){
- var el = $1('#audit_detail_'+id);
- if(el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
-}
-
-function undoAuditEntry(entryId){
- var entry = auditLog.find(function(e){ return e.id === entryId; });
- if(!entry || entry.undone){ showToast('Cannot undo this entry', 2000); return; }
-
- if(entry.action === 'merge'){
-  if(!confirm('Undo merge for "'+(entry.client||'this entry')+'"? This will restore the deleted cases and revert the kept case to its pre-merge state.')) return;
-  // Restore the kept case to its before-merge state
-  if(entry.before && entry.before.keep){
-   var keepIdx = cases.findIndex(function(c){ return c && c.id === entry.before.keep.id; });
-   if(keepIdx !== -1) cases[keepIdx] = JSON.parse(JSON.stringify(entry.before.keep));
-   else cases.push(JSON.parse(JSON.stringify(entry.before.keep))); // fallback if it was deleted somehow
-  }
-  // Re-create the deleted cases
-  if(entry.before && entry.before.removed){
-   entry.before.removed.forEach(function(removedCase){
-    var exists = cases.find(function(c){ return c && c.id === removedCase.id; });
-    if(!exists) cases.push(JSON.parse(JSON.stringify(removedCase)));
-   });
-  }
-  entry.undone = true;
-  saveCases();
-  // Update the audit entry in Firebase
-  try {
-   fetch(FIREBASE_URL + '/' + currentAgent.id + '/auditLog/' + entry.id + '.json', {method:'PATCH', body: JSON.stringify({undone:true})}).catch(function(){});
-  } catch(e){}
-  // Log the undo action
-  logAuditEntry({
-   action: 'undo',
-   targetIds: entry.targetIds || [],
-   summary: 'Undid merge from audit entry #' + entry.id + ' — restored ' + (entry.before.removed||[]).length + ' deleted case(s)',
-   before: null,
-   after: { undidEntryId: entry.id }
-  });
-  showToast('Merge undone — cases restored', 3000);
-  showAuditLog();
-  return;
- }
-
- if(entry.action === 'delete'){
-  if(!confirm('Undo delete for "'+(entry.client||'this case')+'"? This will recreate the case.')) return;
-  if(entry.before && entry.before.case){
-   var existing = cases.find(function(c){ return c && c.id === entry.before.case.id; });
-   if(existing){ showToast('Case ID '+entry.before.case.id+' already exists', 2500); return; }
-   cases.push(JSON.parse(JSON.stringify(entry.before.case)));
-   entry.undone = true;
-   saveCases();
-   try {
-    fetch(FIREBASE_URL + '/' + currentAgent.id + '/auditLog/' + entry.id + '.json', {method:'PATCH', body: JSON.stringify({undone:true})}).catch(function(){});
-   } catch(e){}
-   logAuditEntry({
-    action: 'undo',
-    targetIds: [entry.before.case.id],
-    summary: 'Undid delete from audit entry #' + entry.id + ' — restored case ID ' + entry.before.case.id,
-    before: null,
-    after: { undidEntryId: entry.id }
-   });
-   showToast('Case restored', 3000);
-   showAuditLog();
-   return;
-  }
- }
-
- showToast('Undo not supported for this action type', 2500);
-}
-
-function markDupReviewed(groupKey){
- var n = 0;
- cases.forEach(function(c){
-  if(c && normalizeClientName(c.client) === groupKey){
-   c.dupReviewed = true;
-   n++;
-  }
- });
- if(n > 0) saveCases();
- showToast('Marked '+n+' cases as separate (not duplicates)', 2500);
- showDuplicateScanner();
-}
-
-function mergeIntoCase(keepId, groupKey){
- var keep = cases.find(function(c){ return c && c.id === keepId; });
- if(!keep) return;
- if(!confirm('Merge other "'+keep.client+'" cases into ID '+keepId+'? This will delete the other cases.')) return;
-
- var others = cases.filter(function(c){
-  return c && normalizeClientName(c.client) === groupKey && c.id !== keepId;
- });
-
- // Snapshot for audit log (full deep copy of all cases involved BEFORE merge)
- var auditBeforeKeep = JSON.parse(JSON.stringify(keep));
- var auditBeforeOthers = JSON.parse(JSON.stringify(others));
-
- // Pick the most "advanced" status: prefer paid > paid-partial > issued > approved > submitted > pending
- function statusRank(s){
-  if(s === 'paid') return 100;
-  if(s === 'paid-partial') return 95;
-  if(s === 'declined') return 90; // terminal but no commission
-  if(s === 'issued') return 80;
-  if(s === 'approved') return 70;
-  if(s === 'submitted') return 60;
-  return 50;
- }
- var allCases = [keep].concat(others);
- var bestStatus = allCases.reduce(function(best, c){
-  return statusRank(c.status) > statusRank(best.status) ? c : best;
- }, keep);
-
- // Pull paid data from the most-advanced case
- if(bestStatus.id !== keep.id || statusRank(bestStatus.status) > statusRank(keep.status)){
-  // BEFORE overwriting, capture expected values from the kept case (the original estimate)
-  var expectedAmtPre = keep.amount || 0;
-  var expectedCommPre = (calcCase(keep).agentShare) || 0;
-
-  if(bestStatus.actualCommission !== undefined) keep.actualCommission = bestStatus.actualCommission;
-  if(bestStatus.productionCredit !== undefined) keep.productionCredit = bestStatus.productionCredit;
-  if(bestStatus.paidIn) keep.paidIn = bestStatus.paidIn;
-  if(bestStatus.paidDate) keep.paidDate = bestStatus.paidDate;
-  if(bestStatus.rate && !keep.rate) keep.rate = bestStatus.rate;
-
-  // Variance detection: if the merged paid case has a different premium than the kept case,
-  // record expected values and offer to mark as paid-partial
-  var paidAmt = (bestStatus.amount || 0);
-  var actualComm = (bestStatus.actualCommission || 0);
-  var amtDiffer = expectedAmtPre > 0 && paidAmt > 0 && Math.abs(expectedAmtPre - paidAmt) > 0.5;
-  var commDiffer = expectedCommPre > 0 && actualComm > 0 && Math.abs(expectedCommPre - actualComm) > 0.5;
-
-  if(amtDiffer || commDiffer){
-   keep.expectedAmount = expectedAmtPre;
-   keep.expectedCommission = expectedCommPre;
-   keep.paidVariance = actualComm - expectedCommPre;
-   // Default behavior: keep the kept case's original amount (so the variance is visible)
-   // and mark as paid-partial. Ask user to confirm.
-   var summary = 'Variance detected:\\n'
-    + 'Original amount: $' + expectedAmtPre.toFixed(2) + '\\n'
-    + 'Paid amount: $' + paidAmt.toFixed(2) + '\\n'
-    + 'Expected commission: $' + expectedCommPre.toFixed(2) + '\\n'
-    + 'Actual paid: $' + actualComm.toFixed(2) + '\\n'
-    + 'Variance: $' + (actualComm - expectedCommPre).toFixed(2) + '\\n\\n'
-    + 'Mark as Paid (Partial) and keep original amount as the expected estimate?';
-   if(confirm(summary)){
-    keep.status = 'paid-partial';
-    // amount stays at expectedAmtPre (original estimate)
-   } else {
-    // User declined — fall back to standard merge behavior
-    if(statusRank(bestStatus.status) > statusRank(keep.status)) keep.status = bestStatus.status;
-    if(!keep.amount && bestStatus.amount) keep.amount = bestStatus.amount;
-   }
-  } else {
-   // No meaningful variance — just mark with the best status
-   if(statusRank(bestStatus.status) > statusRank(keep.status)) keep.status = bestStatus.status;
-   if(!keep.amount && bestStatus.amount) keep.amount = bestStatus.amount;
-  }
- }
-
- // Fill in any missing fields from others (splitName, etc.)
- others.forEach(function(o){
-  if(!keep.splitName && o.splitName) keep.splitName = o.splitName;
-  if(!keep.splitEmail && o.splitEmail) keep.splitEmail = o.splitEmail;
-  if(!keep.phone && o.phone) keep.phone = o.phone;
-  if(!keep.policyType && o.policyType) keep.policyType = o.policyType;
- });
-
- keep.notes = (keep.notes || '') + ' | Merged from IDs: ' + others.map(function(o){return o.id;}).join(', ');
- keep.updated = new Date().toISOString();
-
- // Remove the other cases
- var removeIds = others.map(function(o){return o.id;});
- cases = cases.filter(function(c){ return !c || removeIds.indexOf(c.id) === -1; });
-
- saveCases();
-
- // Audit log entry
- var summaryText = 'Merged ' + others.length + ' case' + (others.length>1?'s':'') + ' for "' + keep.client + '" into ID ' + keepId
-  + ' (status: ' + keep.status + (keep.paidVariance ? ', variance: $' + keep.paidVariance.toFixed(2) : '') + ')';
- logAuditEntry({
-  action: 'merge',
-  targetIds: [keepId].concat(others.map(function(o){return o.id;})),
-  keptId: keepId,
-  client: keep.client,
-  summary: summaryText,
-  before: { keep: auditBeforeKeep, removed: auditBeforeOthers },
-  after: { keep: JSON.parse(JSON.stringify(keep)) }
- });
-
- showToast('Merged '+others.length+' case'+(others.length>1?'s':'')+' into ID '+keepId, 3000);
- showDuplicateScanner();
-}
-
-// ════════════════════════════════════════════
-// IMPORT PREVIEW & CONFIRM
-// ════════════════════════════════════════════
-var _pendingPreviewActions = null;
-
-function showImportPreview(actions){
- _pendingPreviewActions = actions;
- var h = '';
- h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">';
- h += '<div style="font-size:18px;font-weight:700;color:var(--pri)">Review Varicent Import (' + actions.length + ' cases)</div>';
- h += '<button class="btn btn-outline btn-sm" onclick="cancelImportPreview()">&times; Cancel</button>';
- h += '</div>';
- h += '<div style="font-size:11px;color:var(--muted);margin-bottom:12px">Review each case below. Auto-matches are pre-selected (green). Possible matches needing review are amber. New cases will be added fresh.</div>';
-
- actions.forEach(function(a, idx){
-  var vc = a.varicentCase;
-  var tier = a.tier;
-  var bg = tier === 'A' ? 'var(--gtint)' : tier === 'B' ? 'var(--ptint)' : tier === 'C' ? 'var(--atint)' : 'var(--card)';
-  var borderColor = tier === 'A' ? 'var(--grn)' : tier === 'B' ? 'var(--pri)' : tier === 'C' ? 'var(--amb)' : 'var(--border)';
-  var icon = tier === 'A' ? '✓' : tier === 'B' ? '✓' : tier === 'C' ? '⚠' : '+';
-  var label = tier === 'A' ? 'Auto-match' : tier === 'B' ? 'Match (variance)' : tier === 'C' ? 'Possible match — REVIEW' : 'New case';
-
-  h += '<div style="border:2px solid '+borderColor+';background:'+bg+';border-radius:6px;padding:10px 12px;margin-bottom:8px">';
-  h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
-  h += '<div style="font-size:11px;font-weight:700">'+icon+' '+label+'</div>';
-  h += '<div style="font-size:10px;color:var(--muted)">'+a.section+' &middot; '+(a.vMeta.period_label||'')+'</div>';
-  h += '</div>';
-
-  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px">';
-  // Varicent side
-  h += '<div style="padding:8px;background:var(--card);border-radius:4px">';
-  h += '<div style="font-weight:600;color:var(--pri);margin-bottom:4px">From Varicent</div>';
-  h += '<div><b>'+(vc.client||'(no name)')+'</b></div>';
-  h += '<div style="font-size:11px;color:var(--muted)">'+(vc.product||'')+' '+(vc.plan_code||'')+'</div>';
-  h += '<div style="font-size:11px">Premium: '+fmt(vc.paid_premium||0)+' &middot; Commission: <b>'+fmt(vc.commission||0)+'</b></div>';
-  h += '</div>';
-
-  // Existing case side
-  h += '<div style="padding:8px;background:var(--card);border-radius:4px">';
-  if(a.candidate){
-   var c = a.candidate;
-   h += '<div style="font-weight:600;color:var(--pri);margin-bottom:4px">Existing Pipeline Case (ID '+c.id+')</div>';
-   h += '<div><b>'+c.client+'</b></div>';
-   h += '<div style="font-size:11px;color:var(--muted)">'+c.product+' &middot; '+c.status+'</div>';
-   h += '<div style="font-size:11px">Premium: '+fmt(c.amount||0)+' &middot; Est: '+fmt(calcCase(c).agentShare||0)+'</div>';
-   if(Math.abs(a.varianceAmt) > 0.5){
-    var vSign = a.varianceAmt < 0 ? '−' : '+';
-    h += '<div style="font-size:11px;color:var(--amb);font-weight:600">Variance: '+vSign+fmt(Math.abs(a.varianceAmt))+'</div>';
-   }
-  } else {
-   h += '<div style="font-size:11px;color:var(--muted)">No matching pipeline case found</div>';
-  }
-  h += '</div>';
-  h += '</div>';
-
-  // Action controls
-  h += '<div style="display:flex;gap:10px;align-items:center;margin-top:8px;font-size:12px">';
-  h += '<label style="display:flex;align-items:center;gap:4px"><input type="radio" name="imp_act_'+idx+'" value="match" '+(a.chosenAction==='match'?'checked':'')+(a.candidate?'':' disabled')+' onchange="_pendingPreviewActions['+idx+'].chosenAction=this.value"> Match</label>';
-  h += '<label style="display:flex;align-items:center;gap:4px"><input type="radio" name="imp_act_'+idx+'" value="new" '+(a.chosenAction==='new'?'checked':'')+' onchange="_pendingPreviewActions['+idx+'].chosenAction=this.value"> Create new</label>';
-  h += '<label style="display:flex;align-items:center;gap:4px"><input type="radio" name="imp_act_'+idx+'" value="skip" '+(a.chosenAction==='skip'?'checked':'')+' onchange="_pendingPreviewActions['+idx+'].chosenAction=this.value"> Skip</label>';
-  if(a.candidate && Math.abs(a.varianceAmt) > 0.5){
-   h += '<label style="display:flex;align-items:center;gap:4px;margin-left:auto"><input type="checkbox" '+(a.markPartial?'checked':'')+' onchange="_pendingPreviewActions['+idx+'].markPartial=this.checked"> Mark as Paid (Partial)</label>';
-  }
-  h += '</div>';
-  h += '</div>';
- });
-
- h += '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">';
- h += '<button class="btn btn-outline" onclick="cancelImportPreview()">Cancel</button>';
- h += '<button class="btn btn-pri" onclick="confirmImport()">Confirm Import ('+actions.length+' cases)</button>';
- h += '</div>';
-
- $1('#importPreviewContent').innerHTML = h;
- $1('#importPreviewModal').className = 'modal-overlay show';
-}
-
-function cancelImportPreview(){
- $1('#importPreviewModal').className = 'modal-overlay';
- _pendingPreviewActions = null;
- // Pay periods were already saved; just finalize with no case changes
- finishImport(0, 0);
-}
-
-function confirmImport(){
- var actions = _pendingPreviewActions || [];
- var newCount = 0, updatedCount = 0;
- var skippedCount = 0;
- var matchedDetails = []; // for audit log
- var ctx = window._importContext || {};
- var getCaseDate = ctx.getCaseDate || function(m,p){ return {submitted: toYMD(new Date()), year: new Date().getFullYear()}; };
-
- actions.forEach(function(a){
-  var vc = a.varicentCase;
-  var v = a.vMeta;
-  if(a.chosenAction === 'skip'){ skippedCount++; return; }
-
-  if(a.chosenAction === 'match' && a.candidate){
-   var c = a.candidate;
-   var beforeSnap = JSON.parse(JSON.stringify(c));
-   // Compute expected commission BEFORE we overwrite case fields
-   var expected = calcCase(c).agentShare || 0;
-   c.expectedCommission = expected;
-   c.expectedAmount = c.amount;
-   c.paidVariance = (vc.commission || 0) - expected;
-   c.actualCommission = vc.commission || 0;
-   c.productionCredit = vc.production_credit || 0;
-   if(vc.paid_premium) c.amount = vc.paid_premium;
-   if(vc.mma_rate || vc.commission_rate) c.rate = vc.mma_rate || vc.commission_rate;
-   if(vc.is_split && (!c.split || c.split === 'full')) c.split = 'pc';
-   c.status = a.markPartial ? 'paid-partial' : 'paid';
-   c.paidDate = toYMD(new Date());
-   c.paidIn = v.period_label || '';
-   c.notes = (c.notes || '') + ' | Matched from Varicent ' + (v._filename||'');
-   c.updated = new Date().toISOString();
-   matchedDetails.push({ caseId: c.id, client: c.client, before: beforeSnap });
-   updatedCount++;
-   return;
-  }
-
-  // Create new case
-  var prodLabel = vc.product || 'Unknown Product';
-  if(vc.plan_code) prodLabel += ' (' + vc.plan_code + ')';
-  var dateInfo = getCaseDate(v.month, v.period_label);
-  cases.push({
-   id: nextCaseId++,
-   client: (vc.client || '').trim(),
-   phone: '',
-   product: prodLabel,
-   policyType: vc.policy_type || 'New',
-   section: a.section,
-   amount: vc.paid_premium || vc.production_credit || 0,
-   rate: vc.mma_rate || vc.commission_rate || 0,
-   actualCommission: vc.commission || 0,
-   productionCredit: vc.production_credit || 0,
-   split: vc.is_split ? 'pc' : 'full',
-   splitName: '', splitEmail: '',
-   status: 'paid',
-   submitted: dateInfo.submitted,
-   estPay: '',
-   paidDate: toYMD(new Date()),
-   paidIn: v.period_label || '',
-   notes: (vc.policy_type || 'New') + ' | ' + a.section + ' | Paid Premium: $'+(vc.paid_premium||0).toFixed(2)+' | Prod Credit: $'+(vc.production_credit||0).toFixed(2),
-   year: dateInfo.year,
-   created: new Date().toISOString()
-  });
-  newCount++;
- });
-
- if(newCount > 0 || updatedCount > 0) saveCases();
-
- // Audit log entry — Varicent import summary
- if(actions.length > 0){
-  var periodLabel = (actions[0] && actions[0].vMeta && actions[0].vMeta.period_label) || 'Unknown period';
-  logAuditEntry({
-   action: 'import_confirm',
-   targetIds: matchedDetails.map(function(m){return m.caseId;}),
-   periodLabel: periodLabel,
-   summary: 'Varicent import (' + periodLabel + '): ' + updatedCount + ' matched, ' + newCount + ' new, ' + skippedCount + ' skipped',
-   before: { matchedDetails: matchedDetails }, // for potential undo of matched changes
-   after: { newCount: newCount, updatedCount: updatedCount, skippedCount: skippedCount }
-  });
- }
-
- $1('#importPreviewModal').className = 'modal-overlay';
- _pendingPreviewActions = null;
- finishImport(newCount, updatedCount);
-}
-
 async function processUploads(){
  var apiKey = getApiKey();
  if(!apiKey){
@@ -3675,7 +2169,7 @@ async function processUploads(){
   } else {
    content.push({type:'image', source:{type:'base64', media_type:f.mediaType, data:f.base64}});
   }
-  content.push({type:'text', text:'This is a pay document from an AAA Life Insurance Specialist. It is EITHER a Varicent Commission Statement OR a Workday Payslip (identify which one it is).\n\nThe filename of this document is: "'+f.name+'"\nUse the filename to help determine the correct pay period. Filenames often follow patterns like "2026-02 1.pdf" (= Feb P1) or "2026-01 2 actual.pdf" (= Jan P2 Workday).\n\nExtract ALL data and return as JSON with this EXACT structure:\n\n{"doc_type":"varicent or workday","period_label":"e.g. Apr P1 or Jan P2","month":"e.g. Apr","mma":0,"mma_tier":"e.g. TIER4","varicent_commission":0,"new_production_credits":0,"new_commission":0,"renewal_production_credits":0,"renewal_commission":0,"flat_commission_total":0,"base_pay":0,"gross_pay":0,"banking_incentive":0,"bonuses":0,"pre_tax_deductions":0,"employee_taxes":0,"post_tax_deductions":0,"net_pay":0,"notes":"","cases":[],"flat_cases":[]}\n\nIMPORTANT:\n- "doc_type" must be "varicent" or "workday" based on what this document is\n- "period_label" MUST be in the format "Mon P1" or "Mon P2" (e.g. "Jan P1", "Feb P2"). Determine P1 vs P2 based on the pay period dates in the document: if the pay period ENDS on or before the 15th of the month, it is P1; if it ends after the 15th, it is P2. The MONTH in the label should be the month the work was performed (the pay period dates), NOT the check/payment date.\n- If the filename contains a pattern like "YYYY-MM N" (e.g. "2026-02 1"), use it: the month maps to the label month, and "1"=P1, "2"=P2.\n- If this is a WORKDAY payslip:\n  - Look for "Pay Period Begin" and "Pay Period End" dates in the document header. Use THESE dates (not the Check Date) to determine period_label and month.\n  - If Pay Period End is on or before the 15th, it is P1. If after the 15th, it is P2. The month comes from the Pay Period dates.\n  - Example: Pay Period Begin 01/01/2026, Pay Period End 01/15/2026 = "Jan P1". Pay Period Begin 02/16/2026, End 02/28/2026 = "Feb P2".\n  - Fill in: period_label, month, gross_pay (from "Gross Pay" current row), employee_taxes (from "Employee Taxes" current row), pre_tax_deductions (from "Pre Tax Deductions" current row), post_tax_deductions (from "Post Tax Deductions" current row), net_pay (from "Net Pay" current row)\n  - Do NOT use YTD values — use the CURRENT period values only\n\nFor VARICENT statements, there are multiple sections to extract:\n\nSECTION 1 (Agent Payout Summary): Extract mma (3MMA Credits), mma_tier (e.g. TIER4), varicent_commission (Total Commission Payout)\n\nSECTION 3 (Production Credits and Commission Summary): Extract:\n- new_production_credits and new_commission (the "New" row)\n- renewal_production_credits and renewal_commission (the "Renewal/Other" row)\n\nSECTION 4 (3MMA Transaction Details) — put these in the "cases" array:\n{"client":"Insured Name","product":"Product Type (e.g. Platinum Annuity 5, Ordinary Life)","policy_type":"New or Renewal/Other","plan_code":"Plan Code","paid_premium":0,"production_credit":0,"mma_rate":0,"commission":0,"is_split":false}\n\nSECTION 5 (Flat Commission Transaction Detail) — put these in the "flat_cases" array. This section contains CD deposits and renewals:\n{"client":"Insured Name","product":"Product Type (e.g. CERTIFICATE OF DEPOSIT, Ordinary Life)","policy_type":"New or Renewal/Other","plan_code":"Plan Code","paid_premium":0,"production_credit":0,"commission_rate":0,"commission":0,"is_split":false}\n- For flat_cases, "commission" = the "Flat Renewal Commission" column\n- Also set flat_commission_total to the sum of all flat commissions\n\nFor ALL cases and flat_cases:\n- "client" = the Insured Name column exactly as shown\n- "product" = the Product Type column exactly as written\n- "policy_type" = "New" or "Renewal/Other" from the Policy Type column\n- "plan_code" = the Plan Code column\n- "paid_premium" = the Paid Premium column\n- "production_credit" = the Production Credit column\n- "is_split" = true if LPSplitCommInd says SPLIT, false if FULL\n\nCRITICAL: Extract EVERY SINGLE line item from BOTH Section 4 AND Section 5. This includes Renewal/Other items even if the commission is very small (e.g. $1.64, $3.77, $1.80). Do NOT skip any rows regardless of commission size. Every row in the table must appear in the output. Do not calculate or modify any numbers.\n\nReturn ONLY valid JSON, no markdown or explanation.'});
+  content.push({type:'text', text:'This is a pay document from an AAA Life Insurance Specialist. It is EITHER a Varicent Commission Statement OR a Workday Payslip (identify which one it is).\n\nThe filename of this document is: "'+f.name+'"\nUse the filename to help determine the correct pay period. Filenames often follow patterns like "2026-02 1.pdf" (= Feb P1) or "2026-01 2 actual.pdf" (= Jan P2 Workday).\n\nExtract ALL data and return as JSON with this EXACT structure:\n\n{"doc_type":"varicent or workday","period_label":"e.g. Apr P1 or Jan P2","month":"e.g. Apr","mma":0,"mma_tier":"e.g. TIER4","varicent_commission":0,"new_production_credits":0,"new_commission":0,"renewal_production_credits":0,"renewal_commission":0,"flat_commission_total":0,"base_pay":0,"gross_pay":0,"banking_incentive":0,"bonuses":0,"pre_tax_deductions":0,"employee_taxes":0,"post_tax_deductions":0,"net_pay":0,"notes":"","cases":[],"flat_cases":[]}\n\nIMPORTANT:\n- "doc_type" must be "varicent" or "workday" based on what this document is\n- "period_label" MUST be in the format "Mon P1" or "Mon P2" (e.g. "Jan P1", "Feb P2"). Determine P1 vs P2 based on the pay period dates in the document: if the pay period ENDS on or before the 15th of the month, it is P1; if it ends after the 15th, it is P2. The MONTH in the label should be the month the work was performed (the pay period dates), NOT the check/payment date.\n- If the filename contains a pattern like "YYYY-MM N" (e.g. "2026-02 1"), use it: the month maps to the label month, and "1"=P1, "2"=P2.\n- If this is a WORKDAY payslip: fill in period_label, month, base_pay, gross_pay, banking_incentive, bonuses, pre_tax_deductions, employee_taxes, post_tax_deductions, net_pay\n- Use the ACTUAL pay period dates from the document to determine the period, not the check date\n\nFor VARICENT statements, there are multiple sections to extract:\n\nSECTION 1 (Agent Payout Summary): Extract mma (3MMA Credits), mma_tier (e.g. TIER4), varicent_commission (Total Commission Payout)\n\nSECTION 3 (Production Credits and Commission Summary): Extract:\n- new_production_credits and new_commission (the "New" row)\n- renewal_production_credits and renewal_commission (the "Renewal/Other" row)\n\nSECTION 4 (3MMA Transaction Details) — put these in the "cases" array:\n{"client":"Insured Name","product":"Product Type (e.g. Platinum Annuity 5, Ordinary Life)","policy_type":"New or Renewal/Other","plan_code":"Plan Code","paid_premium":0,"production_credit":0,"mma_rate":0,"commission":0,"is_split":false}\n\nSECTION 5 (Flat Commission Transaction Detail) — put these in the "flat_cases" array. This section contains CD deposits and renewals:\n{"client":"Insured Name","product":"Product Type (e.g. CERTIFICATE OF DEPOSIT, Ordinary Life)","policy_type":"New or Renewal/Other","plan_code":"Plan Code","paid_premium":0,"production_credit":0,"commission_rate":0,"commission":0,"is_split":false}\n- For flat_cases, "commission" = the "Flat Renewal Commission" column\n- Also set flat_commission_total to the sum of all flat commissions\n\nFor ALL cases and flat_cases:\n- "client" = the Insured Name column exactly as shown\n- "product" = the Product Type column exactly as written\n- "policy_type" = "New" or "Renewal/Other" from the Policy Type column\n- "plan_code" = the Plan Code column\n- "paid_premium" = the Paid Premium column\n- "production_credit" = the Production Credit column\n- "is_split" = true if LPSplitCommInd says SPLIT, false if FULL\n\nCRITICAL: Extract EVERY SINGLE line item from BOTH Section 4 AND Section 5. This includes Renewal/Other items even if the commission is very small (e.g. $1.64, $3.77, $1.80). Do NOT skip any rows regardless of commission size. Every row in the table must appear in the output. Do not calculate or modify any numbers.\n\nReturn ONLY valid JSON, no markdown or explanation.'});
 
   try {
    var resp = await fetch('https://api.anthropic.com/v1/messages', {
@@ -3729,10 +2223,6 @@ async function processUploads(){
  }
 
  var totalNewCases = 0, totalUpdatedCases = 0, periodsCreated = 0, duplicatesSkipped = 0;
-
- // Collect proposed case actions (from Varicent imports) for the preview modal
- // Each action: { varicentCase, vMeta:{period_label,month,_filename}, candidate, tier, varianceAmt, expectedCommission, section, chosenAction:'match'|'new'|'skip', markPartial:bool }
- var pendingImportActions = [];
 
  // Auto-save each pay period
  // Try to pair Varicent + Workday by period label first, then month, otherwise create separate entries
@@ -3804,28 +2294,62 @@ async function processUploads(){
   payPeriods.push(pe);
   periodsCreated++;
 
-  // Collect Varicent cases as proposed actions (for preview modal)
-  function collectImportActions(caseList, section){
+  // Process cases from Section 4 (3MMA Transaction Details) into Book of Business
+  function importCaseList(caseList, section){
    if(!caseList || caseList.length === 0) return;
    caseList.forEach(function(pc){
     if(!pc.client) return;
-    var match = findCaseMatchCandidates(pc);
-    var defaultAction = (match.tier === 'A' || match.tier === 'B' || match.tier === 'C') ? 'match' : 'new';
-    var defaultPartial = (match.tier === 'B' || match.tier === 'C') && Math.abs(match.varianceAmt) > 0.5;
-    pendingImportActions.push({
-     varicentCase: pc,
-     vMeta: { period_label: v.period_label, month: v.month, _filename: v._filename },
-     candidate: match.candidate,
-     tier: match.tier,
-     varianceAmt: match.varianceAmt,
-     section: section,
-     chosenAction: defaultAction,
-     markPartial: defaultPartial
+    // Match by client + plan_code + paid_premium to allow same client with multiple policies
+    var pcAmt = Math.round((pc.paid_premium||0)*100);
+    var existing = cases.find(function(c){
+     return c.client.toLowerCase().trim() === pc.client.toLowerCase().trim()
+      && c.product && c.product.indexOf(pc.plan_code||'NOMATCH') !== -1
+      && Math.round((c.amount||0)*100) === pcAmt;
     });
+    if(existing){
+     if(existing.status !== 'paid'){
+      existing.status = 'paid';
+      existing.paidDate = toYMD(new Date());
+      existing.paidIn = v.period_label || '';
+      if(pc.commission) existing.actualCommission = pc.commission;
+      if(pc.production_credit) existing.productionCredit = pc.production_credit;
+      if(pc.paid_premium) existing.amount = pc.paid_premium;
+      if(pc.mma_rate || pc.commission_rate) existing.rate = pc.mma_rate || pc.commission_rate;
+      if(pc.is_split) existing.split = 'split';
+      totalUpdatedCases++;
+     }
+    } else {
+     var prodLabel = pc.product || 'Unknown Product';
+     if(pc.plan_code) prodLabel += ' (' + pc.plan_code + ')';
+     var policyType = pc.policy_type || 'New';
+     cases.push({
+      id: nextCaseId++,
+      client: pc.client.trim(),
+      phone: '',
+      product: prodLabel,
+      policyType: policyType,
+      section: section,
+      amount: pc.paid_premium || pc.production_credit || 0,
+      rate: pc.mma_rate || pc.commission_rate || 0,
+      actualCommission: pc.commission || 0,
+      productionCredit: pc.production_credit || 0,
+      split: pc.is_split ? 'split' : 'full',
+      splitName: '', splitEmail: '',
+      status: 'paid',
+      submitted: getCaseDate(v.month, v.period_label).submitted,
+      estPay: '',
+      paidDate: toYMD(new Date()),
+      paidIn: v.period_label || '',
+      notes: policyType + ' | ' + section + ' | Paid Premium: $'+(pc.paid_premium||0).toFixed(2)+' | Prod Credit: $'+(pc.production_credit||0).toFixed(2),
+      year: getCaseDate(v.month, v.period_label).year,
+      created: new Date().toISOString()
+     });
+     totalNewCases++;
+    }
    });
   }
-  collectImportActions(v.cases, '3MMA');
-  collectImportActions(v.flat_cases, 'Flat/CD');
+  importCaseList(v.cases, '3MMA');
+  importCaseList(v.flat_cases, 'Flat/CD');
 
  });
 
@@ -3836,65 +2360,26 @@ async function processUploads(){
   var wMonth = (w.month || '').toLowerCase().trim();
   var wNet = Math.round((w.net_pay || 0) * 100);
 
-  // DUPLICATE CHECK — only true duplicates (same label + same net to the penny, OR same net amount in same month)
-  // Also checks extraDeposits so re-uploading a prior bonus is blocked
+  // DUPLICATE CHECK — skip if a period already has this workday data
   var dupW = payPeriods.find(function(p){
-   // Same label + same primary net = same file re-uploaded
-   if(wLabel && p.label && p.label.toLowerCase().trim() === wLabel && Math.round((p.net||0)*100) === wNet && wNet > 0) return true;
-   // Same month + same net amount = same file re-uploaded
+   if(wLabel && p.label && p.label.toLowerCase().trim() === wLabel && (p.net||0) > 0) return true;
    if(wMonth && p.month && p.month.toLowerCase().trim() === wMonth && Math.round((p.net||0)*100) === wNet && wNet > 0) return true;
-   // Already in extraDeposits with same net
-   if(wLabel && p.label && p.label.toLowerCase().trim() === wLabel && p.extraDeposits){
-    for(var ei=0;ei<p.extraDeposits.length;ei++){
-     if(Math.round((p.extraDeposits[ei].net||0)*100) === wNet) return true;
-    }
-   }
    return false;
   });
   if(dupW){ duplicatesSkipped++; return; }
 
-  // EXTRA DEPOSIT CHECK — label matches but different net amount = second paycheck for same period
-  var extraTarget = null;
-  if(wLabel){
-   extraTarget = payPeriods.find(function(p){
-    return p.label && p.label.toLowerCase().trim() === wLabel && (p.net||0) > 0;
-   });
-  }
-  if(extraTarget){
-   // Append as extra deposit
-   if(!extraTarget.extraDeposits) extraTarget.extraDeposits = [];
-   var edId = 1;
-   extraTarget.extraDeposits.forEach(function(ed){ if(ed.id >= edId) edId = ed.id + 1; });
-   // Build description from filename
-   var desc = (w._filename || 'Additional Payment').replace(/\.pdf$/i,'').replace(/_/g,' ');
-   extraTarget.extraDeposits.push({
-    id: edId,
-    date: toYMD(new Date()),
-    description: desc,
-    gross: w.gross_pay || 0,
-    taxes: w.employee_taxes || 0,
-    preTax: w.pre_tax_deductions || 0,
-    postTax: w.post_tax_deductions || 0,
-    net: w.net_pay || 0,
-    bonuses: w.bonuses || 0,
-    source: w._filename || 'manual'
-   });
-   periodsCreated++;
-   return;
-  }
-
-  // MERGE-BACK: try to find an existing period that doesn't have workday data yet
+  // MERGE-BACK: try to find an existing varicent-only period (has varicent but no workday data)
   var mergeTarget = null;
-  // Pass 1: match by period_label (any period without gross data)
+  // Pass 1: match by period_label
   if(wLabel){
    mergeTarget = payPeriods.find(function(p){
-    return p.label && p.label.toLowerCase().trim() === wLabel && (p.gross||0) === 0;
+    return p.label && p.label.toLowerCase().trim() === wLabel && (p.varicent||0) > 0 && (p.gross||0) === 0;
    });
   }
-  // Pass 2: match by month where no workday data exists (only if one candidate)
+  // Pass 2: match by month (only if one candidate)
   if(!mergeTarget && wMonth){
    var candidates = payPeriods.filter(function(p){
-    return p.month && p.month.toLowerCase().trim() === wMonth && (p.gross||0) === 0;
+    return p.month && p.month.toLowerCase().trim() === wMonth && (p.varicent||0) > 0 && (p.gross||0) === 0;
    });
    if(candidates.length === 1) mergeTarget = candidates[0];
   }
@@ -3935,53 +2420,31 @@ async function processUploads(){
   periodsCreated++;
  });
 
- // Save pay periods immediately (no preview needed for those)
+ // Save everything
  if(periodsCreated > 0) savePayPeriods();
-
- // Stash import metadata for the confirmImport handler
- window._importContext = {
-  errors: errors,
-  duplicatesSkipped: duplicatesSkipped,
-  periodsCreated: periodsCreated,
-  statusEl: statusEl,
-  getCaseDate: getCaseDate
- };
-
- // Clear file uploads UI now (preview modal will run independently)
- uploadedFiles = [];
- if($1('#upload_previews')) $1('#upload_previews').innerHTML = '';
-
- if(pendingImportActions.length > 0){
-  showImportPreview(pendingImportActions);
-  return;
- }
-
- // No cases to review — just show summary for pay periods
- finishImport(0, 0);
-}
-
-function finishImport(newCount, updatedCount){
- var ctx = window._importContext || {};
+ if(totalNewCases > 0 || totalUpdatedCases > 0) saveCases();
 
  // Build summary message
  var msg = [];
- if(ctx.periodsCreated > 0) msg.push(ctx.periodsCreated + ' pay period'+(ctx.periodsCreated>1?'s':'')+' created');
- if(newCount > 0) msg.push(newCount + ' new case'+(newCount>1?'s':'')+' added to Book of Business');
- if(updatedCount > 0) msg.push(updatedCount + ' case'+(updatedCount>1?'s':'')+' marked as Paid');
- if(ctx.duplicatesSkipped > 0) msg.push(ctx.duplicatesSkipped + ' duplicate'+(ctx.duplicatesSkipped>1?'s':'')+' skipped (already imported)');
- if(ctx.errors && ctx.errors.length > 0) msg.push(ctx.errors.length + ' file'+(ctx.errors.length>1?'s':'')+' had errors');
+ if(periodsCreated > 0) msg.push(periodsCreated + ' pay period'+(periodsCreated>1?'s':'')+' created');
+ if(totalNewCases > 0) msg.push(totalNewCases + ' new case'+(totalNewCases>1?'s':'')+' added to Book of Business');
+ if(totalUpdatedCases > 0) msg.push(totalUpdatedCases + ' case'+(totalUpdatedCases>1?'s':'')+' marked as Paid');
+ if(duplicatesSkipped > 0) msg.push(duplicatesSkipped + ' duplicate'+(duplicatesSkipped>1?'s':'')+' skipped (already imported)');
+ if(errors.length > 0) msg.push(errors.length + ' file'+(errors.length>1?'s':'')+' had errors');
 
- var summaryIcon = msg.length === 0 ? '\u26A0\uFE0F' : '\u2705';
- var summaryBg = msg.length === 0 ? 'var(--atint,#fff8e1)' : 'var(--gtint)';
- var summaryColor = msg.length === 0 ? 'var(--amb)' : 'var(--grn)';
+ var summaryIcon = duplicatesSkipped > 0 && periodsCreated === 0 && totalNewCases === 0 ? '\u26A0\uFE0F' : '\u2705';
+ var summaryBg = duplicatesSkipped > 0 && periodsCreated === 0 && totalNewCases === 0 ? 'var(--atint,#fff8e1)' : 'var(--gtint)';
+ var summaryColor = duplicatesSkipped > 0 && periodsCreated === 0 && totalNewCases === 0 ? 'var(--amb)' : 'var(--grn)';
  var summaryHtml = '<div style="padding:12px;background:'+summaryBg+';border-radius:6px;color:'+summaryColor+';font-size:12px;font-weight:600">'+summaryIcon+' ' + (msg.length > 0 ? msg.join(' \u2022 ') : 'No new data to import') + '</div>';
- if(ctx.errors && ctx.errors.length > 0){
-  summaryHtml += '<div style="padding:8px;background:var(--rtint);border-radius:6px;color:var(--red);font-size:11px;margin-top:6px">Errors: ' + ctx.errors.join(', ') + '</div>';
+ if(errors.length > 0){
+  summaryHtml += '<div style="padding:8px;background:var(--rtint);border-radius:6px;color:var(--red);font-size:11px;margin-top:6px">Errors: ' + errors.join(', ') + '</div>';
  }
- if(ctx.statusEl) ctx.statusEl.innerHTML = summaryHtml;
- if(msg.length > 0) showToast(msg.join('. '), 5000);
+ statusEl.innerHTML = summaryHtml;
+ showToast(msg.join('. '), 5000);
 
- // Re-render
+ // Clear uploads and re-render
+ uploadedFiles = [];
+ $1('#upload_previews').innerHTML = '';
  payFormOpen = false;
  renderPayPeriods();
  renderBookOfBusiness();
@@ -3992,156 +2455,6 @@ function finishImport(newCount, updatedCount){
 // ════════════════════════════════════════════
 // TAB 6: FEEDBACK SYSTEM
 // ════════════════════════════════════════════
-
-function getActiveTabName(){
- var tabNames = ['Dashboard','Book of Business','Pay Periods','Forecasting','Rate Table','Settings'];
- return tabNames[activeTab] || 'Unknown';
-}
-
-function openFeedbackModal(){
- var admin = isAdmin();
- var h = '';
- h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">';
- h += '<div style="font-size:18px;font-weight:700;color:var(--pri)">Submit Feedback</div>';
- h += '<button onclick="closeFeedbackModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted)">&times;</button>';
- h += '</div>';
-
- // Auto-captured tab context
- h += '<div style="font-size:11px;color:var(--muted);margin-bottom:12px;padding:6px 10px;background:var(--ptint);border-radius:4px">From: <b>'+getActiveTabName()+'</b></div>';
-
- // Type
- h += '<div class="form-group" style="margin-bottom:10px"><label>Type</label>';
- h += '<select id="fbm_type" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit"><option value="bug">Bug Report</option><option value="suggestion">Suggestion</option><option value="question">Question</option></select></div>';
-
- // Priority (inline radio style)
- h += '<div style="margin-bottom:10px"><label style="font-size:11px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px">Priority</label>';
- h += '<div style="display:flex;gap:8px">';
- h += '<label style="flex:1;text-align:center;padding:6px;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px"><input type="radio" name="fbm_pri" value="low" style="display:none"><span>Low</span></label>';
- h += '<label style="flex:1;text-align:center;padding:6px;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px"><input type="radio" name="fbm_pri" value="medium" checked style="display:none"><span style="font-weight:600;color:var(--amb)">Medium</span></label>';
- h += '<label style="flex:1;text-align:center;padding:6px;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px"><input type="radio" name="fbm_pri" value="high" style="display:none"><span>High</span></label>';
- h += '</div></div>';
-
- // Title
- h += '<div class="form-group" style="margin-bottom:10px"><label>Title</label>';
- h += '<input id="fbm_title" placeholder="Short summary" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit"></div>';
-
- // Description
- h += '<div class="form-group" style="margin-bottom:14px"><label>Description</label>';
- h += '<textarea id="fbm_desc" rows="3" placeholder="Details, steps to reproduce, or your suggestion..." style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;resize:vertical"></textarea></div>';
-
- // Submit
- h += '<button class="btn btn-pri" style="width:100%;padding:10px" onclick="submitFeedbackModal()">Submit Feedback</button>';
-
- // Admin: View All Feedback link
- if(admin){
-  var newCount = feedbackItems.filter(function(f){ return f.status==='new'; }).length;
-  h += '<div style="text-align:center;margin-top:12px">';
-  h += '<a onclick="closeFeedbackModal();showAdminFeedback()" style="font-size:12px;color:var(--pri);cursor:pointer;text-decoration:underline">View All Feedback'+(newCount > 0 ? ' ('+newCount+' new)' : '')+'</a>';
-  h += '</div>';
- }
-
- $1('#fbModalContent').innerHTML = h;
- $1('#fbModal').className = 'fb-modal-overlay show';
-
- // Style the selected priority radio
- setTimeout(function(){
-  document.querySelectorAll('input[name="fbm_pri"]').forEach(function(r){
-   r.parentElement.style.background = r.checked ? 'var(--ptint)' : '';
-   r.addEventListener('change', function(){
-    document.querySelectorAll('input[name="fbm_pri"]').forEach(function(r2){
-     r2.parentElement.style.background = r2.checked ? 'var(--ptint)' : '';
-    });
-   });
-  });
- }, 50);
-}
-
-function closeFeedbackModal(){
- $1('#fbModal').className = 'fb-modal-overlay';
-}
-
-function submitFeedbackModal(){
- var title = ($1('#fbm_title').value||'').trim();
- var desc = ($1('#fbm_desc').value||'').trim();
- if(!title){ showToast('Please enter a title', 2000); return; }
-
- var priEl = document.querySelector('input[name="fbm_pri"]:checked');
- var item = {
-  id: 'fb_' + nextFbId++,
-  type: $1('#fbm_type').value,
-  priority: priEl ? priEl.value : 'medium',
-  area: getActiveTabName(),
-  title: title,
-  description: desc,
-  screenshotNote: '',
-  agentId: currentAgent.id,
-  agentName: currentAgent.name,
-  status: 'new',
-  timestamp: new Date().toISOString(),
-  comments: [],
-  impactChecklist: {},
-  aiAnalysis: '',
-  adminNotes: '',
-  notifyAgent: false
- };
-
- feedbackItems.push(item);
- fbSaveFeedback(item);
- showToast('Feedback submitted: ' + title, 3000);
- closeFeedbackModal();
-}
-
-function showAdminFeedback(){
- // Render the full feedback queue in the review modal
- var items = feedbackItems.slice().sort(function(a,b){ return (b.timestamp||'').localeCompare(a.timestamp||''); });
- var h = '';
- h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">';
- h += '<div style="font-size:18px;font-weight:700;color:var(--pri)">All Feedback ('+items.length+')</div>';
- h += '<button class="btn btn-outline btn-sm" onclick="closeAdminFeedback()">&times; Close</button>';
- h += '</div>';
-
- // Filters
- h += '<div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">';
- h += '<select id="afb_status" onchange="filterAdminFeedback()" style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:11px"><option value="">All Status</option><option value="new">New</option><option value="reviewing">Reviewing</option><option value="resolved">Resolved</option><option value="wontfix">Won\'t Fix</option></select>';
- h += '<select id="afb_type" onchange="filterAdminFeedback()" style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:11px"><option value="">All Types</option><option value="bug">Bugs</option><option value="suggestion">Suggestions</option><option value="question">Questions</option></select>';
- h += '</div>';
-
- h += '<div id="afb_list">';
- items.forEach(function(f){
-  var statusClass = 'fb-status-' + f.status;
-  var typeBadge = f.type === 'bug' ? 'badge-red' : f.type === 'suggestion' ? 'badge-pri' : 'badge-amb';
-  h += '<div class="fb-item fb-'+f.type+'" onclick="closeAdminFeedback();openFeedbackReview(\''+f.id+'\')" style="margin-bottom:8px">';
-  h += '<div class="fb-item-head"><div class="fb-item-title">'+f.title+'</div><span class="badge '+statusClass+'">'+f.status+'</span></div>';
-  h += '<div class="fb-item-meta"><span class="badge '+typeBadge+'">'+(f.type||'')+'</span> <span>'+f.agentName+'</span> <span>'+f.area+'</span> <span>'+new Date(f.timestamp).toLocaleDateString()+'</span></div>';
-  h += '</div>';
- });
- h += '</div>';
-
- $1('#fbReviewContent').innerHTML = h;
- $1('#fbReviewModal').className = 'modal-overlay show';
-}
-
-function closeAdminFeedback(){
- $1('#fbReviewModal').className = 'modal-overlay';
-}
-
-function filterAdminFeedback(){
- var status = ($1('#afb_status').value||'');
- var type = ($1('#afb_type').value||'');
- var items = feedbackItems.slice().sort(function(a,b){ return (b.timestamp||'').localeCompare(a.timestamp||''); });
- if(status) items = items.filter(function(f){ return f.status === status; });
- if(type) items = items.filter(function(f){ return f.type === type; });
- var h = '';
- items.forEach(function(f){
-  var statusClass = 'fb-status-' + f.status;
-  var typeBadge = f.type === 'bug' ? 'badge-red' : f.type === 'suggestion' ? 'badge-pri' : 'badge-amb';
-  h += '<div class="fb-item fb-'+f.type+'" onclick="closeAdminFeedback();openFeedbackReview(\''+f.id+'\')" style="margin-bottom:8px">';
-  h += '<div class="fb-item-head"><div class="fb-item-title">'+f.title+'</div><span class="badge '+statusClass+'">'+f.status+'</span></div>';
-  h += '<div class="fb-item-meta"><span class="badge '+typeBadge+'">'+(f.type||'')+'</span> <span>'+f.agentName+'</span> <span>'+f.area+'</span> <span>'+new Date(f.timestamp).toLocaleDateString()+'</span></div>';
-  h += '</div>';
- });
- $1('#afb_list').innerHTML = h;
-}
 
 function renderFeedback(){
  if(!currentAgent) return;
@@ -4486,11 +2799,6 @@ async function runAiAnalysis(id){
 document.addEventListener('click', function(e){
  if(e.target.id === 'editModal') closeEditModal();
  if(e.target.id === 'fbReviewModal') closeFbReview();
- if(e.target.id === 'onboardModal') dismissOnboarding();
- if(e.target.id === 'fbModal') closeFeedbackModal();
- if(e.target.id === 'importPreviewModal') cancelImportPreview();
- if(e.target.id === 'dupScannerModal') closeDupScanner();
- if(e.target.id === 'auditLogModal') closeAuditLog();
 });
 
 // Enter key on login
@@ -4504,264 +2812,6 @@ document.addEventListener('keydown', function(e){
   }
  }
 });
-
-// ════════════════════════════════════════════
-// CHAT BOT
-// ════════════════════════════════════════════
-var chatHistory = [];
-var chatOpen = false;
-var chatSessionId = '';
-
-function toggleChat(){
- chatOpen = !chatOpen;
- var panel = $1('#chatPanel');
- if(chatOpen){
-  panel.className = 'chat-panel show';
-  if(chatHistory.length === 0){
-   chatHistory.push({role:'assistant', content:'Hi! I\'m the DuetBooks assistant. I can help you with uploading documents, understanding your commissions, product rates, tier calculations, and more. What can I help you with?'});
-   chatSessionId = currentAgent.id + '_' + Date.now();
-   renderChat();
-  }
-  $1('#chatInput').focus();
- } else {
-  panel.className = 'chat-panel';
- }
-}
-
-function renderChat(){
- var el = $1('#chatMessages');
- var h = '';
- chatHistory.forEach(function(m){
-  var cls = m.role === 'user' ? 'chat-msg chat-msg-user' : 'chat-msg chat-msg-bot';
-  h += '<div class="'+cls+'">'+m.content.replace(/\n/g,'<br>')+'</div>';
- });
- el.innerHTML = h;
- el.scrollTop = el.scrollHeight;
-}
-
-function buildChatSystemPrompt(){
- var tabNames = ['Dashboard','Book of Business','Pay Periods','Forecasting','Rate Table','Settings'];
- var curTab = tabNames[activeTab] || 'Unknown';
- var mma = calc3MMA();
- var tier = tierText(mma);
-
- var prompt = 'You are the DuetBooks Help Assistant — a friendly, concise support bot built into the DuetBooks compensation tracking app for AAA Life Insurance Specialists.\n\n';
- prompt += 'CURRENT AGENT: '+currentAgent.name+' ('+currentAgent.branch+')\n';
- prompt += 'CURRENT TAB: '+curTab+'\n';
- prompt += 'CURRENT TIER: '+tier+' (3MMA: $'+mma.toFixed(2)+')\n';
- prompt += 'CASES: '+cases.length+' total ('+cases.filter(function(c){return c.status==="paid"}).length+' paid, '+cases.filter(function(c){return c.status!=="paid"}).length+' in pipeline)\n';
- prompt += 'PAY PERIODS: '+payPeriods.length+' imported\n\n';
-
- prompt += 'APP OVERVIEW:\n';
- prompt += '- Dashboard: YTD gross pay, commission, taxes, deductions, net deposited, current tier\n';
- prompt += '- Book of Business: All cases (pending/submitted/approved/issued/paid), add new cases, track pipeline\n';
- prompt += '- Pay Periods: Upload Varicent commission statements and Workday payslips (PDF). AI reads them and imports data automatically.\n';
- prompt += '- Forecasting: Current pay tier (based on 3 settled months), open month status, what production credits are needed to maintain tier\n';
- prompt += '- Rate Table: Full commission rates for all products across T1-T4 tiers\n';
- prompt += '- Settings: API key, commission split %, backup/restore, PIN change\n\n';
-
- prompt += 'TIER STRUCTURE (3MMA based on Varicent Production Credit):\n';
- prompt += '- T1: 0 - $3,333\n- T2: $3,334 - $4,999\n- T3: $5,000 - $6,666\n- T4: $6,667+\n\n';
-
- prompt += 'PRODUCTION CREDIT RULES:\n';
- prompt += '- Life Insurance (Whole Life, Term, IUL): 100% of annualized/target premium\n';
- prompt += '- Annuities: 3% of deposit\n';
- prompt += '- CDs / Banking: 0% production credit (as of 3/1/2026)\n\n';
-
- prompt += 'COMMON ISSUES:\n';
- prompt += '- "Upload not working": Agent needs an Anthropic API key in Settings tab. Get one at console.anthropic.com. Each document costs ~$0.01-0.02.\n';
- prompt += '- "Cases not showing": Make sure the Varicent PDF was uploaded and processed. Check Pay Periods tab.\n';
- prompt += '- "Production credits seem wrong": CDs have 0% production credit. Annuities are 3%. Life is 100%.\n';
- prompt += '- "Period label wrong": P1 = pay period ends on/before 15th. P2 = ends after 15th. Based on pay period dates, NOT check date.\n';
- prompt += '- "Dark mode": Click the moon/sun icon in the top bar.\n';
- prompt += '- "Feedback/bugs": Click the 💡 button in the bottom-left corner.\n\n';
-
- prompt += 'RULES:\n';
- prompt += '- Be concise (2-3 sentences max unless they need detailed steps)\n';
- prompt += '- You CANNOT modify data, upload files, or change settings — guide the agent to do it themselves\n';
- prompt += '- If you don\'t know the answer, suggest they use the 💡 feedback button to report the issue\n';
- prompt += '- Never share other agents\' data\n';
- return prompt;
-}
-
-async function sendChat(){
- var input = $1('#chatInput');
- var msg = (input.value||'').trim();
- if(!msg) return;
- input.value = '';
-
- var apiKey = getApiKey();
- if(!apiKey){
-  chatHistory.push({role:'user', content: msg});
-  chatHistory.push({role:'assistant', content:'I need an Anthropic API key to work. Please ask your manager to set one up in the Settings tab, or go to console.anthropic.com to get your own key.'});
-  renderChat();
-  return;
- }
-
- chatHistory.push({role:'user', content: msg});
- renderChat();
-
- // Show typing indicator
- var msgEl = $1('#chatMessages');
- msgEl.innerHTML += '<div class="chat-typing">Thinking...</div>';
- msgEl.scrollTop = msgEl.scrollHeight;
-
- // Build messages for API (last 10 exchanges max)
- var apiMessages = [];
- var recent = chatHistory.slice(-20); // last 20 messages (10 exchanges)
- recent.forEach(function(m){
-  apiMessages.push({role: m.role, content: m.content});
- });
-
- try {
-  var resp = await fetch('https://api.anthropic.com/v1/messages', {
-   method: 'POST',
-   headers: {
-    'Content-Type': 'application/json',
-    'x-api-key': apiKey,
-    'anthropic-version': '2023-06-01',
-    'anthropic-dangerous-direct-browser-access': 'true'
-   },
-   body: JSON.stringify({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 512,
-    system: buildChatSystemPrompt(),
-    messages: apiMessages
-   })
-  });
-  var data = await resp.json();
-  if(data.error){
-   throw new Error(data.error.message || 'API error');
-  }
-  var reply = data.content && data.content[0] ? data.content[0].text : 'Sorry, I couldn\'t process that. Try again.';
-  chatHistory.push({role:'assistant', content: reply});
- } catch(e){
-  chatHistory.push({role:'assistant', content:'Error: '+e.message+'. Check your API key in Settings.'});
- }
-
- renderChat();
- saveChatLog();
-}
-
-// ── Chat Logging to Firebase ──
-function saveChatLog(){
- if(!chatSessionId || chatHistory.length < 2) return;
- var logData = {
-  agentId: currentAgent.id,
-  agentName: currentAgent.name,
-  tab: ['Dashboard','Book of Business','Pay Periods','Forecasting','Rate Table','Settings'][activeTab] || 'Unknown',
-  timestamp: new Date().toISOString(),
-  messageCount: chatHistory.length,
-  messages: chatHistory
- };
- var logUrl = FIREBASE_URL.replace('/duetbooks','') + '/duetbooks/_chatlogs/' + chatSessionId + '.json';
- fetch(logUrl, {method:'PUT', body: JSON.stringify(logData)}).catch(function(){});
-}
-
-// ── Admin: Check for new chat logs on login ──
-async function checkChatLogs(){
- if(!isAdmin()) return;
- try {
-  var url = FIREBASE_URL.replace('/duetbooks','') + '/duetbooks/_chatlogs.json?shallow=true';
-  var resp = await fetch(url);
-  var data = await resp.json();
-  if(!data) return;
-  var logCount = Object.keys(data).length;
-  var lastChecked = parseInt(localStorage.getItem('db_chatlogs_checked') || '0');
-  var newLogs = 0;
-  Object.keys(data).forEach(function(k){
-   var ts = parseInt(k.split('_').pop());
-   if(ts > lastChecked) newLogs++;
-  });
-  if(newLogs > 0){
-   showToast(newLogs + ' new help chat session'+(newLogs>1?'s':'')+' from agents', 5000);
-  }
-  localStorage.setItem('db_chatlogs_checked', String(Date.now()));
- } catch(e){}
-}
-
-async function viewChatLogs(){
- var url = FIREBASE_URL.replace('/duetbooks','') + '/duetbooks/_chatlogs.json';
- try {
-  var resp = await fetch(url);
-  var data = await resp.json();
-  if(!data){ showToast('No chat logs yet', 2000); return; }
-  var logs = Object.values(data).sort(function(a,b){ return (b.timestamp||'').localeCompare(a.timestamp||''); });
-
-  var h = '';
-  h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">';
-  h += '<div style="font-size:18px;font-weight:700;color:var(--pri)">Agent Chat Logs ('+logs.length+')</div>';
-  h += '<button class="btn btn-outline btn-sm" onclick="$1(\'#fbReviewModal\').className=\'modal-overlay\'">&times; Close</button>';
-  h += '</div>';
-
-  logs.forEach(function(log){
-   var date = new Date(log.timestamp).toLocaleString();
-   var msgCount = log.messageCount || (log.messages||[]).length;
-   h += '<div style="background:var(--ptint);border-radius:6px;padding:12px;margin-bottom:8px;cursor:pointer" onclick="this.querySelector(\'.chat-log-detail\').style.display=this.querySelector(\'.chat-log-detail\').style.display===\'none\'?\'block\':\'none\'">';
-   h += '<div style="display:flex;justify-content:space-between"><b>'+log.agentName+'</b><span style="font-size:11px;color:var(--muted)">'+date+'</span></div>';
-   h += '<div style="font-size:11px;color:var(--muted)">Tab: '+log.tab+' | '+msgCount+' messages</div>';
-   h += '<div class="chat-log-detail" style="display:none;margin-top:8px;border-top:1px solid var(--border);padding-top:8px">';
-   (log.messages||[]).forEach(function(m){
-    var color = m.role === 'user' ? 'var(--pri)' : 'var(--muted)';
-    var label = m.role === 'user' ? log.agentName : 'Bot';
-    h += '<div style="font-size:11px;margin-bottom:4px"><b style="color:'+color+'">'+label+':</b> '+m.content.substring(0,200)+(m.content.length>200?'...':'')+'</div>';
-   });
-   h += '</div></div>';
-  });
-
-  $1('#fbReviewContent').innerHTML = h;
-  $1('#fbReviewModal').className = 'modal-overlay show';
- } catch(e){
-  showToast('Error loading chat logs: '+e.message, 3000);
- }
-}
-
-// ════════════════════════════════════════════
-// ONBOARDING
-// ════════════════════════════════════════════
-function showOnboarding(){
- var h = '';
- h += '<div style="text-align:center;margin-bottom:20px">';
- h += '<div style="font-size:28px;font-weight:800;color:var(--pri)">Welcome to DuetBooks</div>';
- h += '<div style="font-size:13px;color:var(--muted);margin-top:4px">Your Book of Business. One Place. Total Clarity.</div>';
- h += '</div>';
-
- h += '<div style="text-align:left;font-size:13px;line-height:1.8">';
-
- h += '<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;padding:10px;background:var(--ptint);border-radius:6px">';
- h += '<span style="font-size:18px">📊</span><div><b>Dashboard</b> — Your at-a-glance view: gross pay, commissions, taxes, deductions, and net deposited. See your current tier and case counts.</div></div>';
-
- h += '<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;padding:10px;background:var(--gtint);border-radius:6px">';
- h += '<span style="font-size:18px">📋</span><div><b>Book of Business</b> — Track all your cases from pending through paid. Add new cases, advance their status, and see which pay period each case landed in.</div></div>';
-
- h += '<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;padding:10px;background:var(--ptint);border-radius:6px">';
- h += '<span style="font-size:18px">💰</span><div><b>Pay Periods</b> — Upload your Varicent statements and Workday payslips. The AI reads them and imports your commission data and net pay automatically.</div></div>';
-
- h += '<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;padding:10px;background:var(--gtint);border-radius:6px">';
- h += '<span style="font-size:18px">📈</span><div><b>Forecasting</b> — See your current pay tier, what happens when the 3MMA window shifts, and what you need in production credits to maintain your tier.</div></div>';
-
- h += '<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;padding:10px;background:var(--ptint);border-radius:6px">';
- h += '<span style="font-size:18px">📑</span><div><b>Rate Table</b> — Full commission rate schedule across all 4 tiers for every product (AAA, MassMutual, Securian). Your current tier is highlighted.</div></div>';
-
- h += '<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:16px;padding:10px;background:var(--atint);border-radius:6px;border:1px solid var(--amb)">';
- h += '<span style="font-size:18px">💬</span><div><b>Feedback</b> — Have a question, found a bug, or have a suggestion? Use the Feedback tab to let us know. We review every submission and will keep you updated on the status.</div></div>';
-
- h += '</div>';
-
- h += '<div style="text-align:center;margin-top:16px">';
- h += '<button class="btn btn-pri" style="padding:12px 40px;font-size:15px" onclick="dismissOnboarding()">Got It — Let\'s Go!</button>';
- h += '</div>';
-
- $1('#onboardContent').innerHTML = h;
- $1('#onboardModal').className = 'modal-overlay show';
-}
-
-function dismissOnboarding(){
- $1('#onboardModal').className = 'modal-overlay';
- // Set flag so it doesn't show again
- settings.onboardingDone = true;
- saveSettings();
-}
 
 // ════════════════════════════════════════════
 // INITIALIZATION

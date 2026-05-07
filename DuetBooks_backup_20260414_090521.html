@@ -395,21 +395,6 @@ tr:hover td{background:#FAFAFA}
  <div class="modal fb-review-modal" id="fbReviewContent"></div>
 </div>
 
-<!-- Import Preview Modal -->
-<div class="modal-overlay" id="importPreviewModal">
- <div class="modal" id="importPreviewContent" style="max-width:900px;width:95%;max-height:90vh;overflow-y:auto"></div>
-</div>
-
-<!-- Duplicate Scanner Modal -->
-<div class="modal-overlay" id="dupScannerModal">
- <div class="modal" id="dupScannerContent" style="max-width:900px;width:95%;max-height:90vh;overflow-y:auto"></div>
-</div>
-
-<!-- Audit Log Modal -->
-<div class="modal-overlay" id="auditLogModal">
- <div class="modal" id="auditLogContent" style="max-width:900px;width:95%;max-height:90vh;overflow-y:auto"></div>
-</div>
-
 <!-- Chat Bot Widget -->
 <button class="chat-fab" onclick="toggleChat()" title="DuetBooks Help">💬</button>
 <div class="chat-panel" id="chatPanel">
@@ -442,8 +427,8 @@ tr:hover td{background:#FAFAFA}
 // DUET BOOKS — Standalone Compensation Tracker
 // ════════════════════════════════════════════
 
-var APP_VERSION = 'v1.2.0';
-var APP_BUILD_DATE = '2026-05-07';
+var APP_VERSION = 'v1.1.0';
+var APP_BUILD_DATE = '2026-04-03';
 var FIREBASE_URL = 'https://duet-crm-default-rtdb.firebaseio.com/duetbooks';
 
 // ── State ──
@@ -558,89 +543,6 @@ var products = [
 
 function findProd(n){ return products.find(function(p){return p.name===n}) || products[0]; }
 
-// Normalize client name for matching: lowercase, trim, collapse internal whitespace
-function normalizeClientName(s){
- return (s||'').toLowerCase().trim().replace(/\s+/g,' ');
-}
-
-// Find product by plan code (any product whose codes string contains the given plan code)
-function findProdByPlanCode(planCode){
- if(!planCode) return null;
- var pc = planCode.toUpperCase().trim();
- return products.find(function(p){
-  if(!p.codes) return false;
-  // codes is a comma-separated string like "G22AR, G22ARN" or "W21GN, RWL21, TAR20E"
-  return p.codes.toUpperCase().split(/[,\s]+/).indexOf(pc) !== -1;
- }) || null;
-}
-
-// Find candidate matches for a Varicent case in the existing pipeline.
-// Returns { tier: 'A'|'B'|'C'|'D', candidate: caseObj|null, varianceAmt: number }
-// Tier A: exact match (client + plan code in product OR product matches plan_code's product, premium to penny)
-// Tier B: same client + plan code matches product (any premium)
-// Tier C: same client name only, status is open (not paid)
-// Tier D: no match
-function findCaseMatchCandidates(vc){
- var vcName = normalizeClientName(vc.client);
- if(!vcName) return {tier:'D', candidate:null, varianceAmt:0};
- var vcAmt = Math.round((vc.paid_premium||0)*100);
- var vcPlan = (vc.plan_code||'').toUpperCase().trim();
- var planProd = findProdByPlanCode(vc.plan_code); // resolved product object for the plan code
-
- var sameName = cases.filter(function(c){
-  return c && normalizeClientName(c.client) === vcName;
- });
- if(sameName.length === 0) return {tier:'D', candidate:null, varianceAmt:0};
-
- // Helper: does this case's product match the Varicent plan code?
- function caseProductMatchesPlan(c){
-  if(!vcPlan) return false;
-  var prod = c.product || '';
-  if(prod.toUpperCase().indexOf(vcPlan) !== -1) return true;
-  // Also check: does the case's product look up to a product whose codes include this plan
-  var cp = findProd(c.product);
-  if(cp && cp.codes && cp.codes.toUpperCase().split(/[,\s]+/).indexOf(vcPlan) !== -1) return true;
-  // Or: did the user enter a product that maps to the same product object as the plan code?
-  if(planProd && cp && planProd.name === cp.name) return true;
-  return false;
- }
-
- // Helper: case is "open" if not in a terminal status (paid, paid-partial, declined)
- function isOpen(c){ return c.status !== 'paid' && c.status !== 'paid-partial' && c.status !== 'declined'; }
-
- // Tier A: exact match
- var exact = sameName.find(function(c){
-  return caseProductMatchesPlan(c) && Math.round((c.amount||0)*100) === vcAmt && isOpen(c);
- });
- if(exact){
-  return {tier:'A', candidate:exact, varianceAmt:0};
- }
-
- // Tier B: same client + plan code match (any premium), not yet paid
- var strong = sameName.find(function(c){
-  return caseProductMatchesPlan(c) && isOpen(c);
- });
- if(strong){
-  // Compute variance: actual commission - what calcCase would estimate at Tier amount
-  var expected = calcCase(strong).agentShare || 0;
-  var actual = vc.commission || 0;
-  return {tier:'B', candidate:strong, varianceAmt: actual - expected};
- }
-
- // Tier C: same client name only, open status
- var openStatuses = ['pending','submitted','approved','issued'];
- var possible = sameName.find(function(c){
-  return openStatuses.indexOf(c.status) !== -1;
- });
- if(possible){
-  var expected2 = calcCase(possible).agentShare || 0;
-  var actual2 = vc.commission || 0;
-  return {tier:'C', candidate:possible, varianceAmt: actual2 - expected2};
- }
-
- return {tier:'D', candidate:null, varianceAmt:0};
-}
-
 // ── Utilities ──
 function $(sel){ return document.querySelectorAll(sel); }
 function $1(sel){ return document.querySelector(sel); }
@@ -723,51 +625,6 @@ function saveSettings(){
  if(testMode) return; // Test Mode: changes are in-memory only
  localStorage.setItem('db_settings_' + currentAgent.id, JSON.stringify(settings));
  fbSave('settings', settings);
-}
-
-// ── Audit Log ──
-// Per-agent audit log. Stored in Firebase at /duetbooks/{agentId}/auditLog/{entryId}
-// Each entry: { id, timestamp, agentId, action, targetIds[], summary, before, after, undone }
-var auditLog = []; // in-memory cache, loaded on enterApp
-
-function logAuditEntry(entry){
- if(testMode) return; // Don't log audit entries during test mode
- if(!currentAgent || !currentAgent.id) return;
- var id = Date.now() + Math.floor(Math.random()*1000);
- var fullEntry = Object.assign({
-  id: id,
-  timestamp: new Date().toISOString(),
-  agentId: currentAgent.id,
-  agentName: currentAgent.name || '',
-  undone: false
- }, entry);
- auditLog.push(fullEntry);
- // Fire-and-forget Firebase write — don't block the operation if it fails
- try {
-  var url = FIREBASE_URL + '/' + currentAgent.id + '/auditLog/' + id + '.json';
-  fetch(url, {method:'PUT', body: JSON.stringify(fullEntry)}).catch(function(){});
- } catch(e){}
- return fullEntry;
-}
-
-function loadAuditLog(){
- if(!currentAgent || !currentAgent.id) return Promise.resolve([]);
- var url = FIREBASE_URL + '/' + currentAgent.id + '/auditLog.json';
- return fetch(url).then(function(r){return r.json();}).then(function(data){
-  if(!data) { auditLog = []; return []; }
-  var arr = Object.keys(data).map(function(k){ return data[k]; }).filter(function(e){ return e && e.id; });
-  arr.sort(function(a,b){ return (a.id||0) - (b.id||0); }); // chronological
-  auditLog = arr;
-  return arr;
- }).catch(function(){ auditLog = []; return []; });
-}
-
-function deleteAuditEntry(entryId){
- if(testMode) return;
- auditLog = auditLog.filter(function(e){ return e.id !== entryId; });
- try {
-  fetch(FIREBASE_URL + '/' + currentAgent.id + '/auditLog/' + entryId + '.json', {method:'DELETE'}).catch(function(){});
- } catch(e){}
 }
 
 // ── Test Mode Functions ──
@@ -1052,7 +909,6 @@ function enterApp(){
  var dmBtn = $1('#darkModeBtn');
  if(dmBtn) dmBtn.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
  loadFeedback().catch(function(e){ console.error('Feedback load error:', e); }).finally(function(){ renderAll(); checkChatLogs(); });
- loadAuditLog().catch(function(e){ console.error('Audit log load error:', e); });
 }
 
 // ════════════════════════════════════════════
@@ -1092,14 +948,8 @@ function calcCase(c){
 }
 
 var statusOrder = ['pending','submitted','approved','issued','paid'];
-function statusIdx(s){
- // 'paid-partial' and 'declined' count as terminal (same rank as paid) — no Next button
- if(s === 'paid-partial' || s === 'declined') return statusOrder.indexOf('paid');
- return statusOrder.indexOf((s||'').toLowerCase());
-}
+function statusIdx(s){ return statusOrder.indexOf((s||'').toLowerCase()); }
 function statusBadge(s){
- if(s === 'paid-partial') return '<span class="badge badge-amb" title="Paid less than expected">Paid (Partial)</span>';
- if(s === 'declined') return '<span class="badge" style="background:#777;color:#fff" title="Policy was declined">Declined</span>';
  var cls = s==='paid'?'badge-grn':s==='issued'?'badge-pri':s==='approved'?'badge-pri':s==='submitted'?'badge-amb':'badge-red';
  return '<span class="badge '+cls+'">'+s.charAt(0).toUpperCase()+s.slice(1)+'</span>';
 }
@@ -1204,7 +1054,7 @@ function calc3MMAForecast(){
  var pipelineByStatus = {pending:0, submitted:0, approved:0, issued:0};
  var pipelineTotal = 0;
  cases.forEach(function(c){
-  if(c.status === 'paid' || c.status === 'paid-partial' || c.status === 'declined') return;
+  if(c.status === 'paid') return;
   // If case already has production credit from Varicent, use it
   var credits = 0;
   if(c.productionCredit && c.productionCredit > 0){
@@ -1265,209 +1115,6 @@ function renderAll(){
  renderSettings();
 }
 
-// ═══════════════════════════════════════════════════════════════
-// CRM-PENDING WATCHER — Pulls Won/App-Submitted leads from DuetCRM
-// that don't have a matching DuetBooks case. Shows a Dashboard
-// banner with an "Import" modal for review-then-import. Match rule:
-// fuzzy client name (lowercase + strip non-alphanumeric) AND phone
-// last-10-digits when both sides have a phone (otherwise name-only).
-// ═══════════════════════════════════════════════════════════════
-var CRM_LEADS_URL = 'https://duet-crm-default-rtdb.firebaseio.com/leads.json';
-var _crmPendingLeads = null;
-var _crmPendingLoading = false;
-
-// Mirror of CRM-side product mapping (CRM display name → DuetBooks canonical name)
-var CRM_TO_BOOKS_PRODUCT = {
- 'AAA Accumulator IUL': 'AAA Accumulator - Target Premium',
- 'AAA LifeTime UL (age 79 and under)': 'AAA LifeTime UL - Target (age 79-)',
- 'AAA LifeTime UL (age 80+)': 'AAA LifeTime UL - Target (age 80+)',
- 'Securian Eclipse UL (brokered)': 'Securian Eclipse UL (target/planned)',
- 'MM GIA External Funds (ages 0-79)': 'GIA External Funds (ages 0-79)',
- 'MM GIA Internal Funds (ages 0-79)': 'GIA Internal Funds (ages 0-79)',
- 'MM American Legend 7 External (ages 0-75)': 'American Legend 7 External (ages 0-75)',
- 'MM Safe Return External (ages 0-75)': 'Safe Return External (ages 0-75)',
- 'MM Landmark 3 External (ages 0-75)': 'Landmark 3 External (ages 0-75)',
- 'MM Landmark 5 External (ages 0-75)': 'Landmark 5 External (ages 0-75)',
- 'MM Premier Bonus External (ages 0-75)': 'Premier Bonus External (ages 0-75)',
- 'MM Premier Income Bonus External (ages 0-75)': 'Premier Income Bonus External (ages 0-75)',
- 'Platinum Bonus 5 (AAA Life)': 'Platinum Annuity 5 External (ages 0-79)'
-};
-
-function _esc(s){ return ((s||'')+'').replace(/[&<>"']/g, function(ch){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]; }); }
-function _normCRMName(s){ return ((s||'')+'').toLowerCase().replace(/[^a-z0-9]/g,''); }
-function _normCRMPhone(s){ var d = ((s||'')+'').replace(/\D/g,''); return d.length > 10 ? d.slice(-10) : d; }
-
-function _crmMatchesBooksCase(lead, bcase){
- if(!bcase || !lead) return false;
- if(_normCRMName(lead.name) !== _normCRMName(bcase.client)) return false;
- var lp = _normCRMPhone(lead.phone), bp = _normCRMPhone(bcase.phone);
- if(lp && bp && lp !== bp) return false;
- return true;
-}
-
-function loadCRMPending(callback){
- if(_crmPendingLoading) return;
- _crmPendingLoading = true;
- fetch(CRM_LEADS_URL).then(function(r){ return r.json(); }).then(function(data){
-  var allLeads = (data && data.data) ? data.data : [];
-  var closed = allLeads.filter(function(l){
-   return l && (l.stage === 'won' || l.stage === 'app_submitted');
-  });
-  var pending = closed.filter(function(l){
-   return !cases.some(function(c){ return _crmMatchesBooksCase(l, c); });
-  });
-  _crmPendingLeads = pending;
-  _crmPendingLoading = false;
-  if(callback) callback(pending);
- }).catch(function(err){
-  console.error('CRM pending load failed:', err);
-  _crmPendingLeads = [];
-  _crmPendingLoading = false;
- });
-}
-
-function renderCRMPendingBanner(){
- if(!_crmPendingLeads){
-  loadCRMPending(function(){ renderDashboard(); });
-  return '';
- }
- var n = _crmPendingLeads.length;
- if(n === 0) return '';
- var h = '<div style="background:rgba(243,156,18,0.12);border:1px solid var(--amb);border-radius:8px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">';
- h += '<div style="font-size:18px">⚠️</div>';
- h += '<div style="flex:1;min-width:200px">';
- h += '<b>'+n+' Won lead'+(n>1?'s':'')+' in DuetCRM not yet in DuetBooks</b>';
- h += '<div style="font-size:11px;color:var(--muted);margin-top:2px">Marked Won/App Submitted in CRM but the auto-push didn\'t complete. Review & import to keep them in sync.</div>';
- h += '</div>';
- h += '<button class="btn btn-amb" onclick="showCRMImportModal()" style="font-weight:700">Review &amp; Import</button>';
- h += '<button class="btn btn-outline" onclick="_crmPendingLeads=null;renderDashboard()" style="font-size:11px;padding:6px 10px" title="Re-fetch from CRM">🔄</button>';
- h += '</div>';
- return h;
-}
-
-function showCRMImportModal(){
- if(!_crmPendingLeads || _crmPendingLeads.length === 0){ showToast('No pending leads', 3000); return; }
- var pending = _crmPendingLeads;
-
- var overlay = document.createElement('div');
- overlay.id = 'crmImportOverlay';
- overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px';
-
- var h = '<div style="background:var(--bg);max-width:780px;width:100%;max-height:90vh;border-radius:12px;padding:22px;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.4)">';
- h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap">';
- h += '<h3 style="margin:0">📥 Import from DuetCRM ('+pending.length+')</h3>';
- h += '<button onclick="closeCRMImportModal()" style="margin-left:auto;background:transparent;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1" title="Close">×</button>';
- h += '</div>';
- h += '<div style="font-size:11px;color:var(--muted);margin-bottom:12px">Match rule: fuzzy client name + phone (when both have one). Review each row and click Import to create the DuetBooks case.</div>';
-
- pending.forEach(function(l){
-  var prodCRM = (l.selectedProduct || '').trim();
-  var prodMapped = CRM_TO_BOOKS_PRODUCT[prodCRM] || prodCRM;
-  var prodFound = prodMapped ? products.find(function(p){return p.name === prodMapped}) : null;
-  var amt = parseFloat(l.estPremium) || 0;
-  var canImport = (l.name && amt > 0 && prodFound);
-  var stage = l.stage === 'app_submitted' ? 'App Submitted' : 'Won';
-
-  h += '<div style="border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--card)">';
-  h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">';
-  h += '<b style="font-size:14px">'+_esc(l.name)+'</b>';
-  h += '<span style="font-size:10px;background:var(--amb);color:#fff;padding:1px 6px;border-radius:4px">'+stage+'</span>';
-  if(l.phone) h += '<span style="font-size:11px;color:var(--muted)">📞 '+_esc(l.phone)+'</span>';
-  h += '</div>';
-  h += '<div style="font-size:11px;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap;margin-bottom:6px">';
-  h += '<span>Premium: <b style="color:var(--txt)">'+(amt>0?'$'+amt.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'<span style="color:var(--red)">— missing</span>')+'</b></span>';
-  h += '<span>Product: <b style="color:var(--txt)">'+(prodCRM?_esc(prodCRM):'<span style="color:var(--red)">— missing</span>')+'</b>'+(prodCRM && !prodFound?' <span style="color:var(--red)">(no DuetBooks match for "'+_esc(prodMapped)+'")</span>':'')+'</span>';
-  if(l.agent) h += '<span>Agent: <b style="color:var(--txt)">'+_esc(l.agent)+'</b></span>';
-  if(l.source) h += '<span>Source: '+_esc(l.source)+'</span>';
-  h += '</div>';
-  if(l.notes){ var n0 = (l.notes+'').substring(0,140); h += '<div style="font-size:11px;color:var(--muted);margin-top:2px">Notes: '+_esc(n0)+(l.notes.length>140?'…':'')+'</div>'; }
-  if(l.historyNotes && l.historyNotes.length > 0){
-   var firstHN = l.historyNotes[0];
-   h += '<div style="font-size:11px;color:var(--muted);margin-top:2px">CRM history: '+_esc(((firstHN.text||'')+'').substring(0,140))+'</div>';
-  }
-  if(l.wonReason) h += '<div style="font-size:11px;color:var(--muted);margin-top:2px">Won reason: <b>'+_esc(l.wonReason)+'</b></div>';
-  h += '<div style="margin-top:8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">';
-  if(canImport){
-   h += '<button class="btn btn-grn" onclick="importCRMLead('+l.id+')" style="font-weight:700;font-size:12px;padding:6px 14px">📥 Import</button>';
-  } else {
-   var reasons = [];
-   if(amt <= 0) reasons.push('missing premium');
-   if(!prodCRM) reasons.push('missing product');
-   else if(!prodFound) reasons.push('product not in DuetBooks list');
-   h += '<span style="font-size:11px;color:var(--red)">⚠ Cannot import — '+reasons.join(', ')+'. Edit in CRM first.</span>';
-  }
-  h += '<span style="font-size:10px;color:var(--muted);margin-left:auto">CRM lead #'+l.id+'</span>';
-  h += '</div>';
-  h += '</div>';
- });
-
- h += '<div style="display:flex;justify-content:flex-end;margin-top:12px"><button onclick="closeCRMImportModal()" class="btn btn-outline">Close</button></div>';
- h += '</div>';
- overlay.innerHTML = h;
- document.body.appendChild(overlay);
-}
-
-function closeCRMImportModal(){
- var o = document.getElementById('crmImportOverlay');
- if(o) o.remove();
-}
-
-function importCRMLead(leadId){
- if(!_crmPendingLeads) return;
- var lead = _crmPendingLeads.find(function(l){ return l.id === leadId; });
- if(!lead){ showToast('Lead not found', 3000); return; }
- var prodCRM = (lead.selectedProduct || '').trim();
- var prodMapped = CRM_TO_BOOKS_PRODUCT[prodCRM] || prodCRM;
- var prodFound = products.find(function(p){return p.name === prodMapped});
- if(!prodFound){ showToast('Product not recognized: '+prodCRM, 4000); return; }
- var amt = parseFloat(lead.estPremium) || 0;
- if(amt <= 0){ showToast('Missing premium amount', 3000); return; }
-
- var splitType = 'full';
- if(lead.agent){
-  var cat = (prodFound.cat || '').toLowerCase();
-  splitType = (cat.indexOf('life') >= 0 || cat.indexOf('iul') >= 0 || cat.indexOf('universal') >= 0) ? 'life' : 'pc';
- }
-
- var noteParts = ['Imported from CRM lead #'+lead.id];
- if(lead.wonReason) noteParts.push('Won reason: '+lead.wonReason);
- if(lead.historyNotes){
-  lead.historyNotes.forEach(function(n){
-   if(n && n.text) noteParts.push('CRM note ('+(n.date||'').substring(0,10)+'): '+n.text);
-  });
- }
- if(lead.notes) noteParts.push('CRM: '+lead.notes);
-
- var c = {
-  id: nextCaseId++,
-  client: lead.name,
-  phone: (lead.phone || '').replace(/\D/g,''),
-  product: prodMapped,
-  amount: amt,
-  rate: prodFound.rate || 0,
-  split: splitType,
-  splitName: lead.agent || '',
-  splitEmail: '',
-  status: 'pending',
-  submitted: ((lead.stageEnteredDate || lead.created || new Date().toISOString())+'').substring(0,10),
-  estPay: '',
-  paidDate: '',
-  notes: noteParts.join(' · '),
-  year: new Date().getFullYear(),
-  created: new Date().toISOString()
- };
- cases.push(c);
- saveCases();
-
- _crmPendingLeads = _crmPendingLeads.filter(function(l){ return l.id !== leadId; });
- showToast('✅ Imported: '+lead.name+' — '+prodMapped, 4000);
-
- // Refresh the modal in place so the user can keep going
- closeCRMImportModal();
- if(_crmPendingLeads.length > 0) showCRMImportModal();
- renderAll();
-}
-
 // ════════════════════════════════════════════
 // TAB 0: DASHBOARD
 // ════════════════════════════════════════════
@@ -1481,8 +1128,7 @@ function renderDashboard(){
  yearCases.forEach(function(c){
   var calc = calcCase(c);
   totalProduction += calc.agentShare;
-  // Pending = not yet settled (excludes paid, paid-partial, declined)
-  if(c.status !== 'paid' && c.status !== 'paid-partial' && c.status !== 'declined') totalPending += calc.agentShare;
+  if(c.status !== 'paid') totalPending += calc.agentShare;
  });
 
  // YTD Paid = sum of varicent payouts from pay periods (authoritative Varicent number)
@@ -1522,7 +1168,7 @@ function renderDashboard(){
  });
  var takeHomeRate = totalPaid > 0 ? (ytdNet / totalPaid * 100).toFixed(0) : '—';
 
- var h = renderCRMPendingBanner();
+ var h = '';
 
  // ── YTD Summary (matching Pay History format) ──
  // Gross Pay hero
@@ -1636,12 +1282,13 @@ function renderBookOfBusiness(){
 
   h += '<div class="form-row">';
   var defSplit = (currentAgent && currentAgent.agentType === 'Life') ? 'life' : 'pc';
-  h += '<div class="form-group"><label>Split Type</label><select id="nc_split" onchange="ncCalcPreview();updateSplitAgentDropdown()">';
+  h += '<div class="form-group"><label>Split Type</label><select id="nc_split" onchange="ncCalcPreview()">';
   h += '<option value="full"'+(defSplit==='full'?' selected':'')+'>Full (no split)</option>';
   h += '<option value="life"'+(defSplit==='life'?' selected':'')+'>Life Split ('+settings.lifeShare+'/'+settings.lifePartnerShare+')</option>';
   h += '<option value="pc"'+(defSplit==='pc'?' selected':'')+'>PC Split ('+settings.pcShare+'/'+settings.pcPartnerShare+')</option>';
   h += '</select></div>';
-  h += '<div class="form-group" id="nc_splitagent_wrap"><label>Split Agent</label><select id="nc_splitname_sel" onchange="onSplitAgentChange(\'nc_splitname_sel\',\'nc_splitname_custom\')" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--txt)">'+getSplitAgentOptions(defSplit,'')+'</select><input id="nc_splitname_custom" type="text" placeholder="Type partner name..." style="display:none;width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;margin-top:4px;background:var(--bg);color:var(--txt)"></div>';
+  h += '<div class="form-group"><label>Split Agent Name</label><input id="nc_splitname" type="text" placeholder="Partner name"></div>';
+  h += '<div class="form-group"><label>Split Agent Email</label><input id="nc_splitemail" type="text" placeholder="partner@acg.aaa.com"></div>';
   h += '<div class="form-group"><label>Submitted Date</label><input id="nc_submitted" type="date" value="'+toYMD(new Date())+'"></div>';
   h += '</div>';
 
@@ -1663,15 +1310,13 @@ function renderBookOfBusiness(){
  h += '<div class="filter-bar">';
  h += '<select onchange="filterStatus=this.value;renderBookOfBusiness()"><option value="">All Statuses</option>';
  statusOrder.forEach(function(s){ h += '<option value="'+s+'"'+(filterStatus===s?' selected':'')+'>'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>'; });
- h += '<option value="paid-partial"'+(filterStatus==='paid-partial'?' selected':'')+'>Paid (Partial)</option>';
- h += '<option value="declined"'+(filterStatus==='declined'?' selected':'')+'>Declined</option>';
  h += '</select>';
  h += '<select onchange="filterCarrier=this.value;renderBookOfBusiness()"><option value="">All Carriers</option><option value="AAA"'+(filterCarrier==='AAA'?' selected':'')+'>AAA</option><option value="MassMutual"'+(filterCarrier==='MassMutual'?' selected':'')+'>MassMutual</option><option value="Securian"'+(filterCarrier==='Securian'?' selected':'')+'>Securian</option></select>';
  h += '<select onchange="filterCat=this.value;renderBookOfBusiness()"><option value="">All Categories</option>';
  var cats = ['IUL / Universal Life','Annuities','Life (Whole / Term)','Banking / CD / Other'];
  cats.forEach(function(c){ h += '<option value="'+c+'"'+(filterCat===c?' selected':'')+'>'+c+'</option>'; });
  h += '</select>';
- h += '<input id="bobSearch" type="text" placeholder="Search client..." value="'+searchQuery+'" oninput="searchQuery=this.value;renderBookOfBusiness()" style="min-width:160px">';
+ h += '<input type="text" placeholder="Search client..." value="'+searchQuery+'" oninput="searchQuery=this.value;renderBookOfBusiness()" style="min-width:160px">';
 
  // Count
  var filtered = getFilteredCases();
@@ -1714,17 +1359,8 @@ function renderBookOfBusiness(){
   h += '<td style="font-size:11px">'+carrierBadge(prod.carrier || 'AAA')+' '+c.product+'</td>';
   h += '<td>'+fmt(c.amount)+'</td>';
   h += '<td><b>'+fmt(calc.agentShare)+'</b></td>';
-  var splitDisplay = '—';
-  if(c.split === 'life') splitDisplay = '<span style="font-size:10px"><span class="badge badge-pri" style="font-size:8px">Life</span> '+(c.splitName||'')+'</span>';
-  else if(c.split === 'pc' || c.split === 'split') splitDisplay = '<span style="font-size:10px"><span class="badge badge-grn" style="font-size:8px">PC</span> '+(c.splitName||'')+'</span>';
-  h += '<td>'+splitDisplay+'</td>';
-  var statusCell = statusBadge(c.status);
-  if(c.status === 'paid-partial' && c.paidVariance){
-   var vAmt = c.paidVariance;
-   var vSign = vAmt < 0 ? '−' : '+';
-   statusCell += '<div style="font-size:9px;color:var(--amb);margin-top:2px" title="Expected: '+fmt(c.expectedCommission||0)+' / Paid: '+fmt(c.actualCommission||0)+'">var '+vSign+fmt(Math.abs(vAmt))+'</div>';
-  }
-  h += '<td>'+statusCell+'</td>';
+  h += '<td>'+(c.split==='split'?'<span style="font-size:10px;color:var(--muted)">'+c.splitName+'</span>':'—')+'</td>';
+  h += '<td>'+statusBadge(c.status)+'</td>';
   h += '<td style="font-size:11px">'+c.submitted+'</td>';
   h += '<td style="font-size:11px">'+(c.paidIn||'—')+'</td>';
   h += '<td style="white-space:nowrap">';
@@ -1740,16 +1376,6 @@ function renderBookOfBusiness(){
  h += '</tbody></table></div>';
 
  $1('#p1').innerHTML = h;
-
- // Restore focus to search input if it was active (preserves typing experience)
- if(searchQuery){
-  var sb = $1('#bobSearch');
-  if(sb){
-   sb.focus();
-   var len = sb.value.length;
-   sb.setSelectionRange(len, len);
-  }
- }
 }
 
 function getFilteredCases(){
@@ -1858,8 +1484,8 @@ function addCase(){
   amount: parseFloat($1('#nc_amount').value) || 0,
   rate: parseFloat($1('#nc_rate').value) || findProd(product).rate || 0,
   split: $1('#nc_split').value || 'full',
-  splitName: (function(){ var sel=$1('#nc_splitname_sel'); var cust=$1('#nc_splitname_custom'); if(sel && sel.value==='__other__') return (cust?cust.value:'').trim(); return sel?sel.value:''; })(),
-  splitEmail: (function(){ var sel=$1('#nc_splitname_sel'); if(!sel || sel.value==='__other__' || !sel.value) return ''; var a=getSplitAgents().find(function(x){return x.name===sel.value}); return a?a.email:''; })(),
+  splitName: ($1('#nc_splitname').value||'').trim(),
+  splitEmail: ($1('#nc_splitemail').value||'').trim(),
   status: 'pending',
   submitted: $1('#nc_submitted').value || toYMD(new Date()),
   estPay: $1('#nc_estpay').value || '',
@@ -1881,42 +1507,19 @@ function advanceStatus(caseId){
  if(!c) return;
  var idx = statusIdx(c.status);
  if(idx < 4){
-  var prevStatus = c.status;
   c.status = statusOrder[idx+1];
   if(c.status === 'paid') c.paidDate = toYMD(new Date());
   c.updated = new Date().toISOString();
   saveCases();
-  // Log status change to/from paid (those affect financial totals)
-  if(c.status === 'paid' || prevStatus === 'paid' || c.status === 'paid-partial' || prevStatus === 'paid-partial' || c.status === 'declined' || prevStatus === 'declined'){
-   logAuditEntry({
-    action: 'status_change',
-    targetIds: [caseId],
-    client: c.client,
-    summary: c.client + ' status: ' + prevStatus + ' → ' + c.status,
-    before: { status: prevStatus, paidDate: c.paidDate ? '' : c.paidDate },
-    after: { status: c.status, paidDate: c.paidDate || '' }
-   });
-  }
   showToast(c.client + ' → ' + c.status.charAt(0).toUpperCase()+c.status.slice(1), 2000);
   renderAll();
  }
 }
 
 function deleteCase(caseId){
- var c = cases.find(function(x){return x.id===caseId});
- if(!c) return;
  if(!confirm('Delete this case?')) return;
- var snapshot = JSON.parse(JSON.stringify(c));
- cases = cases.filter(function(x){return x.id!==caseId});
+ cases = cases.filter(function(c){return c.id!==caseId});
  saveCases();
- logAuditEntry({
-  action: 'delete',
-  targetIds: [caseId],
-  client: c.client,
-  summary: 'Deleted case ID ' + caseId + ' — ' + c.client + ' ' + (c.product||'') + ' $' + (c.amount||0).toFixed(2),
-  before: { case: snapshot },
-  after: null
- });
  showToast('Case deleted', 2000);
  renderAll();
 }
@@ -1946,12 +1549,9 @@ function editCase(caseId){
  h += '<option value="life"'+(curSplit==='life'?' selected':'')+'>Life Split ('+settings.lifeShare+'/'+settings.lifePartnerShare+')</option>';
  h += '<option value="pc"'+(curSplit==='pc'?' selected':'')+'>PC Split ('+settings.pcShare+'/'+settings.pcPartnerShare+')</option>';
  h += '</select></div>';
- var ecSplitType = curSplit === 'life' ? 'life' : 'pc';
- h += '<div class="form-group"><label>Split Agent</label><select id="ec_splitname_sel" onchange="onSplitAgentChange(\'ec_splitname_sel\',\'ec_splitname_custom\')" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--txt)">'+getSplitAgentOptions(ecSplitType, c.splitName||'')+'</select><input id="ec_splitname_custom" type="text" placeholder="Type partner name..." style="display:none;width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;margin-top:4px;background:var(--bg);color:var(--txt)"></div>';
+ h += '<div class="form-group"><label>Split Agent</label><input id="ec_splitname" type="text" value="'+(c.splitName||'')+'"></div>';
  h += '<div class="form-group"><label>Status</label><select id="ec_status">';
  statusOrder.forEach(function(s){ h += '<option value="'+s+'"'+(c.status===s?' selected':'')+'>'+s.charAt(0).toUpperCase()+s.slice(1)+'</option>'; });
- h += '<option value="paid-partial"'+(c.status==='paid-partial'?' selected':'')+'>Paid (Partial)</option>';
- h += '<option value="declined"'+(c.status==='declined'?' selected':'')+'>Declined</option>';
  h += '</select></div>';
  h += '</div>';
  h += '<div class="form-row">';
@@ -1973,15 +1573,13 @@ function editCase(caseId){
 function saveEditCase(caseId){
  var c = cases.find(function(x){return x.id===caseId});
  if(!c) return;
- var prevStatus = c.status;
- var prevAmount = c.amount;
  c.client = $1('#ec_client').value.trim();
  c.phone = ($1('#ec_phone').value||'').replace(/[^\d]/g,'');
  c.product = $1('#ec_product').value;
  c.amount = parseFloat($1('#ec_amount').value) || 0;
  c.rate = parseFloat($1('#ec_rate').value) || 0;
  c.split = $1('#ec_split').value;
- c.splitName = (function(){ var sel=$1('#ec_splitname_sel'); var cust=$1('#ec_splitname_custom'); if(sel && sel.value==='__other__') return (cust?cust.value:'').trim(); return sel?sel.value:''; })();
+ c.splitName = $1('#ec_splitname').value.trim();
  c.status = $1('#ec_status').value;
  c.submitted = $1('#ec_submitted').value;
  c.estPay = $1('#ec_estpay').value;
@@ -1989,17 +1587,6 @@ function saveEditCase(caseId){
  c.notes = $1('#ec_notes').value.trim();
  c.updated = new Date().toISOString();
  saveCases();
- // Log if status changed to/from paid or paid-partial (affects totals)
- if(prevStatus !== c.status && (prevStatus === 'paid' || prevStatus === 'paid-partial' || prevStatus === 'declined' || c.status === 'paid' || c.status === 'paid-partial' || c.status === 'declined')){
-  logAuditEntry({
-   action: 'status_change',
-   targetIds: [caseId],
-   client: c.client,
-   summary: c.client + ' (manual edit) status: ' + prevStatus + ' → ' + c.status,
-   before: { status: prevStatus, amount: prevAmount },
-   after: { status: c.status, amount: c.amount }
-  });
- }
  closeEditModal();
  showToast('Case updated: ' + c.client, 2000);
  renderAll();
@@ -2175,7 +1762,7 @@ function updatePayPreview(){
  if(varicent > 0){
   var matches = [];
   cases.forEach(function(c){
-   if(c.status === 'paid' || c.status === 'paid-partial' || c.status === 'declined') return;
+   if(c.status === 'paid') return;
    var calc = calcCase(c);
    if(calc.agentShare <= 0) return;
    var pctDiff = Math.abs(calc.agentShare - varicent) / calc.agentShare;
@@ -2328,10 +1915,8 @@ function renderCashFlow(){
  var d90 = new Date(now); d90.setDate(d90.getDate()+90); var day90 = toYMD(d90);
 
  cases.forEach(function(c){
-  // Declined cases don't pay and aren't pending — skip entirely
-  if(c.status === 'declined') return;
   var calc = calcCase(c);
-  if(c.status === 'paid' || c.status === 'paid-partial'){
+  if(c.status === 'paid'){
    paid += calc.agentShare;
   } else {
    pendingTotal += calc.agentShare;
@@ -2633,65 +2218,6 @@ function renderSettings(){
  h += '<button class="btn btn-pri" onclick="saveSettingsForm()" style="margin-top:8px">Save Settings</button>';
  h += '</div>';
 
- // Split Partners Directory
- h += '<div class="card">';
- h += '<h3>Split Partners</h3>';
- h += '<div style="font-size:11px;color:var(--muted);margin-bottom:10px">Set up your split partners once. When adding cases, pick from the list instead of typing names.</div>';
-
- var agents = getSplitAgents();
- if(agents.length > 0){
-  h += '<div class="tbl-wrap" style="margin-bottom:12px"><table>';
-  h += '<thead><tr><th>Name</th><th>Email</th><th>Type</th><th>Active</th><th></th></tr></thead><tbody>';
-  agents.forEach(function(a){
-   var typeBadges = '';
-   if(a.types && a.types.indexOf('life')!==-1) typeBadges += '<span class="badge badge-pri" style="font-size:9px;margin-right:2px">Life</span>';
-   if(a.types && a.types.indexOf('pc')!==-1) typeBadges += '<span class="badge badge-grn" style="font-size:9px">PC</span>';
-   h += '<tr style="opacity:'+(a.active?'1':'0.5')+'">';
-   h += '<td><b>'+a.name+'</b></td>';
-   h += '<td style="font-size:11px">'+(a.email||'—')+'</td>';
-   h += '<td>'+typeBadges+'</td>';
-   h += '<td><button class="btn btn-sm btn-outline" onclick="toggleSplitAgent('+a.id+')">'+(a.active?'Active':'Inactive')+'</button></td>';
-   h += '<td><button class="btn-del" onclick="editSplitAgent('+a.id+')" style="color:var(--pri)">edit</button> <button class="btn-del" onclick="deleteSplitAgent('+a.id+')">remove</button></td>';
-   h += '</tr>';
-  });
-  h += '</tbody></table></div>';
- } else {
-  h += '<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px">No split partners yet. Add your first partner below.</div>';
- }
-
- // Add partner form
- h += '<div style="padding:12px;background:var(--ptint);border-radius:6px;margin-top:8px">';
- h += '<div style="font-weight:600;font-size:12px;margin-bottom:8px;color:var(--pri)">+ Add Split Partner</div>';
- h += '<div class="form-row">';
- h += '<div class="form-group"><label>Name</label><input id="sa_name" placeholder="Partner name" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;font-family:inherit;background:var(--bg);color:var(--txt)"></div>';
- h += '<div class="form-group"><label>Email</label><input id="sa_email" placeholder="partner@email.com" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;font-family:inherit;background:var(--bg);color:var(--txt)"></div>';
- h += '</div>';
- h += '<div style="display:flex;gap:16px;align-items:center;margin:8px 0">';
- h += '<label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="checkbox" id="sa_type_life"> Life Partner</label>';
- h += '<label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="checkbox" id="sa_type_pc"> PC Partner</label>';
- h += '</div>';
- h += '<button class="btn btn-pri btn-sm" onclick="addSplitAgent()">Add Partner</button>';
- h += '</div>';
- h += '</div>';
-
- // Duplicate Audit
- h += '<div class="card">';
- h += '<h3>Duplicate Audit</h3>';
- h += '<div style="font-size:11px;color:var(--muted);margin-bottom:8px">Scan your Book of Business for cases with the same client name. Useful for cleaning up after Varicent imports created duplicates.</div>';
- var dupCount = findDuplicates().length;
- var btnLabel = dupCount > 0 ? '🔎 Scan for Duplicates ('+dupCount+' group'+(dupCount>1?'s':'')+' found)' : '🔎 Scan for Duplicates';
- h += '<button class="btn btn-pri" onclick="showDuplicateScanner()">'+btnLabel+'</button>';
- h += '</div>';
-
- // Audit Log
- h += '<div class="card">';
- h += '<h3>Audit Log</h3>';
- h += '<div style="font-size:11px;color:var(--muted);margin-bottom:8px">View a history of merges, deletes, status changes, and Varicent imports. Recent merges and deletes can be undone within 7 days.</div>';
- var auditCount = (auditLog || []).length;
- var auditBtnLabel = auditCount > 0 ? '📜 View Audit Log ('+auditCount+' '+(auditCount===1?'entry':'entries')+')' : '📜 View Audit Log';
- h += '<button class="btn btn-pri" onclick="showAuditLog()">'+auditBtnLabel+'</button>';
- h += '</div>';
-
  h += '<div class="card">';
  h += '<h3>Data Management</h3>';
  h += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">';
@@ -2768,157 +2294,6 @@ function saveSettingsForm(){
 
  showToast('Settings saved', 2000);
  renderAll();
-}
-
-// ── Split Agent Directory ──
-function getSplitAgents(){ return settings.splitAgents || []; }
-
-function getSplitAgentOptions(splitType, selectedName){
- var agents = getSplitAgents().filter(function(a){
-  return a.active && a.types && a.types.indexOf(splitType) !== -1;
- });
- var h = '<option value="">Select partner...</option>';
- var foundSelected = false;
- agents.forEach(function(a){
-  var sel = a.name === selectedName ? ' selected' : '';
-  if(a.name === selectedName) foundSelected = true;
-  h += '<option value="'+a.name+'"'+sel+'>'+a.name+'</option>';
- });
- // If legacy name not in directory, show it as custom option
- if(selectedName && !foundSelected){
-  h += '<option value="'+selectedName+'" selected>'+selectedName+' (custom)</option>';
- }
- h += '<option value="__other__">Other (type name)...</option>';
- return h;
-}
-
-function onSplitAgentChange(selectId, textId){
- var sel = $1('#'+selectId);
- var txt = $1('#'+textId);
- if(!sel || !txt) return;
- if(sel.value === '__other__'){
-  txt.style.display = 'block';
-  txt.value = '';
-  txt.focus();
- } else {
-  txt.style.display = 'none';
-  txt.value = sel.value;
- }
-}
-
-function updateSplitAgentDropdown(){
- var splitType = ($1('#nc_split')||{}).value || 'full';
- var wrap = $1('#nc_splitagent_wrap');
- var sel = $1('#nc_splitname_sel');
- if(!wrap) return;
- if(splitType === 'full'){
-  wrap.style.display = 'none';
- } else {
-  wrap.style.display = '';
-  if(sel) sel.innerHTML = getSplitAgentOptions(splitType, '');
- }
-}
-
-function addSplitAgent(){
- var nameEl = $1('#sa_name');
- var emailEl = $1('#sa_email');
- var name = (nameEl ? nameEl.value : '').trim();
- if(!name){ showToast('Partner name is required', 2000); return; }
- var email = (emailEl ? emailEl.value : '').trim();
- var lifeEl = $1('#sa_type_life');
- var pcEl = $1('#sa_type_pc');
- var isLife = lifeEl && lifeEl.checked;
- var isPC = pcEl && pcEl.checked;
- if(!isLife && !isPC){ showToast('Please check at least one: Life Partner or PC Partner', 3000); return; }
- var types = [];
- if(isLife) types.push('life');
- if(isPC) types.push('pc');
- if(!settings.splitAgents) settings.splitAgents = [];
- var maxId = 0;
- settings.splitAgents.forEach(function(a){ if(a.id > maxId) maxId = a.id; });
- settings.splitAgents.push({ id: maxId+1, name:name, email:email, phone:'', types:types, active:true });
- saveSettings();
- // Clear form inputs
- if(nameEl) nameEl.value = '';
- if(emailEl) emailEl.value = '';
- if(lifeEl) lifeEl.checked = false;
- if(pcEl) pcEl.checked = false;
- // Re-render just the partner table instead of entire Settings (preserves scroll)
- showToast('✅ Split partner added: ' + name + ' (' + types.join(' & ') + ')', 3000);
- renderSettings();
- // Scroll to the split partners section after render
- setTimeout(function(){
-  var card = document.querySelector('#p5 .tbl-wrap');
-  if(card) card.scrollIntoView({behavior:'smooth', block:'center'});
- }, 100);
-}
-
-function editSplitAgent(id){
- var a = getSplitAgents().find(function(x){return x.id===id});
- if(!a) return;
- var h = '';
- h += '<h3 style="margin-bottom:12px;color:var(--pri)">Edit Split Partner</h3>';
- h += '<div class="form-group" style="margin-bottom:10px"><label>Name</label><input id="sae_name" value="'+(a.name||'')+'" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--txt)"></div>';
- h += '<div class="form-group" style="margin-bottom:10px"><label>Email</label><input id="sae_email" value="'+(a.email||'')+'" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--txt)"></div>';
- h += '<div class="form-group" style="margin-bottom:10px"><label>Phone</label><input id="sae_phone" value="'+(a.phone||'')+'" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:var(--bg);color:var(--txt)"></div>';
- h += '<div style="display:flex;gap:16px;align-items:center;margin:10px 0">';
- h += '<label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="checkbox" id="sae_type_life"'+(a.types && a.types.indexOf('life')!==-1?' checked':'')+'>Life Partner</label>';
- h += '<label style="font-size:12px;display:flex;align-items:center;gap:4px"><input type="checkbox" id="sae_type_pc"'+(a.types && a.types.indexOf('pc')!==-1?' checked':'')+'>PC Partner</label>';
- h += '</div>';
- h += '<div style="display:flex;gap:8px;margin-top:12px">';
- h += '<button class="btn btn-outline" onclick="closeEditModal()">Cancel</button>';
- h += '<button class="btn btn-pri" onclick="saveSplitAgentEdit('+id+')">Save Changes</button>';
- h += '</div>';
- $1('#editModalContent').innerHTML = h;
- $1('#editModal').className = 'modal-overlay show';
-}
-
-function saveSplitAgentEdit(id){
- var a = getSplitAgents().find(function(x){return x.id===id});
- if(!a) return;
- var name = ($1('#sae_name').value||'').trim();
- if(!name){ showToast('Name is required', 2000); return; }
- var isLife = $1('#sae_type_life') && $1('#sae_type_life').checked;
- var isPC = $1('#sae_type_pc') && $1('#sae_type_pc').checked;
- if(!isLife && !isPC){ showToast('Select at least one type', 2000); return; }
-
- // Update existing cases that reference the old name
- var oldName = a.name;
- a.name = name;
- a.email = ($1('#sae_email').value||'').trim();
- a.phone = ($1('#sae_phone').value||'').trim();
- a.types = [];
- if(isLife) a.types.push('life');
- if(isPC) a.types.push('pc');
-
- // Update splitName on any cases that used the old name
- if(oldName !== name){
-  cases.forEach(function(c){
-   if(c.splitName === oldName) c.splitName = name;
-  });
-  saveCases();
- }
-
- saveSettings();
- closeEditModal();
- showToast('✅ Partner updated: ' + name, 2000);
- renderSettings();
-}
-
-function toggleSplitAgent(id){
- var agents = getSplitAgents();
- var a = agents.find(function(x){return x.id===id});
- if(a) a.active = !a.active;
- saveSettings();
- renderSettings();
-}
-
-function deleteSplitAgent(id){
- if(!confirm('Remove this split partner?')) return;
- settings.splitAgents = getSplitAgents().filter(function(a){return a.id!==id});
- saveSettings();
- showToast('Split partner removed', 2000);
- renderSettings();
 }
 
 async function changePin(){
@@ -3141,510 +2516,6 @@ document.addEventListener('paste', function(e){
  }
 });
 
-// ════════════════════════════════════════════
-// DUPLICATE SCANNER
-// ════════════════════════════════════════════
-function findDuplicates(){
- // Group cases by normalized client name; return groups with 2+ cases that aren't already marked dupReviewed
- var groups = {};
- (cases || []).forEach(function(c){
-  if(!c || !c.client) return;
-  var key = normalizeClientName(c.client);
-  if(!key) return;
-  if(!groups[key]) groups[key] = [];
-  groups[key].push(c);
- });
- var dupGroups = [];
- Object.keys(groups).forEach(function(k){
-  if(groups[k].length < 2) return;
-  // Skip groups where all members have been marked dupReviewed:true
-  var allReviewed = groups[k].every(function(c){ return c.dupReviewed === true; });
-  if(allReviewed) return;
-  dupGroups.push({ key: k, name: groups[k][0].client, cases: groups[k] });
- });
- return dupGroups;
-}
-
-function showDuplicateScanner(){
- var groups = findDuplicates();
- var h = '';
- h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">';
- h += '<div style="font-size:18px;font-weight:700;color:var(--pri)">🔎 Duplicate Audit</div>';
- h += '<button class="btn btn-outline btn-sm" onclick="closeDupScanner()">&times; Close</button>';
- h += '</div>';
-
- if(groups.length === 0){
-  h += '<div style="padding:30px;text-align:center;color:var(--muted)">✅ No duplicates found. Your Book of Business is clean.</div>';
- } else {
-  h += '<div style="font-size:11px;color:var(--muted);margin-bottom:12px">Found '+groups.length+' client name'+(groups.length>1?'s':'')+' with 2+ cases. Review each pair and choose to merge or keep both.</div>';
-
-  groups.forEach(function(g){
-   h += '<div style="border:1px solid var(--border);border-radius:6px;padding:12px;margin-bottom:10px">';
-   h += '<div style="font-weight:700;font-size:13px;margin-bottom:8px">'+g.name+' — '+g.cases.length+' cases</div>';
-   h += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">';
-   g.cases.forEach(function(c){
-    h += '<div style="padding:8px;background:var(--bg);border-radius:4px;font-size:11px">';
-    h += '<div style="font-size:10px;color:var(--muted)">ID: '+c.id+'</div>';
-    h += '<div style="font-weight:600">'+(c.product||'?')+'</div>';
-    h += '<div>Premium: '+fmt(c.amount||0)+'</div>';
-    h += '<div>Comm: '+fmt(c.actualCommission||calcCase(c).agentShare||0)+'</div>';
-    h += '<div>Status: '+statusBadge(c.status)+'</div>';
-    if(c.paidIn) h += '<div>Paid In: '+c.paidIn+'</div>';
-    if(c.splitName) h += '<div>Partner: '+c.splitName+'</div>';
-    h += '</div>';
-   });
-   h += '</div>';
-   // Merge controls
-   h += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">';
-   h += '<button class="btn btn-outline btn-sm" onclick="markDupReviewed(\''+g.key+'\')">Keep all (separate cases)</button>';
-   g.cases.forEach(function(c){
-    h += '<button class="btn btn-pri btn-sm" onclick="mergeIntoCase('+c.id+',\''+g.key+'\')">Merge into ID '+c.id+'</button>';
-   });
-   h += '</div>';
-   h += '</div>';
-  });
- }
-
- $1('#dupScannerContent').innerHTML = h;
- $1('#dupScannerModal').className = 'modal-overlay show';
-}
-
-function closeDupScanner(){
- $1('#dupScannerModal').className = 'modal-overlay';
-}
-
-// ════════════════════════════════════════════
-// AUDIT LOG VIEWER
-// ════════════════════════════════════════════
-var _auditFilter = { range: '30', action: '' };
-
-function showAuditLog(){
- var entries = (auditLog || []).slice().sort(function(a,b){ return (b.id||0) - (a.id||0); });
-
- // Apply filters
- var now = Date.now();
- var rangeDays = parseInt(_auditFilter.range, 10) || 0;
- if(rangeDays > 0){
-  var cutoff = now - rangeDays * 24 * 60 * 60 * 1000;
-  entries = entries.filter(function(e){ return new Date(e.timestamp).getTime() >= cutoff; });
- }
- if(_auditFilter.action){
-  entries = entries.filter(function(e){ return e.action === _auditFilter.action; });
- }
-
- var h = '';
- h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
- h += '<div style="font-size:18px;font-weight:700;color:var(--pri)">📜 Audit Log ('+entries.length+')</div>';
- h += '<button class="btn btn-outline btn-sm" onclick="closeAuditLog()">&times; Close</button>';
- h += '</div>';
-
- // Filters
- h += '<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">';
- h += '<select onchange="_auditFilter.range=this.value;showAuditLog()" style="padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--bg);color:var(--txt)">';
- [['7','Last 7 days'],['30','Last 30 days'],['90','Last 90 days'],['0','All time']].forEach(function(o){
-  h += '<option value="'+o[0]+'"'+(_auditFilter.range===o[0]?' selected':'')+'>'+o[1]+'</option>';
- });
- h += '</select>';
- h += '<select onchange="_auditFilter.action=this.value;showAuditLog()" style="padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:var(--bg);color:var(--txt)">';
- [['','All actions'],['merge','Merges'],['delete','Deletions'],['status_change','Status changes'],['import_confirm','Imports']].forEach(function(o){
-  h += '<option value="'+o[0]+'"'+(_auditFilter.action===o[0]?' selected':'')+'>'+o[1]+'</option>';
- });
- h += '</select>';
- h += '</div>';
-
- if(entries.length === 0){
-  h += '<div style="padding:30px;text-align:center;color:var(--muted);font-size:13px">No audit entries match the current filter.</div>';
- } else {
-  entries.forEach(function(e){
-   var d = new Date(e.timestamp);
-   var dateStr = d.toLocaleString();
-   var actColor = e.action === 'merge' ? 'var(--pri)' : e.action === 'delete' ? 'var(--red)' : e.action === 'import_confirm' ? 'var(--grn)' : 'var(--amb)';
-   var actBg = e.action === 'merge' ? 'var(--ptint)' : e.action === 'delete' ? 'var(--rtint)' : e.action === 'import_confirm' ? 'var(--gtint)' : 'var(--atint)';
-   var canUndo = !e.undone && (e.action === 'merge' || e.action === 'delete') && (now - new Date(e.timestamp).getTime() < 7*24*60*60*1000); // 7 day window
-   h += '<div style="border:1px solid var(--border);border-left:3px solid '+actColor+';background:'+actBg+';border-radius:4px;padding:10px 12px;margin-bottom:6px;font-size:12px">';
-   h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">';
-   h += '<div style="flex:1">';
-   h += '<div style="font-size:10px;color:var(--muted)">'+dateStr+' &middot; <b style="color:'+actColor+'">'+(e.action||"").replace(/_/g," ").toUpperCase()+'</b>'+(e.undone ? ' &middot; <span style="color:var(--red)">UNDONE</span>' : '')+'</div>';
-   h += '<div style="margin-top:2px">'+e.summary+'</div>';
-   h += '</div>';
-   h += '<div style="display:flex;gap:4px;flex-shrink:0">';
-   h += '<button class="btn btn-outline btn-sm" onclick="toggleAuditDetail('+e.id+')" style="font-size:10px">Details</button>';
-   if(canUndo) h += '<button class="btn btn-outline btn-sm" onclick="undoAuditEntry('+e.id+')" style="font-size:10px;color:var(--amb)">Undo</button>';
-   h += '</div>';
-   h += '</div>';
-   h += '<div id="audit_detail_'+e.id+'" style="display:none;margin-top:8px;padding:8px;background:var(--card);border-radius:4px;font-family:monospace;font-size:10px;overflow-x:auto;white-space:pre-wrap">'+JSON.stringify({before:e.before, after:e.after}, null, 2)+'</div>';
-   h += '</div>';
-  });
- }
-
- $1('#auditLogContent').innerHTML = h;
- $1('#auditLogModal').className = 'modal-overlay show';
-}
-
-function closeAuditLog(){
- $1('#auditLogModal').className = 'modal-overlay';
-}
-
-function toggleAuditDetail(id){
- var el = $1('#audit_detail_'+id);
- if(el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
-}
-
-function undoAuditEntry(entryId){
- var entry = auditLog.find(function(e){ return e.id === entryId; });
- if(!entry || entry.undone){ showToast('Cannot undo this entry', 2000); return; }
-
- if(entry.action === 'merge'){
-  if(!confirm('Undo merge for "'+(entry.client||'this entry')+'"? This will restore the deleted cases and revert the kept case to its pre-merge state.')) return;
-  // Restore the kept case to its before-merge state
-  if(entry.before && entry.before.keep){
-   var keepIdx = cases.findIndex(function(c){ return c && c.id === entry.before.keep.id; });
-   if(keepIdx !== -1) cases[keepIdx] = JSON.parse(JSON.stringify(entry.before.keep));
-   else cases.push(JSON.parse(JSON.stringify(entry.before.keep))); // fallback if it was deleted somehow
-  }
-  // Re-create the deleted cases
-  if(entry.before && entry.before.removed){
-   entry.before.removed.forEach(function(removedCase){
-    var exists = cases.find(function(c){ return c && c.id === removedCase.id; });
-    if(!exists) cases.push(JSON.parse(JSON.stringify(removedCase)));
-   });
-  }
-  entry.undone = true;
-  saveCases();
-  // Update the audit entry in Firebase
-  try {
-   fetch(FIREBASE_URL + '/' + currentAgent.id + '/auditLog/' + entry.id + '.json', {method:'PATCH', body: JSON.stringify({undone:true})}).catch(function(){});
-  } catch(e){}
-  // Log the undo action
-  logAuditEntry({
-   action: 'undo',
-   targetIds: entry.targetIds || [],
-   summary: 'Undid merge from audit entry #' + entry.id + ' — restored ' + (entry.before.removed||[]).length + ' deleted case(s)',
-   before: null,
-   after: { undidEntryId: entry.id }
-  });
-  showToast('Merge undone — cases restored', 3000);
-  showAuditLog();
-  return;
- }
-
- if(entry.action === 'delete'){
-  if(!confirm('Undo delete for "'+(entry.client||'this case')+'"? This will recreate the case.')) return;
-  if(entry.before && entry.before.case){
-   var existing = cases.find(function(c){ return c && c.id === entry.before.case.id; });
-   if(existing){ showToast('Case ID '+entry.before.case.id+' already exists', 2500); return; }
-   cases.push(JSON.parse(JSON.stringify(entry.before.case)));
-   entry.undone = true;
-   saveCases();
-   try {
-    fetch(FIREBASE_URL + '/' + currentAgent.id + '/auditLog/' + entry.id + '.json', {method:'PATCH', body: JSON.stringify({undone:true})}).catch(function(){});
-   } catch(e){}
-   logAuditEntry({
-    action: 'undo',
-    targetIds: [entry.before.case.id],
-    summary: 'Undid delete from audit entry #' + entry.id + ' — restored case ID ' + entry.before.case.id,
-    before: null,
-    after: { undidEntryId: entry.id }
-   });
-   showToast('Case restored', 3000);
-   showAuditLog();
-   return;
-  }
- }
-
- showToast('Undo not supported for this action type', 2500);
-}
-
-function markDupReviewed(groupKey){
- var n = 0;
- cases.forEach(function(c){
-  if(c && normalizeClientName(c.client) === groupKey){
-   c.dupReviewed = true;
-   n++;
-  }
- });
- if(n > 0) saveCases();
- showToast('Marked '+n+' cases as separate (not duplicates)', 2500);
- showDuplicateScanner();
-}
-
-function mergeIntoCase(keepId, groupKey){
- var keep = cases.find(function(c){ return c && c.id === keepId; });
- if(!keep) return;
- if(!confirm('Merge other "'+keep.client+'" cases into ID '+keepId+'? This will delete the other cases.')) return;
-
- var others = cases.filter(function(c){
-  return c && normalizeClientName(c.client) === groupKey && c.id !== keepId;
- });
-
- // Snapshot for audit log (full deep copy of all cases involved BEFORE merge)
- var auditBeforeKeep = JSON.parse(JSON.stringify(keep));
- var auditBeforeOthers = JSON.parse(JSON.stringify(others));
-
- // Pick the most "advanced" status: prefer paid > paid-partial > issued > approved > submitted > pending
- function statusRank(s){
-  if(s === 'paid') return 100;
-  if(s === 'paid-partial') return 95;
-  if(s === 'declined') return 90; // terminal but no commission
-  if(s === 'issued') return 80;
-  if(s === 'approved') return 70;
-  if(s === 'submitted') return 60;
-  return 50;
- }
- var allCases = [keep].concat(others);
- var bestStatus = allCases.reduce(function(best, c){
-  return statusRank(c.status) > statusRank(best.status) ? c : best;
- }, keep);
-
- // Pull paid data from the most-advanced case
- if(bestStatus.id !== keep.id || statusRank(bestStatus.status) > statusRank(keep.status)){
-  // BEFORE overwriting, capture expected values from the kept case (the original estimate)
-  var expectedAmtPre = keep.amount || 0;
-  var expectedCommPre = (calcCase(keep).agentShare) || 0;
-
-  if(bestStatus.actualCommission !== undefined) keep.actualCommission = bestStatus.actualCommission;
-  if(bestStatus.productionCredit !== undefined) keep.productionCredit = bestStatus.productionCredit;
-  if(bestStatus.paidIn) keep.paidIn = bestStatus.paidIn;
-  if(bestStatus.paidDate) keep.paidDate = bestStatus.paidDate;
-  if(bestStatus.rate && !keep.rate) keep.rate = bestStatus.rate;
-
-  // Variance detection: if the merged paid case has a different premium than the kept case,
-  // record expected values and offer to mark as paid-partial
-  var paidAmt = (bestStatus.amount || 0);
-  var actualComm = (bestStatus.actualCommission || 0);
-  var amtDiffer = expectedAmtPre > 0 && paidAmt > 0 && Math.abs(expectedAmtPre - paidAmt) > 0.5;
-  var commDiffer = expectedCommPre > 0 && actualComm > 0 && Math.abs(expectedCommPre - actualComm) > 0.5;
-
-  if(amtDiffer || commDiffer){
-   keep.expectedAmount = expectedAmtPre;
-   keep.expectedCommission = expectedCommPre;
-   keep.paidVariance = actualComm - expectedCommPre;
-   // Default behavior: keep the kept case's original amount (so the variance is visible)
-   // and mark as paid-partial. Ask user to confirm.
-   var summary = 'Variance detected:\\n'
-    + 'Original amount: $' + expectedAmtPre.toFixed(2) + '\\n'
-    + 'Paid amount: $' + paidAmt.toFixed(2) + '\\n'
-    + 'Expected commission: $' + expectedCommPre.toFixed(2) + '\\n'
-    + 'Actual paid: $' + actualComm.toFixed(2) + '\\n'
-    + 'Variance: $' + (actualComm - expectedCommPre).toFixed(2) + '\\n\\n'
-    + 'Mark as Paid (Partial) and keep original amount as the expected estimate?';
-   if(confirm(summary)){
-    keep.status = 'paid-partial';
-    // amount stays at expectedAmtPre (original estimate)
-   } else {
-    // User declined — fall back to standard merge behavior
-    if(statusRank(bestStatus.status) > statusRank(keep.status)) keep.status = bestStatus.status;
-    if(!keep.amount && bestStatus.amount) keep.amount = bestStatus.amount;
-   }
-  } else {
-   // No meaningful variance — just mark with the best status
-   if(statusRank(bestStatus.status) > statusRank(keep.status)) keep.status = bestStatus.status;
-   if(!keep.amount && bestStatus.amount) keep.amount = bestStatus.amount;
-  }
- }
-
- // Fill in any missing fields from others (splitName, etc.)
- others.forEach(function(o){
-  if(!keep.splitName && o.splitName) keep.splitName = o.splitName;
-  if(!keep.splitEmail && o.splitEmail) keep.splitEmail = o.splitEmail;
-  if(!keep.phone && o.phone) keep.phone = o.phone;
-  if(!keep.policyType && o.policyType) keep.policyType = o.policyType;
- });
-
- keep.notes = (keep.notes || '') + ' | Merged from IDs: ' + others.map(function(o){return o.id;}).join(', ');
- keep.updated = new Date().toISOString();
-
- // Remove the other cases
- var removeIds = others.map(function(o){return o.id;});
- cases = cases.filter(function(c){ return !c || removeIds.indexOf(c.id) === -1; });
-
- saveCases();
-
- // Audit log entry
- var summaryText = 'Merged ' + others.length + ' case' + (others.length>1?'s':'') + ' for "' + keep.client + '" into ID ' + keepId
-  + ' (status: ' + keep.status + (keep.paidVariance ? ', variance: $' + keep.paidVariance.toFixed(2) : '') + ')';
- logAuditEntry({
-  action: 'merge',
-  targetIds: [keepId].concat(others.map(function(o){return o.id;})),
-  keptId: keepId,
-  client: keep.client,
-  summary: summaryText,
-  before: { keep: auditBeforeKeep, removed: auditBeforeOthers },
-  after: { keep: JSON.parse(JSON.stringify(keep)) }
- });
-
- showToast('Merged '+others.length+' case'+(others.length>1?'s':'')+' into ID '+keepId, 3000);
- showDuplicateScanner();
-}
-
-// ════════════════════════════════════════════
-// IMPORT PREVIEW & CONFIRM
-// ════════════════════════════════════════════
-var _pendingPreviewActions = null;
-
-function showImportPreview(actions){
- _pendingPreviewActions = actions;
- var h = '';
- h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">';
- h += '<div style="font-size:18px;font-weight:700;color:var(--pri)">Review Varicent Import (' + actions.length + ' cases)</div>';
- h += '<button class="btn btn-outline btn-sm" onclick="cancelImportPreview()">&times; Cancel</button>';
- h += '</div>';
- h += '<div style="font-size:11px;color:var(--muted);margin-bottom:12px">Review each case below. Auto-matches are pre-selected (green). Possible matches needing review are amber. New cases will be added fresh.</div>';
-
- actions.forEach(function(a, idx){
-  var vc = a.varicentCase;
-  var tier = a.tier;
-  var bg = tier === 'A' ? 'var(--gtint)' : tier === 'B' ? 'var(--ptint)' : tier === 'C' ? 'var(--atint)' : 'var(--card)';
-  var borderColor = tier === 'A' ? 'var(--grn)' : tier === 'B' ? 'var(--pri)' : tier === 'C' ? 'var(--amb)' : 'var(--border)';
-  var icon = tier === 'A' ? '✓' : tier === 'B' ? '✓' : tier === 'C' ? '⚠' : '+';
-  var label = tier === 'A' ? 'Auto-match' : tier === 'B' ? 'Match (variance)' : tier === 'C' ? 'Possible match — REVIEW' : 'New case';
-
-  h += '<div style="border:2px solid '+borderColor+';background:'+bg+';border-radius:6px;padding:10px 12px;margin-bottom:8px">';
-  h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
-  h += '<div style="font-size:11px;font-weight:700">'+icon+' '+label+'</div>';
-  h += '<div style="font-size:10px;color:var(--muted)">'+a.section+' &middot; '+(a.vMeta.period_label||'')+'</div>';
-  h += '</div>';
-
-  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px">';
-  // Varicent side
-  h += '<div style="padding:8px;background:var(--card);border-radius:4px">';
-  h += '<div style="font-weight:600;color:var(--pri);margin-bottom:4px">From Varicent</div>';
-  h += '<div><b>'+(vc.client||'(no name)')+'</b></div>';
-  h += '<div style="font-size:11px;color:var(--muted)">'+(vc.product||'')+' '+(vc.plan_code||'')+'</div>';
-  h += '<div style="font-size:11px">Premium: '+fmt(vc.paid_premium||0)+' &middot; Commission: <b>'+fmt(vc.commission||0)+'</b></div>';
-  h += '</div>';
-
-  // Existing case side
-  h += '<div style="padding:8px;background:var(--card);border-radius:4px">';
-  if(a.candidate){
-   var c = a.candidate;
-   h += '<div style="font-weight:600;color:var(--pri);margin-bottom:4px">Existing Pipeline Case (ID '+c.id+')</div>';
-   h += '<div><b>'+c.client+'</b></div>';
-   h += '<div style="font-size:11px;color:var(--muted)">'+c.product+' &middot; '+c.status+'</div>';
-   h += '<div style="font-size:11px">Premium: '+fmt(c.amount||0)+' &middot; Est: '+fmt(calcCase(c).agentShare||0)+'</div>';
-   if(Math.abs(a.varianceAmt) > 0.5){
-    var vSign = a.varianceAmt < 0 ? '−' : '+';
-    h += '<div style="font-size:11px;color:var(--amb);font-weight:600">Variance: '+vSign+fmt(Math.abs(a.varianceAmt))+'</div>';
-   }
-  } else {
-   h += '<div style="font-size:11px;color:var(--muted)">No matching pipeline case found</div>';
-  }
-  h += '</div>';
-  h += '</div>';
-
-  // Action controls
-  h += '<div style="display:flex;gap:10px;align-items:center;margin-top:8px;font-size:12px">';
-  h += '<label style="display:flex;align-items:center;gap:4px"><input type="radio" name="imp_act_'+idx+'" value="match" '+(a.chosenAction==='match'?'checked':'')+(a.candidate?'':' disabled')+' onchange="_pendingPreviewActions['+idx+'].chosenAction=this.value"> Match</label>';
-  h += '<label style="display:flex;align-items:center;gap:4px"><input type="radio" name="imp_act_'+idx+'" value="new" '+(a.chosenAction==='new'?'checked':'')+' onchange="_pendingPreviewActions['+idx+'].chosenAction=this.value"> Create new</label>';
-  h += '<label style="display:flex;align-items:center;gap:4px"><input type="radio" name="imp_act_'+idx+'" value="skip" '+(a.chosenAction==='skip'?'checked':'')+' onchange="_pendingPreviewActions['+idx+'].chosenAction=this.value"> Skip</label>';
-  if(a.candidate && Math.abs(a.varianceAmt) > 0.5){
-   h += '<label style="display:flex;align-items:center;gap:4px;margin-left:auto"><input type="checkbox" '+(a.markPartial?'checked':'')+' onchange="_pendingPreviewActions['+idx+'].markPartial=this.checked"> Mark as Paid (Partial)</label>';
-  }
-  h += '</div>';
-  h += '</div>';
- });
-
- h += '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">';
- h += '<button class="btn btn-outline" onclick="cancelImportPreview()">Cancel</button>';
- h += '<button class="btn btn-pri" onclick="confirmImport()">Confirm Import ('+actions.length+' cases)</button>';
- h += '</div>';
-
- $1('#importPreviewContent').innerHTML = h;
- $1('#importPreviewModal').className = 'modal-overlay show';
-}
-
-function cancelImportPreview(){
- $1('#importPreviewModal').className = 'modal-overlay';
- _pendingPreviewActions = null;
- // Pay periods were already saved; just finalize with no case changes
- finishImport(0, 0);
-}
-
-function confirmImport(){
- var actions = _pendingPreviewActions || [];
- var newCount = 0, updatedCount = 0;
- var skippedCount = 0;
- var matchedDetails = []; // for audit log
- var ctx = window._importContext || {};
- var getCaseDate = ctx.getCaseDate || function(m,p){ return {submitted: toYMD(new Date()), year: new Date().getFullYear()}; };
-
- actions.forEach(function(a){
-  var vc = a.varicentCase;
-  var v = a.vMeta;
-  if(a.chosenAction === 'skip'){ skippedCount++; return; }
-
-  if(a.chosenAction === 'match' && a.candidate){
-   var c = a.candidate;
-   var beforeSnap = JSON.parse(JSON.stringify(c));
-   // Compute expected commission BEFORE we overwrite case fields
-   var expected = calcCase(c).agentShare || 0;
-   c.expectedCommission = expected;
-   c.expectedAmount = c.amount;
-   c.paidVariance = (vc.commission || 0) - expected;
-   c.actualCommission = vc.commission || 0;
-   c.productionCredit = vc.production_credit || 0;
-   if(vc.paid_premium) c.amount = vc.paid_premium;
-   if(vc.mma_rate || vc.commission_rate) c.rate = vc.mma_rate || vc.commission_rate;
-   if(vc.is_split && (!c.split || c.split === 'full')) c.split = 'pc';
-   c.status = a.markPartial ? 'paid-partial' : 'paid';
-   c.paidDate = toYMD(new Date());
-   c.paidIn = v.period_label || '';
-   c.notes = (c.notes || '') + ' | Matched from Varicent ' + (v._filename||'');
-   c.updated = new Date().toISOString();
-   matchedDetails.push({ caseId: c.id, client: c.client, before: beforeSnap });
-   updatedCount++;
-   return;
-  }
-
-  // Create new case
-  var prodLabel = vc.product || 'Unknown Product';
-  if(vc.plan_code) prodLabel += ' (' + vc.plan_code + ')';
-  var dateInfo = getCaseDate(v.month, v.period_label);
-  cases.push({
-   id: nextCaseId++,
-   client: (vc.client || '').trim(),
-   phone: '',
-   product: prodLabel,
-   policyType: vc.policy_type || 'New',
-   section: a.section,
-   amount: vc.paid_premium || vc.production_credit || 0,
-   rate: vc.mma_rate || vc.commission_rate || 0,
-   actualCommission: vc.commission || 0,
-   productionCredit: vc.production_credit || 0,
-   split: vc.is_split ? 'pc' : 'full',
-   splitName: '', splitEmail: '',
-   status: 'paid',
-   submitted: dateInfo.submitted,
-   estPay: '',
-   paidDate: toYMD(new Date()),
-   paidIn: v.period_label || '',
-   notes: (vc.policy_type || 'New') + ' | ' + a.section + ' | Paid Premium: $'+(vc.paid_premium||0).toFixed(2)+' | Prod Credit: $'+(vc.production_credit||0).toFixed(2),
-   year: dateInfo.year,
-   created: new Date().toISOString()
-  });
-  newCount++;
- });
-
- if(newCount > 0 || updatedCount > 0) saveCases();
-
- // Audit log entry — Varicent import summary
- if(actions.length > 0){
-  var periodLabel = (actions[0] && actions[0].vMeta && actions[0].vMeta.period_label) || 'Unknown period';
-  logAuditEntry({
-   action: 'import_confirm',
-   targetIds: matchedDetails.map(function(m){return m.caseId;}),
-   periodLabel: periodLabel,
-   summary: 'Varicent import (' + periodLabel + '): ' + updatedCount + ' matched, ' + newCount + ' new, ' + skippedCount + ' skipped',
-   before: { matchedDetails: matchedDetails }, // for potential undo of matched changes
-   after: { newCount: newCount, updatedCount: updatedCount, skippedCount: skippedCount }
-  });
- }
-
- $1('#importPreviewModal').className = 'modal-overlay';
- _pendingPreviewActions = null;
- finishImport(newCount, updatedCount);
-}
-
 async function processUploads(){
  var apiKey = getApiKey();
  if(!apiKey){
@@ -3730,10 +2601,6 @@ async function processUploads(){
 
  var totalNewCases = 0, totalUpdatedCases = 0, periodsCreated = 0, duplicatesSkipped = 0;
 
- // Collect proposed case actions (from Varicent imports) for the preview modal
- // Each action: { varicentCase, vMeta:{period_label,month,_filename}, candidate, tier, varianceAmt, expectedCommission, section, chosenAction:'match'|'new'|'skip', markPartial:bool }
- var pendingImportActions = [];
-
  // Auto-save each pay period
  // Try to pair Varicent + Workday by period label first, then month, otherwise create separate entries
  var usedWorkdays = {};
@@ -3804,28 +2671,62 @@ async function processUploads(){
   payPeriods.push(pe);
   periodsCreated++;
 
-  // Collect Varicent cases as proposed actions (for preview modal)
-  function collectImportActions(caseList, section){
+  // Process cases from Section 4 (3MMA Transaction Details) into Book of Business
+  function importCaseList(caseList, section){
    if(!caseList || caseList.length === 0) return;
    caseList.forEach(function(pc){
     if(!pc.client) return;
-    var match = findCaseMatchCandidates(pc);
-    var defaultAction = (match.tier === 'A' || match.tier === 'B' || match.tier === 'C') ? 'match' : 'new';
-    var defaultPartial = (match.tier === 'B' || match.tier === 'C') && Math.abs(match.varianceAmt) > 0.5;
-    pendingImportActions.push({
-     varicentCase: pc,
-     vMeta: { period_label: v.period_label, month: v.month, _filename: v._filename },
-     candidate: match.candidate,
-     tier: match.tier,
-     varianceAmt: match.varianceAmt,
-     section: section,
-     chosenAction: defaultAction,
-     markPartial: defaultPartial
+    // Match by client + plan_code + paid_premium to allow same client with multiple policies
+    var pcAmt = Math.round((pc.paid_premium||0)*100);
+    var existing = cases.find(function(c){
+     return c.client.toLowerCase().trim() === pc.client.toLowerCase().trim()
+      && c.product && c.product.indexOf(pc.plan_code||'NOMATCH') !== -1
+      && Math.round((c.amount||0)*100) === pcAmt;
     });
+    if(existing){
+     if(existing.status !== 'paid'){
+      existing.status = 'paid';
+      existing.paidDate = toYMD(new Date());
+      existing.paidIn = v.period_label || '';
+      if(pc.commission) existing.actualCommission = pc.commission;
+      if(pc.production_credit) existing.productionCredit = pc.production_credit;
+      if(pc.paid_premium) existing.amount = pc.paid_premium;
+      if(pc.mma_rate || pc.commission_rate) existing.rate = pc.mma_rate || pc.commission_rate;
+      if(pc.is_split) existing.split = 'split';
+      totalUpdatedCases++;
+     }
+    } else {
+     var prodLabel = pc.product || 'Unknown Product';
+     if(pc.plan_code) prodLabel += ' (' + pc.plan_code + ')';
+     var policyType = pc.policy_type || 'New';
+     cases.push({
+      id: nextCaseId++,
+      client: pc.client.trim(),
+      phone: '',
+      product: prodLabel,
+      policyType: policyType,
+      section: section,
+      amount: pc.paid_premium || pc.production_credit || 0,
+      rate: pc.mma_rate || pc.commission_rate || 0,
+      actualCommission: pc.commission || 0,
+      productionCredit: pc.production_credit || 0,
+      split: pc.is_split ? 'split' : 'full',
+      splitName: '', splitEmail: '',
+      status: 'paid',
+      submitted: getCaseDate(v.month, v.period_label).submitted,
+      estPay: '',
+      paidDate: toYMD(new Date()),
+      paidIn: v.period_label || '',
+      notes: policyType + ' | ' + section + ' | Paid Premium: $'+(pc.paid_premium||0).toFixed(2)+' | Prod Credit: $'+(pc.production_credit||0).toFixed(2),
+      year: getCaseDate(v.month, v.period_label).year,
+      created: new Date().toISOString()
+     });
+     totalNewCases++;
+    }
    });
   }
-  collectImportActions(v.cases, '3MMA');
-  collectImportActions(v.flat_cases, 'Flat/CD');
+  importCaseList(v.cases, '3MMA');
+  importCaseList(v.flat_cases, 'Flat/CD');
 
  });
 
@@ -3935,53 +2836,31 @@ async function processUploads(){
   periodsCreated++;
  });
 
- // Save pay periods immediately (no preview needed for those)
+ // Save everything
  if(periodsCreated > 0) savePayPeriods();
-
- // Stash import metadata for the confirmImport handler
- window._importContext = {
-  errors: errors,
-  duplicatesSkipped: duplicatesSkipped,
-  periodsCreated: periodsCreated,
-  statusEl: statusEl,
-  getCaseDate: getCaseDate
- };
-
- // Clear file uploads UI now (preview modal will run independently)
- uploadedFiles = [];
- if($1('#upload_previews')) $1('#upload_previews').innerHTML = '';
-
- if(pendingImportActions.length > 0){
-  showImportPreview(pendingImportActions);
-  return;
- }
-
- // No cases to review — just show summary for pay periods
- finishImport(0, 0);
-}
-
-function finishImport(newCount, updatedCount){
- var ctx = window._importContext || {};
+ if(totalNewCases > 0 || totalUpdatedCases > 0) saveCases();
 
  // Build summary message
  var msg = [];
- if(ctx.periodsCreated > 0) msg.push(ctx.periodsCreated + ' pay period'+(ctx.periodsCreated>1?'s':'')+' created');
- if(newCount > 0) msg.push(newCount + ' new case'+(newCount>1?'s':'')+' added to Book of Business');
- if(updatedCount > 0) msg.push(updatedCount + ' case'+(updatedCount>1?'s':'')+' marked as Paid');
- if(ctx.duplicatesSkipped > 0) msg.push(ctx.duplicatesSkipped + ' duplicate'+(ctx.duplicatesSkipped>1?'s':'')+' skipped (already imported)');
- if(ctx.errors && ctx.errors.length > 0) msg.push(ctx.errors.length + ' file'+(ctx.errors.length>1?'s':'')+' had errors');
+ if(periodsCreated > 0) msg.push(periodsCreated + ' pay period'+(periodsCreated>1?'s':'')+' created');
+ if(totalNewCases > 0) msg.push(totalNewCases + ' new case'+(totalNewCases>1?'s':'')+' added to Book of Business');
+ if(totalUpdatedCases > 0) msg.push(totalUpdatedCases + ' case'+(totalUpdatedCases>1?'s':'')+' marked as Paid');
+ if(duplicatesSkipped > 0) msg.push(duplicatesSkipped + ' duplicate'+(duplicatesSkipped>1?'s':'')+' skipped (already imported)');
+ if(errors.length > 0) msg.push(errors.length + ' file'+(errors.length>1?'s':'')+' had errors');
 
- var summaryIcon = msg.length === 0 ? '\u26A0\uFE0F' : '\u2705';
- var summaryBg = msg.length === 0 ? 'var(--atint,#fff8e1)' : 'var(--gtint)';
- var summaryColor = msg.length === 0 ? 'var(--amb)' : 'var(--grn)';
+ var summaryIcon = duplicatesSkipped > 0 && periodsCreated === 0 && totalNewCases === 0 ? '\u26A0\uFE0F' : '\u2705';
+ var summaryBg = duplicatesSkipped > 0 && periodsCreated === 0 && totalNewCases === 0 ? 'var(--atint,#fff8e1)' : 'var(--gtint)';
+ var summaryColor = duplicatesSkipped > 0 && periodsCreated === 0 && totalNewCases === 0 ? 'var(--amb)' : 'var(--grn)';
  var summaryHtml = '<div style="padding:12px;background:'+summaryBg+';border-radius:6px;color:'+summaryColor+';font-size:12px;font-weight:600">'+summaryIcon+' ' + (msg.length > 0 ? msg.join(' \u2022 ') : 'No new data to import') + '</div>';
- if(ctx.errors && ctx.errors.length > 0){
-  summaryHtml += '<div style="padding:8px;background:var(--rtint);border-radius:6px;color:var(--red);font-size:11px;margin-top:6px">Errors: ' + ctx.errors.join(', ') + '</div>';
+ if(errors.length > 0){
+  summaryHtml += '<div style="padding:8px;background:var(--rtint);border-radius:6px;color:var(--red);font-size:11px;margin-top:6px">Errors: ' + errors.join(', ') + '</div>';
  }
- if(ctx.statusEl) ctx.statusEl.innerHTML = summaryHtml;
- if(msg.length > 0) showToast(msg.join('. '), 5000);
+ statusEl.innerHTML = summaryHtml;
+ showToast(msg.join('. '), 5000);
 
- // Re-render
+ // Clear uploads and re-render
+ uploadedFiles = [];
+ $1('#upload_previews').innerHTML = '';
  payFormOpen = false;
  renderPayPeriods();
  renderBookOfBusiness();
@@ -4488,9 +3367,6 @@ document.addEventListener('click', function(e){
  if(e.target.id === 'fbReviewModal') closeFbReview();
  if(e.target.id === 'onboardModal') dismissOnboarding();
  if(e.target.id === 'fbModal') closeFeedbackModal();
- if(e.target.id === 'importPreviewModal') cancelImportPreview();
- if(e.target.id === 'dupScannerModal') closeDupScanner();
- if(e.target.id === 'auditLogModal') closeAuditLog();
 });
 
 // Enter key on login

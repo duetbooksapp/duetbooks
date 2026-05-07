@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "duetbooks",
+      "runtimeExecutable": "ruby",
+      "runtimeArgs": ["-run", "-ehttpd", "/tmp/duetbooks"],
+      "port": 8099
+    }
+  ]
+}
