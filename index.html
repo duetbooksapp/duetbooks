@@ -2712,6 +2712,13 @@ function renderRateTable(){
 function renderSettings(){
  var h = '<h2 style="margin-bottom:16px;color:var(--amb)">Settings</h2>';
 
+ // Subscription / Monthly Fee (top of Settings)
+ h += '<div class="card" style="border:1px solid var(--pri);background:var(--ptint)">';
+ h += '<h3 style="color:var(--pri)">💳 Monthly Fee</h3>';
+ h += '<div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">If DuetBooks brings real value to your book of business, <b>$19/month</b> is a no-brainer. Your subscription keeps it running, supported, and always improving. Thank you! 🙏</div>';
+ h += '<a class="btn btn-pri" href="'+SUBSCRIBE_URL+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">Subscribe — $19/month</a>';
+ h += '</div>';
+
  h += '<div class="card">';
  h += '<h3>Agent Info</h3>';
  h += '<div class="form-row">';
@@ -2851,13 +2858,6 @@ function renderSettings(){
  h += '<h3 style="color:var(--red)">Reset Data</h3>';
  h += '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">This will permanently delete all your cases and pay periods. Your account and settings will be kept.</div>';
  h += '<button class="btn btn-red" onclick="resetAllData()">Reset All Data</button>';
- h += '</div>';
-
- // Subscription / Monthly Fee
- h += '<div class="card" style="border:1px solid var(--pri);background:var(--ptint)">';
- h += '<h3 style="color:var(--pri)">💳 Monthly Fee</h3>';
- h += '<div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">If DuetBooks brings real value to your book of business, <b>$19/month</b> is a no-brainer. Your subscription keeps it running, supported, and always improving. Thank you! 🙏</div>';
- h += '<a class="btn btn-pri" href="'+SUBSCRIBE_URL+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">Subscribe — $19/month</a>';
  h += '</div>';
 
  // Admin: Chat Logs
