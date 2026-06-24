@@ -265,7 +265,7 @@ tr:hover td{background:#FAFAFA}
 @media(max-width:768px){.fb-fab{bottom:70px}}
 
 /* ── Version ── */
-.version{text-align:center;font-size:10px;color:var(--muted);padding:20px;opacity:.5}
+.version{position:fixed;bottom:0;left:0;right:0;text-align:center;font-size:10px;color:var(--muted);padding:8px;opacity:.6;pointer-events:none;z-index:1}
 
 /* ── Responsive ── */
 .bob-exp{font-size:10px;color:var(--amb);line-height:1.2;opacity:.85}
@@ -449,8 +449,8 @@ tr:hover td{background:#FAFAFA}
 // DUET BOOKS — Standalone Compensation Tracker
 // ════════════════════════════════════════════
 
-var APP_VERSION = 'v1.3.0';
-var APP_BUILD_DATE = '2026-05-07';
+var APP_VERSION = 'v1.4.0';
+var APP_BUILD_DATE = '2026-06-24';
 var FIREBASE_URL = 'https://duet-crm-default-rtdb.firebaseio.com/duetbooks';
 
 // ── State ──
@@ -1046,7 +1046,7 @@ function doLogout(){
  currentAgent = null;
  $1('#appShell').style.display = 'none';
  $1('#loginScreen').style.display = 'flex';
- $1('#versionLine').style.display = 'none';
+ $1('#versionLine').style.display = 'block';
 }
 
 function enterApp(){
@@ -4894,6 +4894,10 @@ function dismissOnboarding(){
 // INITIALIZATION
 // ════════════════════════════════════════════
 (async function init(){
+ // Always show the version line, including on the login screen
+ $1('#versionLine').textContent = 'DuetBooks ' + APP_VERSION + ' | Built ' + APP_BUILD_DATE;
+ $1('#versionLine').style.display = 'block';
+
  // Check for existing session
  var stored = sessionStorage.getItem('db_agent');
  if(stored){
