@@ -451,6 +451,8 @@ tr:hover td{background:#FAFAFA}
 
 var APP_VERSION = 'v1.4.0';
 var APP_BUILD_DATE = '2026-06-24';
+// ── Subscription link ──  $19/month Stripe recurring Payment Link
+var SUBSCRIBE_URL = 'https://buy.stripe.com/00wdR9aIGct1e2ccv55ZC01';
 var FIREBASE_URL = 'https://duet-crm-default-rtdb.firebaseio.com/duetbooks';
 
 // ── State ──
@@ -1049,12 +1051,20 @@ function doLogout(){
  $1('#versionLine').style.display = 'block';
 }
 
+// Footer line: version + a subtle, clickable "Support" link.
+// The .version bar has pointer-events:none so it never blocks clicks behind it;
+// the link re-enables pointer-events on itself only.
+function versionLineHTML(){
+ return 'DuetBooks ' + APP_VERSION + ' | Built ' + APP_BUILD_DATE +
+  ' · <a href="' + SUBSCRIBE_URL + '" target="_blank" rel="noopener" style="color:inherit;pointer-events:auto;text-decoration:none;border-bottom:1px dotted currentColor">💳 Monthly Fee — $19/mo</a>';
+}
+
 function enterApp(){
  $1('#loginScreen').style.display = 'none';
  $1('#appShell').style.display = 'block';
  $1('#topAgentInfo').textContent = currentAgent.name + ' | ' + currentAgent.branch;
  $1('#versionLine').style.display = 'block';
- $1('#versionLine').textContent = 'DuetBooks ' + APP_VERSION + ' | Built ' + APP_BUILD_DATE;
+ $1('#versionLine').innerHTML = versionLineHTML();
  // Set dark mode button icon
  var dmBtn = $1('#darkModeBtn');
  if(dmBtn) dmBtn.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
@@ -2841,6 +2851,13 @@ function renderSettings(){
  h += '<h3 style="color:var(--red)">Reset Data</h3>';
  h += '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">This will permanently delete all your cases and pay periods. Your account and settings will be kept.</div>';
  h += '<button class="btn btn-red" onclick="resetAllData()">Reset All Data</button>';
+ h += '</div>';
+
+ // Subscription / Monthly Fee
+ h += '<div class="card" style="border:1px solid var(--pri);background:var(--ptint)">';
+ h += '<h3 style="color:var(--pri)">💳 Monthly Fee</h3>';
+ h += '<div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">If DuetBooks brings real value to your book of business, <b>$19/month</b> is a no-brainer. Your subscription keeps it running, supported, and always improving. Thank you! 🙏</div>';
+ h += '<a class="btn btn-pri" href="'+SUBSCRIBE_URL+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">Subscribe — $19/month</a>';
  h += '</div>';
 
  // Admin: Chat Logs
@@ -4895,7 +4912,7 @@ function dismissOnboarding(){
 // ════════════════════════════════════════════
 (async function init(){
  // Always show the version line, including on the login screen
- $1('#versionLine').textContent = 'DuetBooks ' + APP_VERSION + ' | Built ' + APP_BUILD_DATE;
+ $1('#versionLine').innerHTML = versionLineHTML();
  $1('#versionLine').style.display = 'block';
 
  // Check for existing session
