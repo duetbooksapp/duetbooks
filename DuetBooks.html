@@ -3832,7 +3832,7 @@ async function processUploads(){
     },
     body: JSON.stringify({
      model: 'claude-sonnet-4-6',
-     max_tokens: 4096,
+     max_tokens: 8192,
      messages: [{role:'user', content:content}]
     })
    });
@@ -3892,11 +3892,17 @@ async function processUploads(){
    if(vMonth && p.month && p.month.toLowerCase().trim() === vMonth && Math.round((p.varicent||0)*100) === vComm && vComm > 0) return true;
    return false;
   });
-  if(dupPeriod){
+  // Only a TRUE duplicate if this period's per-policy cases are ALSO already in
+  // the Book of Business. A period summary (varicent total) can exist while its
+  // per-policy cases were never applied (e.g. the verify step was closed) — in
+  // that case we must still import the cases.
+  var casesAlreadyImported = v.period_label && cases.some(function(c){ return c.paidIn === v.period_label; });
+  if(dupPeriod && casesAlreadyImported){
    duplicatesSkipped++;
    return;
   }
 
+  if(!dupPeriod){
   // Find matching workday — prefer full period_label match, then fall back to month
   var matchedW = null;
   // Pass 1: match by period_label (e.g. "Feb P2" === "Feb P2")
@@ -3947,6 +3953,7 @@ async function processUploads(){
   };
   payPeriods.push(pe);
   periodsCreated++;
+  } // end if(!dupPeriod) — don't recreate a period that already exists; still import its cases below
 
   // Collect Varicent cases as proposed actions (for preview modal)
   function collectImportActions(caseList, section){
