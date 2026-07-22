@@ -449,7 +449,7 @@ tr:hover td{background:#FAFAFA}
 // DUET BOOKS — Standalone Compensation Tracker
 // ════════════════════════════════════════════
 
-var APP_VERSION = 'v1.4.1';
+var APP_VERSION = 'v1.4.2';
 var APP_BUILD_DATE = '2026-06-29';
 // ── Subscription link ──  $19/month Stripe recurring Payment Link
 var SUBSCRIBE_URL = 'https://buy.stripe.com/00wdR9aIGct1e2ccv55ZC01';
@@ -581,6 +581,62 @@ function findProdByPlanCode(planCode){
   // codes is a comma-separated string like "G22AR, G22ARN" or "W21GN, RWL21, TAR20E"
   return p.codes.toUpperCase().split(/[,\s]+/).indexOf(pc) !== -1;
  }) || null;
+}
+
+// Resolve a case's product CATEGORY robustly, so it can be STORED on the record
+// (not re-derived at read-time, which mis-files every imported case as Whole Life).
+// Priority: explicit plan code → plan code parsed from a "Name (CODE)" label → exact
+// product-name match. Returns '' (Uncategorized) when nothing resolves — deliberately
+// blank rather than silently falling through to products[0].
+function resolveCaseCat(o){
+ if(!o) return '';
+ var pc = o.planCode || o.plan_code || '';
+ if(!pc && o.product){
+  var m = String(o.product).match(/\(([^)]+)\)\s*$/); // trailing "(PL5NQ)"
+  if(m) pc = m[1];
+ }
+ if(pc){
+  var byCode = findProdByPlanCode(pc);
+  if(byCode) return byCode.cat || '';
+ }
+ if(o.product){
+  var byName = products.find(function(p){ return p.name === o.product; });
+  if(byName) return byName.cat || '';
+ }
+ // Last-resort keyword fallback on the product name — only reached when both exact
+ // plan-code and exact name matching fail. Handles legacy plan-code years (30T24 vs
+ // 30T26), carrier prefixes ("MM American Legend..."), and age-band-in-parens labels.
+ // Never overrides a precise match above, so it stays conservative.
+ var n = String(o.product || '').toLowerCase();
+ if(n){
+  if(/annuity|legend|landmark|safe\s*return|platinum|\belite\b|\bgia\b/.test(n)) return 'Annuities';
+  if(/\biul\b|accumulator|lifetime|universal\s*life/.test(n)) return 'IUL / Universal Life';
+  if(/\bterm\b|whole\s*life|\bgiwl\b|paid\s*up/.test(n)) return 'Life (Whole / Term)';
+  if(/certificate of deposit|\bcd\b|credit\s*card|membership/.test(n)) return 'Banking / CD / Other';
+ }
+ return '';
+}
+
+// One-shot migration: stamp `cat` (product category) onto legacy cases that lack it.
+// Idempotent — only touches cases where cat is missing. Enables trailing-90 avg
+// commission BY PRODUCT for the DuetCRM Production Calculator, and fixes the category
+// filter which currently mis-reports every Varicent-imported case.
+function backfillCaseCategory(){
+ if(!Array.isArray(cases)) return;
+ var changed = 0, unresolved = 0;
+ cases.forEach(function(c){
+  if(!c || c.cat) return; // already has one
+  var cat = resolveCaseCat(c);
+  if(cat){ c.cat = cat; changed++; }
+  else { unresolved++; }
+ });
+ if(changed > 0){
+  saveCases();
+  console.log('[backfillCaseCategory] stamped cat on '+changed+' case(s)'
+   + (unresolved ? ('; '+unresolved+' still unresolved (no matching plan code/product name)') : ''));
+ } else if(unresolved){
+  console.log('[backfillCaseCategory] '+unresolved+' case(s) unresolved (no matching plan code/product name)');
+ }
 }
 
 // Find candidate matches for a Varicent case in the existing pipeline.
@@ -1073,6 +1129,8 @@ function enterApp(){
  // One-shot: stamp crmLeadId onto legacy cases by parsing the notes string.
  // No-op for cases that already have it. Idempotent — safe to run every load.
  try { backfillCrmLeadIds(); } catch(e){ console.error('crmLeadId backfill error:', e); }
+ // One-shot: stamp product category onto legacy cases. Idempotent — safe every load.
+ try { backfillCaseCategory(); } catch(e){ console.error('cat backfill error:', e); }
 }
 
 // ════════════════════════════════════════════
@@ -1544,6 +1602,7 @@ function importCRMLead(leadId){
   client: lead.name,
   phone: (lead.phone || '').replace(/\D/g,''),
   product: prodMapped,
+  cat: (prodFound.cat || ''),
   amount: amt,
   rate: prodFound.rate || 0,
   split: splitType,
@@ -1888,8 +1947,8 @@ function getFilteredCases(){
    if(p.carrier !== filterCarrier) return false;
   }
   if(filterCat){
-   var p = findProd(c.product);
-   if(p.cat !== filterCat) return false;
+   var caseCat = c.cat || resolveCaseCat(c) || findProd(c.product).cat;
+   if(caseCat !== filterCat) return false;
   }
   if(searchQuery){
    var q = searchQuery.toLowerCase();
@@ -1982,6 +2041,7 @@ function addCase(){
   client: client,
   phone: ($1('#nc_phone').value||'').replace(/[^\d]/g,''),
   product: product,
+  cat: resolveCaseCat({ product: product }),
   amount: parseFloat($1('#nc_amount').value) || 0,
   rate: parseFloat($1('#nc_rate').value) || findProd(product).rate || 0,
   split: $1('#nc_split').value || 'full',
@@ -2107,6 +2167,7 @@ function saveEditCase(caseId){
  c.client = $1('#ec_client').value.trim();
  c.phone = ($1('#ec_phone').value||'').replace(/[^\d]/g,'');
  c.product = $1('#ec_product').value;
+ c.cat = resolveCaseCat(c); // re-resolve category when the product is changed
  c.amount = parseFloat($1('#ec_amount').value) || 0;
  c.rate = parseFloat($1('#ec_rate').value) || 0;
  c.split = $1('#ec_split').value;
@@ -3749,6 +3810,7 @@ function confirmImport(){
    client: (vc.client || '').trim(),
    phone: '',
    product: prodLabel,
+   cat: resolveCaseCat({ product: prodLabel, plan_code: vc.plan_code }),
    policyType: vc.policy_type || 'New',
    section: a.section,
    amount: vc.paid_premium || vc.production_credit || 0,
