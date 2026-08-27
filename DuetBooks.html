@@ -449,8 +449,8 @@ tr:hover td{background:#FAFAFA}
 // DUET BOOKS — Standalone Compensation Tracker
 // ════════════════════════════════════════════
 
-var APP_VERSION = 'v1.4.2';
-var APP_BUILD_DATE = '2026-06-29';
+var APP_VERSION = 'v1.4.3';
+var APP_BUILD_DATE = '2026-08-27';
 // ── Subscription link ──  $19/month Stripe recurring Payment Link
 var SUBSCRIBE_URL = 'https://buy.stripe.com/00wdR9aIGct1e2ccv55ZC01';
 var FIREBASE_URL = 'https://duet-crm-default-rtdb.firebaseio.com/duetbooks';
@@ -1389,12 +1389,77 @@ function _esc(s){ return ((s||'')+'').replace(/[&<>"']/g, function(ch){ return {
 function _normCRMName(s){ return ((s||'')+'').toLowerCase().replace(/[^a-z0-9]/g,''); }
 function _normCRMPhone(s){ var d = ((s||'')+'').replace(/\D/g,''); return d.length > 10 ? d.slice(-10) : d; }
 
-function _crmMatchesBooksCase(lead, bcase){
- if(!bcase || !lead) return false;
- if(_normCRMName(lead.name) !== _normCRMName(bcase.client)) return false;
+// Core name = lowercase, generational suffix (Jr/Sr/II/III/IV/V) dropped,
+// punctuation stripped. "Antonio Da Silva Jr" and "Antonio DaSilva" both
+// become "antoniodasilva".
+function _normCRMNameCore(s){
+ var t = ((s||'')+'').toLowerCase().replace(/\b(jr|sr|junior|senior|ii|iii|iv|v)\.?\b/g,' ');
+ return t.replace(/[^a-z0-9]/g,'');
+}
+function _crmLastToken(s){
+ var t = ((s||'')+'').toLowerCase().replace(/\b(jr|sr|junior|senior|ii|iii|iv|v)\.?\b/g,' ');
+ var words = t.replace(/[^a-z0-9 ]/g,'').trim().split(/\s+/);
+ return words.length ? words[words.length-1] : '';
+}
+// Plain Levenshtein — names are short, so the O(n·m) loop is fine.
+function _nameLev(a, b){
+ if(a === b) return 0;
+ if(!a.length) return b.length;
+ if(!b.length) return a.length;
+ var prev = [], cur = [], i, j;
+ for(j=0; j<=b.length; j++) prev[j] = j;
+ for(i=1; i<=a.length; i++){
+  cur[0] = i;
+  for(j=1; j<=b.length; j++){
+   cur[j] = Math.min(prev[j]+1, cur[j-1]+1, prev[j-1] + (a[i-1]===b[j-1] ? 0 : 1));
+  }
+  var tmp = prev; prev = cur; cur = tmp;
+ }
+ return prev[b.length];
+}
+
+// Tiered match — 'exact' auto-hides the lead from the import banner,
+// 'near' keeps it visible but flagged with a "Same person / Import as new"
+// choice, null = no relation.
+//  exact: crmLeadId back-link, OR suffix-stripped names equal (phones must
+//         not conflict), OR a 1-2 char typo with the SAME phone on both
+//         sides (long names only — short names stay 'near').
+//  near:  1-2 char typo without phone confirmation, or same phone + same
+//         last name (household — spouses share numbers, so never auto-hide).
+function _crmCaseMatchLevel(lead, bcase){
+ if(!bcase || !lead) return null;
+ if(bcase.crmLeadId && lead.id && bcase.crmLeadId === lead.id) return 'exact';
+ var lc = _normCRMNameCore(lead.name), bc = _normCRMNameCore(bcase.client);
+ if(!lc || !bc) return null;
  var lp = _normCRMPhone(lead.phone), bp = _normCRMPhone(bcase.phone);
- if(lp && bp && lp !== bp) return false;
- return true;
+ var phoneConflict = lp && bp && lp !== bp;
+ var phoneMatch = !!(lp && bp && lp === bp);
+ if(lc === bc) return phoneConflict ? null : 'exact';
+ var lev = _nameLev(lc, bc);
+ if(lev <= 2 && !phoneConflict){
+  return (phoneMatch && Math.min(lc.length, bc.length) >= 8) ? 'exact' : 'near';
+ }
+ if(phoneMatch && _crmLastToken(lead.name) === _crmLastToken(bcase.client)) return 'near';
+ return null;
+}
+
+function _crmMatchesBooksCase(lead, bcase){
+ return _crmCaseMatchLevel(lead, bcase) === 'exact';
+}
+
+// "Same person" button — stamp the CRM lead id onto the existing books case
+// so the hard link wins forever after (no fuzzy logic needed next time).
+function linkCRMLeadToCase(leadId, caseId){
+ var bcase = cases.find(function(c){ return c && c.id === caseId; });
+ if(!bcase){ showToast('Case not found', 3000); return; }
+ bcase.crmLeadId = leadId;
+ bcase.notes = (bcase.notes ? bcase.notes + ' · ' : '') + 'Linked to CRM lead #'+leadId+' (same person)';
+ saveCases();
+ if(_crmPendingLeads) _crmPendingLeads = _crmPendingLeads.filter(function(l){ return l.id !== leadId; });
+ showToast('🔗 Linked to existing case: '+bcase.client, 4000);
+ closeCRMImportModal();
+ if(_crmPendingLeads && _crmPendingLeads.length > 0) showCRMImportModal();
+ renderAll();
 }
 
 function loadCRMPending(callback){
@@ -1451,7 +1516,7 @@ function showCRMImportModal(){
  h += '<h3 style="margin:0">📥 Import from DuetCRM ('+pending.length+')</h3>';
  h += '<button onclick="closeCRMImportModal()" style="margin-left:auto;background:transparent;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1" title="Close">×</button>';
  h += '</div>';
- h += '<div style="font-size:11px;color:var(--muted);margin-bottom:12px">Match rule: fuzzy client name + phone (when both have one). Review each row and click Import to create the DuetBooks case.</div>';
+ h += '<div style="font-size:11px;color:var(--muted);margin-bottom:12px">Match rule: fuzzy client name (Jr/Sr and small typos tolerated) + phone (when both have one). Rows that look like an existing case offer "Same person" (link, no new case) vs "Import as new".</div>';
 
  pending.forEach(function(l){
   var prodCRM = (l.selectedProduct || '').trim();
@@ -1460,6 +1525,10 @@ function showCRMImportModal(){
   var amt = parseFloat(l.estPremium) || 0;
   var canImport = (l.name && amt > 0 && prodFound);
   var stage = l.stage === 'app_submitted' ? 'App Submitted' : 'Won';
+  var nearCase = null;
+  for(var ci=0; ci<cases.length; ci++){
+   if(_crmCaseMatchLevel(l, cases[ci]) === 'near'){ nearCase = cases[ci]; break; }
+  }
 
   h += '<div style="border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--card)">';
   h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">';
@@ -1479,9 +1548,18 @@ function showCRMImportModal(){
    h += '<div style="font-size:11px;color:var(--muted);margin-top:2px">CRM history: '+_esc(((firstHN.text||'')+'').substring(0,140))+'</div>';
   }
   if(l.wonReason) h += '<div style="font-size:11px;color:var(--muted);margin-top:2px">Won reason: <b>'+_esc(l.wonReason)+'</b></div>';
+  if(nearCase){
+   var ncStatus = (nearCase.status||'')+'';
+   h += '<div style="margin-top:8px;background:rgba(243,156,18,0.12);border:1px solid var(--amb);border-radius:6px;padding:8px 10px;font-size:11px">';
+   h += '⚠️ Looks like <b>'+_esc(nearCase.client)+'</b> already in your books — '+_esc(nearCase.product||'')+', $'+((nearCase.amount||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}))+(ncStatus?', '+_esc(ncStatus):'')+'. If it\'s the same person, link instead of importing so the book doesn\'t double up.';
+   h += '</div>';
+  }
   h += '<div style="margin-top:8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">';
+  if(nearCase){
+   h += '<button class="btn btn-amb" onclick="linkCRMLeadToCase('+l.id+','+nearCase.id+')" style="font-weight:700;font-size:12px;padding:6px 14px">🔗 Same person — link, don\'t import</button>';
+  }
   if(canImport){
-   h += '<button class="btn btn-grn" onclick="importCRMLead('+l.id+')" style="font-weight:700;font-size:12px;padding:6px 14px">📥 Import</button>';
+   h += '<button class="btn btn-grn" onclick="importCRMLead('+l.id+')" style="font-weight:700;font-size:12px;padding:6px 14px">📥 Import'+(nearCase?' as new':'')+'</button>';
   } else {
    var reasons = [];
    if(amt <= 0) reasons.push('missing premium');
